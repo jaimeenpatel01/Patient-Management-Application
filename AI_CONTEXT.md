@@ -65,7 +65,7 @@ A private Android application for a physiotherapist/doctor to manage patients, m
 - **Goal:** Secure file storage.
 - **Features:** Uploading X-rays, MRIs, reports, and progress photos to Supabase Storage. Viewing/downloading files. Integrated `expo-image-picker` and `expo-document-picker`.
 
-### Phase 7: Payment Management & Revenue (⏳ NOT STARTED)
+### Phase 7: Payment Management & Revenue (✅ COMPLETED)
 - **Goal:** Financial tracking.
 - **Features:** Record payments (cash/UPI/card), track pending vs paid status, simple revenue dashboard/statistics.
 
