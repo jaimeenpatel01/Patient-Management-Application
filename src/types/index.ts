@@ -40,3 +40,129 @@ export type PaymentType = 'consultation' | 'physiotherapy_session' | 'package' |
 export type PaymentMethod = 'cash' | 'upi' | 'card' | 'bank_transfer' | 'other';
 
 export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
+
+// ─── Database Entity Types ────────────────────────────────────
+
+export interface Patient {
+  id: string;
+  doctor_id: string;
+  full_name: string;
+  phone: string | null;
+  email: string | null;
+  date_of_birth: string | null;
+  gender: Gender | null;
+  address: string | null;
+  emergency_contact: string | null;
+  notes: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Appointment {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  duration_minutes: number;
+  status: AppointmentStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Consultation {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  appointment_id: string | null;
+  consultation_date: string;
+  symptoms: string | null;
+  diagnosis: string | null;
+  assessment: string | null;
+  notes: string | null;
+  follow_up_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Diagnosis {
+  id: string;
+  consultation_id: string;
+  doctor_id: string;
+  patient_id: string;
+  title: string;
+  symptoms: string | null;
+  clinical_assessment: string | null;
+  notes: string | null;
+  diagnosis_date: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Treatment {
+  id: string;
+  consultation_id: string;
+  doctor_id: string;
+  patient_id: string;
+  name: string;
+  description: string | null;
+  instructions: string | null;
+  frequency: string | null;
+  duration: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExercisePlan {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  consultation_id: string | null;
+  name: string;
+  description: string | null;
+  sets: number | null;
+  repetitions: number | null;
+  duration: string | null;
+  frequency: string | null;
+  instructions: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  media_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DocumentCategory = 'xray' | 'mri' | 'prescription' | 'report' | 'progress_photo' | 'exercise_doc' | 'other';
+
+export interface Document {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  consultation_id: string | null;
+  file_name: string;
+  file_type: string;
+  file_size: number | null;
+  storage_path: string;
+  category: DocumentCategory | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Payment {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  appointment_id: string | null;
+  amount: number;
+  payment_type: PaymentType;
+  payment_method: PaymentMethod | null;
+  status: PaymentStatus;
+  payment_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
