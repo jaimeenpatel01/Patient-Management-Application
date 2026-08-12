@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "application",
-    "slug": "application",
+    "name": "Doctor Management App",
+    "slug": "doctor-management-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "application",
+    "scheme": "doctor-management-app",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
