@@ -196,6 +196,25 @@ export default function PatientDetailScreen() {
           </View>
         </View>
 
+        {/* Medical Records Link */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Medical Records</Text>
+          <TouchableOpacity 
+            style={styles.recordsButton}
+            onPress={() => router.push(`/patient/${patient.id}/consultations` as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.recordsIconContainer}>
+              <Ionicons name="medical-outline" size={24} color={Colors.primary} />
+            </View>
+            <View style={styles.recordsTextContainer}>
+              <Text style={styles.recordsTitle}>Consultations & Records</Text>
+              <Text style={styles.recordsSubtitle}>View history, diagnoses, and treatments</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
         {/* Notes */}
         {patient.notes && (
           <View style={styles.section}>
@@ -356,5 +375,35 @@ const styles = StyleSheet.create({
     marginTop: Spacing['2xl'],
     paddingHorizontal: Spacing.base,
     paddingBottom: Spacing.xl,
+  },
+  recordsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+    ...Shadows.sm,
+  },
+  recordsIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  recordsTextContainer: {
+    flex: 1,
+  },
+  recordsTitle: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
+  },
+  recordsSubtitle: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
 });

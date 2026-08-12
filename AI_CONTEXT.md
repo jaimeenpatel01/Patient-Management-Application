@@ -49,17 +49,17 @@ A private Android application for a physiotherapist/doctor to manage patients, m
 - Implemented PostgreSQL triggers for `updated_at` and profile auto-creation.
 - Updated `src/types/index.ts` with all entity interfaces.
 
-### Phase 3: Patient Management (⏳ NOT STARTED)
+### Phase 3: Patient Management (✅ COMPLETED)
 - **Goal:** CRUD operations for patients.
 - **Features:** Patient list screen with search/filter, Add new patient form, Patient details view, Edit patient information.
 
-### Phase 4: Appointments Management (⏳ NOT STARTED)
+### Phase 4: Appointments Management (✅ COMPLETED)
 - **Goal:** Scheduling and tracking appointments.
 - **Features:** Calendar/List view of appointments, Create new appointment, Update appointment status (scheduled, completed, cancelled, no_show).
 
-### Phase 5: Medical Records Management (⏳ NOT STARTED)
+### Phase 5: Medical Records Management (✅ COMPLETED)
 - **Goal:** Clinical documentation.
-- **Features:** Create/view consultations, add diagnoses, prescribe treatments, and create exercise plans for patients.
+- **Features:** Create/view consultations, add diagnoses, prescribe treatments, and create exercise plans for patients. Added `medicalService.ts` and consultation screens.
 
 ### Phase 6: Documents & Media (⏳ NOT STARTED)
 - **Goal:** Secure file storage.

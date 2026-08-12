@@ -22,6 +22,7 @@ function RootNavigator() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="patient" />
           <Stack.Screen name="appointment" />
+          <Stack.Screen name="consultation" />
         </Stack.Protected>
       </Stack>
     </>
