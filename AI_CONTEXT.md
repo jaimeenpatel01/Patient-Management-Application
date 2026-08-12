@@ -61,9 +61,9 @@ A private Android application for a physiotherapist/doctor to manage patients, m
 - **Goal:** Clinical documentation.
 - **Features:** Create/view consultations, add diagnoses, prescribe treatments, and create exercise plans for patients. Added `medicalService.ts` and consultation screens.
 
-### Phase 6: Documents & Media (⏳ NOT STARTED)
+### Phase 6: Documents & Media (✅ COMPLETED)
 - **Goal:** Secure file storage.
-- **Features:** Uploading X-rays, MRIs, reports, and progress photos to Supabase Storage. Viewing/downloading files.
+- **Features:** Uploading X-rays, MRIs, reports, and progress photos to Supabase Storage. Viewing/downloading files. Integrated `expo-image-picker` and `expo-document-picker`.
 
 ### Phase 7: Payment Management & Revenue (⏳ NOT STARTED)
 - **Goal:** Financial tracking.

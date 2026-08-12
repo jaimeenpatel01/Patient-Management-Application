@@ -215,6 +215,25 @@ export default function PatientDetailScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Documents & Media Link */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Documents & Media</Text>
+          <TouchableOpacity 
+            style={styles.recordsButton}
+            onPress={() => router.push(`/patient/${patient.id}/documents` as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.recordsIconContainer}>
+              <Ionicons name="images-outline" size={24} color={Colors.primary} />
+            </View>
+            <View style={styles.recordsTextContainer}>
+              <Text style={styles.recordsTitle}>Files & Uploads</Text>
+              <Text style={styles.recordsSubtitle}>X-Rays, MRI scans, and reports</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
         {/* Notes */}
         {patient.notes && (
           <View style={styles.section}>
