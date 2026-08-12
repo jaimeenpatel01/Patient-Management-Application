@@ -12,8 +12,17 @@ import { Button } from '@/components/ui/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 export default function ProfileScreen() {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
+  const isDoctor = profile?.role === 'doctor' || !profile;
+  if (isDoctor) {
+    const lowerName = displayName.toLowerCase();
+    if (!lowerName.startsWith('dr.') && !lowerName.startsWith('dr ')) {
+      displayName = `Dr. ${displayName}`;
+    }
+  }
 
   const handleSignOut = () => {
     Alert.alert(
@@ -46,7 +55,7 @@ export default function ProfileScreen() {
           <Ionicons name="person" size={40} color={Colors.primary} />
         </View>
         <Text style={styles.profileName}>
-          Dr. {user?.email?.split('@')[0] ?? 'Doctor'}
+          {displayName}
         </Text>
         <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
         <View style={styles.roleBadge}>

@@ -75,7 +75,7 @@ function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps)
 }
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,14 @@ export default function DashboardScreen() {
     fetchStats(overviewFilter, paymentFilter).finally(() => setRefreshing(false));
   }, [overviewFilter, paymentFilter]);
 
-  const displayName = user?.email?.split('@')[0] ?? 'Doctor';
+  let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
+  const isDoctor = profile?.role === 'doctor' || !profile;
+  if (isDoctor) {
+    const lowerName = displayName.toLowerCase();
+    if (!lowerName.startsWith('dr.') && !lowerName.startsWith('dr ')) {
+      displayName = `Dr. ${displayName}`;
+    }
+  }
 
   if (loading) {
     return (
@@ -122,7 +129,7 @@ export default function DashboardScreen() {
       <View style={styles.welcomeSection}>
         <View>
           <Text style={styles.welcomeGreeting}>Good evening,</Text>
-          <Text style={styles.welcomeName}>Dr. {displayName}</Text>
+          <Text style={styles.welcomeName}>{displayName}</Text>
         </View>
         <View style={styles.avatarContainer}>
           <Ionicons name="person" size={24} color={Colors.primary} />
