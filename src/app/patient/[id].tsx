@@ -1,0 +1,360 @@
+import React, { useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
+import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { getPatientById, deletePatient } from '@/services/patientService';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { Button } from '@/components/ui/Button';
+import type { Patient } from '@/types';
+
+function calculateAge(dateOfBirth: string | null): string | null {
+  if (!dateOfBirth) return null;
+  const today = new Date();
+  const birth = new Date(dateOfBirth);
+  let age = today.getFullYear() - birth.getFullYear();
+  const monthDiff = today.getMonth() - birth.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  return `${age} years`;
+}
+
+function getGenderDisplay(gender: string | null): string {
+  if (!gender) return 'Not specified';
+  const labels: Record<string, string> = {
+    male: 'Male',
+    female: 'Female',
+    other: 'Other',
+    prefer_not_to_say: 'Prefer not to say',
+  };
+  return labels[gender] || gender;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
+
+function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null }) {
+  return (
+    <View style={styles.infoRow}>
+      <View style={styles.infoIconContainer}>
+        <Ionicons name={icon} size={18} color={Colors.primary} />
+      </View>
+      <View style={styles.infoContent}>
+        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoValue}>{value || 'Not provided'}</Text>
+      </View>
+    </View>
+  );
+}
+
+export default function PatientDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const [patient, setPatient] = useState<Patient | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!id) return;
+      setIsLoading(true);
+      getPatientById(id).then((result) => {
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setPatient(result.data);
+        }
+        setIsLoading(false);
+      });
+    }, [id])
+  );
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Patient',
+      `Are you sure you want to delete ${patient?.full_name}? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!id) return;
+            const { error: delError } = await deletePatient(id);
+            if (delError) {
+              Alert.alert('Error', delError);
+            } else {
+              router.back();
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Patient' }} />
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      </>
+    );
+  }
+
+  if (error || !patient) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Patient' }} />
+        <View style={styles.centerContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={Colors.error} />
+          <Text style={styles.errorTitle}>Could not load patient</Text>
+          <Text style={styles.errorMessage}>{error || 'Patient not found'}</Text>
+          <Button
+            title="Go Back"
+            onPress={() => router.back()}
+            variant="outline"
+            size="sm"
+            fullWidth={false}
+            style={{ marginTop: Spacing.base }}
+          />
+        </View>
+      </>
+    );
+  }
+
+  const age = calculateAge(patient.date_of_birth);
+
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          title: patient.full_name,
+          headerRight: () => (
+            <TouchableOpacity
+              onPress={() => router.push(`/patient/edit/${patient.id}` as any)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="create-outline" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header card */}
+        <View style={styles.headerCard}>
+          <View style={styles.avatarLarge}>
+            <Text style={styles.avatarLargeText}>{getInitials(patient.full_name)}</Text>
+          </View>
+          <Text style={styles.patientName}>{patient.full_name}</Text>
+          {age && (
+            <Text style={styles.patientAge}>
+              {age} • {getGenderDisplay(patient.gender)}
+            </Text>
+          )}
+          {!age && (
+            <Text style={styles.patientAge}>{getGenderDisplay(patient.gender)}</Text>
+          )}
+        </View>
+
+        {/* Contact information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <View style={styles.infoCard}>
+            <InfoRow icon="call-outline" label="Phone" value={patient.phone} />
+            <InfoRow icon="mail-outline" label="Email" value={patient.email} />
+            <InfoRow icon="location-outline" label="Address" value={patient.address} />
+            <InfoRow icon="alert-circle-outline" label="Emergency Contact" value={patient.emergency_contact} />
+          </View>
+        </View>
+
+        {/* Medical details */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Medical Details</Text>
+          <View style={styles.infoCard}>
+            <InfoRow icon="calendar-outline" label="Date of Birth" value={patient.date_of_birth} />
+            <InfoRow icon="person-outline" label="Gender" value={getGenderDisplay(patient.gender)} />
+          </View>
+        </View>
+
+        {/* Notes */}
+        {patient.notes && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            <View style={styles.notesCard}>
+              <Text style={styles.notesText}>{patient.notes}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Record info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Record</Text>
+          <View style={styles.infoCard}>
+            <InfoRow
+              icon="time-outline"
+              label="Created"
+              value={new Date(patient.created_at).toLocaleDateString()}
+            />
+            <InfoRow
+              icon="refresh-outline"
+              label="Last Updated"
+              value={new Date(patient.updated_at).toLocaleDateString()}
+            />
+          </View>
+        </View>
+
+        {/* Delete button */}
+        <View style={styles.dangerZone}>
+          <Button
+            title="Delete Patient"
+            onPress={handleDelete}
+            variant="danger"
+            icon={<Ionicons name="trash-outline" size={18} color={Colors.textInverse} />}
+          />
+        </View>
+      </ScrollView>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  content: {
+    paddingBottom: Spacing['4xl'],
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    paddingHorizontal: Spacing['2xl'],
+  },
+  errorTitle: {
+    fontSize: Typography.lg,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
+    marginTop: Spacing.base,
+  },
+  errorMessage: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+    textAlign: 'center',
+  },
+  headerCard: {
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    paddingVertical: Spacing['2xl'],
+    paddingHorizontal: Spacing.base,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  avatarLarge: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  avatarLargeText: {
+    fontSize: Typography['2xl'],
+    fontWeight: Typography.bold,
+    color: Colors.primary,
+  },
+  patientName: {
+    fontSize: Typography.xl,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+  },
+  patientAge: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  section: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.base,
+  },
+  sectionTitle: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  infoCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+    ...Shadows.sm,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.sm,
+  },
+  infoIconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.md,
+  },
+  infoContent: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    fontWeight: Typography.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoValue: {
+    fontSize: Typography.base,
+    color: Colors.text,
+    marginTop: 2,
+  },
+  notesCard: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.base,
+    ...Shadows.sm,
+  },
+  notesText: {
+    fontSize: Typography.base,
+    color: Colors.textSecondary,
+    lineHeight: Typography.base * Typography.relaxed,
+  },
+  dangerZone: {
+    marginTop: Spacing['2xl'],
+    paddingHorizontal: Spacing.base,
+    paddingBottom: Spacing.xl,
+  },
+});
