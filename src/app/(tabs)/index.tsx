@@ -1,24 +1,56 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { getDashboardStats, DashboardStats, DashboardFilter } from '@/services/dashboardService';
 
 interface QuickActionProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   color: string;
   backgroundColor: string;
+  onPress: () => void;
 }
 
-function QuickAction({ icon, label, color, backgroundColor }: QuickActionProps) {
+function QuickAction({ icon, label, color, backgroundColor, onPress }: QuickActionProps) {
   return (
-    <TouchableOpacity style={styles.quickAction} activeOpacity={0.7}>
+    <TouchableOpacity style={styles.quickAction} activeOpacity={0.7} onPress={onPress}>
       <View style={[styles.quickActionIcon, { backgroundColor }]}>
         <Ionicons name={icon} size={22} color={color} />
       </View>
       <Text style={styles.quickActionLabel}>{label}</Text>
     </TouchableOpacity>
+  );
+}
+
+interface FilterTabsProps {
+  value: DashboardFilter;
+  onChange: (value: DashboardFilter) => void;
+}
+
+function FilterTabs({ value, onChange }: FilterTabsProps) {
+  const options: { label: string; value: DashboardFilter }[] = [
+    { label: 'Daily', value: 'daily' },
+    { label: 'Weekly', value: 'weekly' },
+    { label: 'Monthly', value: 'monthly' },
+  ];
+
+  return (
+    <View style={styles.filterTabs}>
+      {options.map((opt) => (
+        <TouchableOpacity
+          key={opt.value}
+          style={[styles.filterTab, value === opt.value && styles.filterTabActive]}
+          onPress={() => onChange(opt.value)}
+        >
+          <Text style={[styles.filterTabText, value === opt.value && styles.filterTabTextActive]}>
+            {opt.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
   );
 }
 
@@ -44,14 +76,47 @@ function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps)
 
 export default function DashboardScreen() {
   const { user } = useAuth();
+  const router = useRouter();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [overviewFilter, setOverviewFilter] = useState<DashboardFilter>('daily');
+  const [paymentFilter, setPaymentFilter] = useState<DashboardFilter>('monthly');
+
+  const fetchStats = async (overview: DashboardFilter, payment: DashboardFilter) => {
+    const { data } = await getDashboardStats(overview, payment);
+    if (data) {
+      setStats(data);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStats(overviewFilter, paymentFilter).finally(() => setLoading(false));
+    }, [overviewFilter, paymentFilter])
+  );
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchStats(overviewFilter, paymentFilter).finally(() => setRefreshing(false));
+  }, [overviewFilter, paymentFilter]);
 
   const displayName = user?.email?.split('@')[0] ?? 'Doctor';
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[Colors.primary]} tintColor={Colors.primary} />}
     >
       {/* Welcome */}
       <View style={styles.welcomeSection}>
@@ -73,50 +138,56 @@ export default function DashboardScreen() {
             label="Add Patient"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
+            onPress={() => router.push('/patient/add')}
           />
           <QuickAction
             icon="calendar-outline"
             label="Appointment"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
+            onPress={() => router.push('/appointment/add')}
           />
           <QuickAction
             icon="wallet-outline"
             label="Payment"
             color={Colors.success}
             backgroundColor={Colors.successLight}
+            onPress={() => router.push('/payment/add')}
           />
         </View>
       </View>
 
-      {/* Today's Overview */}
+      {/* Overview */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today&apos;s Overview</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Overview</Text>
+          <FilterTabs value={overviewFilter} onChange={setOverviewFilter} />
+        </View>
         <View style={styles.statsGrid}>
           <StatCard
             title="Appointments"
-            value="0"
+            value={stats?.overview.appointments.toString() ?? '0'}
             icon="calendar"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
           />
           <StatCard
             title="Patients"
-            value="0"
+            value={stats?.overview.patients.toString() ?? '0'}
             icon="people"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
           />
           <StatCard
             title="Collected"
-            value="₹0"
+            value={`₹${stats?.overview.collected ?? 0}`}
             icon="checkmark-circle"
             color={Colors.success}
             backgroundColor={Colors.successLight}
           />
           <StatCard
             title="Pending"
-            value="₹0"
+            value={`₹${stats?.overview.pending ?? 0}`}
             icon="time"
             color={Colors.warning}
             backgroundColor={Colors.warningLight}
@@ -124,33 +195,28 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Monthly Summary */}
+      {/* Payment Summary */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>This Month</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Payments</Text>
+          <FilterTabs value={paymentFilter} onChange={setPaymentFilter} />
+        </View>
         <View style={[styles.monthlyCard, Shadows.sm]}>
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Total Patients</Text>
-            <Text style={styles.monthlyValue}>0</Text>
+            <Text style={styles.monthlyValue}>{stats?.payment.totalPatients ?? 0}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Revenue</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹0</Text>
+            <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.payment.revenue ?? 0}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Outstanding</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹0</Text>
+            <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.payment.outstanding ?? 0}</Text>
           </View>
         </View>
-      </View>
-
-      {/* Placeholder notice */}
-      <View style={styles.notice}>
-        <Ionicons name="information-circle-outline" size={18} color={Colors.info} />
-        <Text style={styles.noticeText}>
-          Dashboard data will be live once patient and appointment modules are built.
-        </Text>
       </View>
     </ScrollView>
   );
@@ -192,11 +258,40 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: Spacing.xl,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
   sectionTitle: {
     fontSize: Typography.base,
     fontWeight: Typography.semibold,
     color: Colors.text,
-    marginBottom: Spacing.md,
+  },
+  filterTabs: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceSecondary,
+    borderRadius: BorderRadius.full,
+    padding: 2,
+  },
+  filterTab: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+  },
+  filterTabActive: {
+    backgroundColor: Colors.surface,
+    ...Shadows.sm,
+  },
+  filterTabText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    fontWeight: Typography.medium,
+  },
+  filterTabTextActive: {
+    color: Colors.primary,
+    fontWeight: Typography.bold,
   },
   quickActionsRow: {
     flexDirection: 'row',

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, Modal, FlatList, TextInput } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -40,6 +40,8 @@ export default function AddPaymentScreen() {
 
   // Form state
   const [patientId, setPatientId] = useState<string>('');
+  const [isPatientModalVisible, setIsPatientModalVisible] = useState(false);
+  const [patientSearchQuery, setPatientSearchQuery] = useState('');
   const [amount, setAmount] = useState<string>('');
   const [paymentType, setPaymentType] = useState<PaymentType>('consultation');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
@@ -123,30 +125,15 @@ export default function AddPaymentScreen() {
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         
         <Text style={styles.sectionTitle}>Patient</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
-          {loadingPatients ? (
-            <Text style={styles.loadingText}>Loading patients...</Text>
-          ) : patients.length === 0 ? (
-            <Text style={styles.loadingText}>No patients found.</Text>
-          ) : (
-            patients.map((p) => (
-              <TouchableOpacity
-                key={p.id}
-                style={[styles.patientChip, patientId === p.id && styles.patientChipActive]}
-                onPress={() => setPatientId(p.id)}
-              >
-                <Ionicons 
-                  name="person-circle-outline" 
-                  size={20} 
-                  color={patientId === p.id ? Colors.primary : Colors.textSecondary} 
-                />
-                <Text style={[styles.patientChipText, patientId === p.id && styles.patientChipTextActive]}>
-                  {p.full_name}
-                </Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+        <TouchableOpacity 
+          style={[styles.dropdownTrigger, errors.patientId ? styles.dropdownTriggerError : null]} 
+          onPress={() => setIsPatientModalVisible(true)}
+        >
+          <Text style={patientId ? styles.dropdownTriggerText : styles.dropdownTriggerPlaceholder}>
+            {patientId ? patients.find(p => p.id === patientId)?.full_name : 'Select a patient...'}
+          </Text>
+          <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
         {errors.patientId && <Text style={styles.errorText}>{errors.patientId}</Text>}
 
         <View style={styles.spacer} />
@@ -199,6 +186,51 @@ export default function AddPaymentScreen() {
         </View>
 
       </ScrollView>
+
+      <Modal visible={isPatientModalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setIsPatientModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Patient</Text>
+            <TouchableOpacity onPress={() => setIsPatientModalVisible(false)}>
+              <Ionicons name="close" size={24} color={Colors.text} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.modalSearchContainer}>
+             <Ionicons name="search" size={20} color={Colors.textSecondary} style={styles.modalSearchIcon} />
+             <TextInput 
+               style={styles.modalSearchInput}
+               placeholder="Search patients..."
+               value={patientSearchQuery}
+               onChangeText={setPatientSearchQuery}
+               placeholderTextColor={Colors.textTertiary}
+             />
+          </View>
+          {loadingPatients ? (
+            <Text style={styles.loadingText}>Loading patients...</Text>
+          ) : (
+            <FlatList
+              data={patients.filter(p => p.full_name.toLowerCase().includes(patientSearchQuery.toLowerCase()))}
+              keyExtractor={p => p.id}
+              contentContainerStyle={styles.modalListContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={[styles.modalListItem, patientId === item.id && styles.modalListItemActive]} 
+                  onPress={() => {
+                    setPatientId(item.id);
+                    setIsPatientModalVisible(false);
+                    if (errors.patientId) setErrors(prev => ({ ...prev, patientId: '' }));
+                  }}
+                >
+                  <Ionicons name="person-circle-outline" size={24} color={patientId === item.id ? Colors.primary : Colors.textSecondary} />
+                  <Text style={[styles.modalListItemText, patientId === item.id && styles.modalListItemTextActive]}>{item.full_name}</Text>
+                  {patientId === item.id && <Ionicons name="checkmark" size={20} color={Colors.primary} style={{ marginLeft: 'auto' }} />}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={<Text style={styles.loadingText}>No patients found.</Text>}
+            />
+          )}
+        </View>
+      </Modal>
     </>
   );
 }
@@ -231,4 +263,37 @@ const styles = StyleSheet.create({
   spacer: { height: Spacing.lg },
   errorText: { fontSize: Typography.sm, color: Colors.error, marginTop: Spacing.xs },
   submitContainer: { marginTop: Spacing.xl },
+  dropdownTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+  },
+  dropdownTriggerError: {
+    borderColor: Colors.error,
+  },
+  dropdownTriggerText: {
+    fontSize: Typography.base,
+    color: Colors.text,
+  },
+  dropdownTriggerPlaceholder: {
+    fontSize: Typography.base,
+    color: Colors.textTertiary,
+  },
+  modalContainer: { flex: 1, backgroundColor: Colors.background },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: Spacing.lg, borderBottomWidth: 1, borderBottomColor: Colors.borderLight, backgroundColor: Colors.surface },
+  modalTitle: { fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.text },
+  modalSearchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, margin: Spacing.base, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, borderWidth: 1, borderColor: Colors.border },
+  modalSearchIcon: { marginRight: Spacing.sm },
+  modalSearchInput: { flex: 1, paddingVertical: Spacing.md, fontSize: Typography.base, color: Colors.text },
+  modalListContent: { paddingBottom: Spacing['4xl'] },
+  modalListItem: { flexDirection: 'row', alignItems: 'center', padding: Spacing.md, borderBottomWidth: 1, borderBottomColor: Colors.borderLight, backgroundColor: Colors.surface },
+  modalListItemActive: { backgroundColor: Colors.primaryFaded },
+  modalListItemText: { fontSize: Typography.base, color: Colors.text, marginLeft: Spacing.md },
+  modalListItemTextActive: { color: Colors.primary, fontWeight: Typography.semibold },
 });
