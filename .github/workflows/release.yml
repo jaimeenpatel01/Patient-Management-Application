@@ -44,18 +44,32 @@ jobs:
             console.log(data[0].id);
           ")
 
+          APK_URL=$(node -e "
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('build.json'));
+            console.log(data[0].artifacts.buildUrl);
+          ")
+
           echo "BUILD_ID=$BUILD_ID" >> "$GITHUB_OUTPUT"
+          echo "APK_URL=$APK_URL" >> "$GITHUB_OUTPUT"
+
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Download APK
         run: |
-          eas build:download \
-            --build-id "${{ steps.build.outputs.BUILD_ID }}"
+          echo "Downloading APK..."
 
-          mv *.apk physio-doctor.apk
+          curl -L \
+            -H "Authorization: Bearer $EXPO_TOKEN" \
+            "${{ steps.build.outputs.APK_URL }}" \
+            -o physio-doctor.apk
+
+          echo "APK downloaded successfully:"
+          ls -lh physio-doctor.apk
+
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
