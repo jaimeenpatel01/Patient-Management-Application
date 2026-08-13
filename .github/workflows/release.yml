@@ -29,29 +29,33 @@ jobs:
         run: npm install -g eas-cli
 
       - name: Build APK with EAS
+        id: build
         run: |
           eas build \
             --platform android \
             --profile preview \
             --non-interactive \
-            --wait
+            --wait \
+            --json > build.json
+
+          BUILD_ID=$(node -e "
+            const fs = require('fs');
+            const data = JSON.parse(fs.readFileSync('build.json'));
+            console.log(data[0].id);
+          ")
+
+          echo "BUILD_ID=$BUILD_ID" >> "$GITHUB_OUTPUT"
         env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  
 
       - name: Download APK
         run: |
-          eas build:list \
-            --platform android \
-            --limit 1 \
-            --json > build.json
+          eas build:download \
+            --build-id "${{ steps.build.outputs.BUILD_ID }}"
 
-          APK_URL=$(node -e "
-            const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('build.json'));
-            console.log(data[0].artifacts.buildUrl);
-          ")
-
-          curl -L "$APK_URL" -o physio-doctor.apk
+          mv *.apk physio-doctor.apk
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}  
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
