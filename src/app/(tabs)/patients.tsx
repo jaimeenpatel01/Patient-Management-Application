@@ -49,7 +49,6 @@ export default function PatientsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       loadPatients().finally(() => setIsLoading(false));
     }, [loadPatients])
   );

@@ -39,9 +39,9 @@ export type PaymentStatus = 'paid' | 'pending' | 'partially_paid' | 'cancelled' 
 
 export type PaymentType = 'consultation' | 'physiotherapy_session' | 'package' | 'other';
 
-export type PaymentMethod = 'cash' | 'upi' | 'card' | 'bank_transfer' | 'other';
+export type PaymentMethod = 'cash' | 'upi' | 'other';
 
-export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
+export type Gender = 'male' | 'female';
 
 // ─── Database Entity Types ────────────────────────────────────
 
@@ -50,11 +50,9 @@ export interface Patient {
   doctor_id: string;
   full_name: string;
   phone: string | null;
-  email: string | null;
   date_of_birth: string | null;
   gender: Gender | null;
   address: string | null;
-  emergency_contact: string | null;
   notes: string | null;
   is_active: boolean;
   created_at: string;

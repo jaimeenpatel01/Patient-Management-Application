@@ -13,14 +13,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { createPatient } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
+import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import type { Gender } from '@/types';
 
 const GENDER_OPTIONS: { label: string; value: Gender }[] = [
   { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
-  { label: 'Prefer not to say', value: 'prefer_not_to_say' },
+  { label: 'Female', value: 'female' }
 ];
 
 export default function AddPatientScreen() {
@@ -32,7 +31,6 @@ export default function AddPatientScreen() {
   // Form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<Gender | null>(null);
   const [address, setAddress] = useState('');
@@ -50,10 +48,8 @@ export default function AddPatientScreen() {
       newErrors.phone = 'Enter a valid phone number';
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = 'Enter a valid email address';
-    }
-
+    // If dateOfBirth is not set, it's ok since it's optional
+    // If we wanted to validate format we could, but AppDateTimePicker guarantees YYYY-MM-DD
     if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
       newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
     }
@@ -69,11 +65,9 @@ export default function AddPatientScreen() {
     const { error } = await createPatient({
       full_name: fullName.trim(),
       phone: phone.trim() || null,
-      email: email.trim() || null,
       date_of_birth: dateOfBirth.trim() || null,
       gender: gender,
       address: address.trim() || null,
-      emergency_contact: emergencyContact.trim() || null,
       notes: notes.trim() || null,
     });
 
@@ -118,22 +112,11 @@ export default function AddPatientScreen() {
           keyboardType="phone-pad"
         />
 
-        <Input
-          label="Email"
-          placeholder="patient@example.com"
-          leftIcon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
-          error={errors.email}
-          keyboardType="email-address"
-        />
-
-        <Input
+        <AppDateTimePicker
           label="Date of Birth"
-          placeholder="YYYY-MM-DD"
-          leftIcon="calendar-outline"
           value={dateOfBirth}
-          onChangeText={setDateOfBirth}
+          onChange={setDateOfBirth}
+          mode="date"
           error={errors.dateOfBirth}
         />
 
@@ -172,14 +155,6 @@ export default function AddPatientScreen() {
           onChangeText={setAddress}
           multiline
           numberOfLines={2}
-        />
-
-        <Input
-          label="Emergency Contact"
-          placeholder="Name & phone number"
-          leftIcon="alert-circle-outline"
-          value={emergencyContact}
-          onChangeText={setEmergencyContact}
         />
 
         <Input

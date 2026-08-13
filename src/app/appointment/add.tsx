@@ -10,6 +10,7 @@ import { getPatients } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
+import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import type { Patient, AppointmentStatus } from '@/types';
 
@@ -47,8 +48,8 @@ export default function AddAppointmentScreen() {
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!selectedPatientId) e.patient = 'Select a patient';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(appointmentDate)) e.date = 'Use YYYY-MM-DD';
-    if (!/^\d{2}:\d{2}$/.test(appointmentTime)) e.time = 'Use HH:MM (24h)';
+    if (!appointmentDate) e.date = 'Date is required';
+    if (!appointmentTime) e.time = 'Time is required';
     if (!durationMinutes || isNaN(Number(durationMinutes))) e.duration = 'Enter a number';
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -90,8 +91,20 @@ export default function AddAppointmentScreen() {
 
         {/* Appointment details */}
         <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Details</Text>
-        <Input label="Date *" placeholder="YYYY-MM-DD" leftIcon="calendar-outline" value={appointmentDate} onChangeText={setAppointmentDate} error={errors.date} />
-        <Input label="Time *" placeholder="HH:MM (24h)" leftIcon="time-outline" value={appointmentTime} onChangeText={setAppointmentTime} error={errors.time} />
+        <AppDateTimePicker
+          label="Date *"
+          value={appointmentDate}
+          onChange={setAppointmentDate}
+          mode="date"
+          error={errors.date}
+        />
+        <AppDateTimePicker
+          label="Time *"
+          value={appointmentTime}
+          onChange={setAppointmentTime}
+          mode="time"
+          error={errors.time}
+        />
         <Input label="Duration (minutes)" placeholder="30" leftIcon="hourglass-outline" value={durationMinutes} onChangeText={setDurationMinutes} error={errors.duration} keyboardType="numeric" />
 
         <Text style={styles.fieldLabel}>Status</Text>

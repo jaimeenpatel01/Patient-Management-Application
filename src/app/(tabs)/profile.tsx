@@ -103,7 +103,6 @@ export default function ProfileScreen() {
             label="Version"
             value="1.0.0"
           />
-          
         </View>
       </View>
 
@@ -132,7 +131,7 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
     <View style={styles.infoRow}>
       <View style={styles.infoRowLeft}>
         <Ionicons name={icon} size={20} color={Colors.textSecondary} />
-        <Text style={styles.infoLabel}>{label}</Text>
+        <Text style={styles.infoLabel}>{label}{' '}</Text>
       </View>
       <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
     </View>

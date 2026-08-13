@@ -21,8 +21,6 @@ const PAYMENT_TYPES: { label: string; value: PaymentType }[] = [
 const PAYMENT_METHODS: { label: string; value: PaymentMethod }[] = [
   { label: 'Cash', value: 'cash' },
   { label: 'UPI', value: 'upi' },
-  { label: 'Card', value: 'card' },
-  { label: 'Bank Transfer', value: 'bank_transfer' },
   { label: 'Other', value: 'other' },
 ];
 

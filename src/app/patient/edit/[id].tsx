@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getPatientById, updatePatient } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
+import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import type { Gender } from '@/types';
 
@@ -79,6 +80,7 @@ export default function EditPatientScreen() {
       newErrors.email = 'Enter a valid email address';
     }
 
+    // AppDateTimePicker ensures correct format, so we can skip manual format check here
     if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
       newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
     }
@@ -183,12 +185,11 @@ export default function EditPatientScreen() {
           keyboardType="email-address"
         />
 
-        <Input
+        <AppDateTimePicker
           label="Date of Birth"
-          placeholder="YYYY-MM-DD"
-          leftIcon="calendar-outline"
           value={dateOfBirth}
-          onChangeText={setDateOfBirth}
+          onChange={setDateOfBirth}
+          mode="date"
           error={errors.dateOfBirth}
         />
 

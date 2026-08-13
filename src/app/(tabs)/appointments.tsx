@@ -53,7 +53,6 @@ export default function AppointmentsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       loadAppointments().finally(() => setIsLoading(false));
     }, [loadAppointments])
   );

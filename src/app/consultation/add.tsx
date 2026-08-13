@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createConsultation } from '@/services/medicalService';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
+import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 
 export default function AddConsultationScreen() {
@@ -24,8 +25,8 @@ export default function AddConsultationScreen() {
       Alert.alert('Error', 'Missing patient ID');
       return;
     }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      setErrors({ date: 'Use YYYY-MM-DD format' });
+    if (!date) {
+      setErrors({ date: 'Date is required' });
       return;
     }
     setErrors({});
@@ -50,7 +51,13 @@ export default function AddConsultationScreen() {
     <>
       <Stack.Screen options={{ title: 'New Consultation' }} />
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Input label="Date *" placeholder="YYYY-MM-DD" leftIcon="calendar-outline" value={date} onChangeText={setDate} error={errors.date} />
+        <AppDateTimePicker
+          label="Date *"
+          value={date}
+          onChange={setDate}
+          mode="date"
+          error={errors.date}
+        />
         <Input label="Symptoms" placeholder="Patient's symptoms..." value={symptoms} onChangeText={setSymptoms} multiline numberOfLines={3} />
         <Input label="Diagnosis" placeholder="Primary diagnosis..." value={diagnosis} onChangeText={setDiagnosis} />
         <Input label="Clinical Assessment" placeholder="Objective findings..." value={assessment} onChangeText={setAssessment} multiline numberOfLines={3} />
