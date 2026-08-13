@@ -59,7 +59,7 @@ export default function ProfileScreen() {
         </Text>
         <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
         <View style={styles.roleBadge}>
-          <Text style={styles.roleBadgeText}>Doctor / Admin</Text>
+          <Text style={styles.roleBadgeText}>Doctor</Text>
         </View>
       </View>
 
@@ -103,12 +103,7 @@ export default function ProfileScreen() {
             label="Version"
             value="1.0.0"
           />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="build-outline"
-            label="Phase"
-            value="Phase 1 — Authentication"
-          />
+          
         </View>
       </View>
 

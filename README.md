@@ -1,56 +1,88 @@
-# Welcome to your Expo app 👋
+# Doctor Management Application
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Welcome to the **Doctor Management Application**, a comprehensive and modern platform designed for healthcare professionals to effortlessly manage their clinic, patients, appointments, and payments. Built with React Native (Expo) and Supabase, this application provides a seamless mobile experience for both iOS and Android.
 
-## Get started
+## 🌟 Key Features & Functionality
 
-1. Install dependencies
+This application comes fully loaded with features tailored specifically to a doctor's daily operational needs. 
 
+### 1. Authentication
+* **Sign Up / Sign In:** Secure email and password authentication powered by Supabase.
+* **Forgot Password:** Easy recovery flow for forgotten credentials.
+* **Protected Routes:** Ensure that sensitive clinic data is only accessible to authenticated medical professionals.
+
+### 2. Interactive Dashboard
+The Dashboard serves as the central hub of your clinic's operations, providing immediate insights and actionable metrics.
+* **Overview Metrics:** Instantly see your total appointments, total unique patients, collected revenue (₹), and pending balances (₹).
+* **Payment Summary:** A dedicated section that tracks your patient inflow vs. revenue generated and what is still outstanding.
+* **Quick Actions:** Easily jump to "Add Patient", "Add Appointment", or "Add Payment" with a single tap.
+
+### 3. Data Filters
+The dashboard and statistical modules come with built-in time filters that calculate your clinic's performance on the fly without lag.
+
+* **Daily Filter:** Displays data specifically for the current day. Perfect for seeing today's scheduled appointments and today's expected revenue.
+* **Weekly Filter:** Displays data for the trailing 7 days. Useful for tracking short-term trends, weekly patient volume, and end-of-week financial reconciliation.
+* **Monthly Filter:** Displays data for the trailing 30 days. Gives a bird's-eye view of your clinic's broader financial health, patient retention, and overall growth.
+
+### 4. Patient Management (Patients Tab)
+* Maintain a complete directory of all your patients.
+* View patient histories, contact information, and medical records.
+* Easily add new patients into your system.
+
+### 5. Scheduling (Appointments Tab)
+* A dedicated tab for viewing and managing your calendar.
+* Schedule new appointments and assign them to specific patients.
+* See upcoming visits and organize your daily agenda efficiently.
+
+### 6. Billing & Finances (Payments Tab)
+* Track every transaction made within your clinic.
+* Mark payments as `paid`, `pending`, or `partially_paid`.
+* Keep a clear record of outstanding balances to follow up on.
+
+### 7. User Profile (Profile Tab)
+* View your current account details (Email, Role, Display Name).
+* Manage your app settings and session safely.
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+* Node.js and npm installed on your machine.
+* Expo CLI or Expo Go app installed on your mobile device.
+* A Supabase project set up for the backend.
+
+### Installation
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
+2. **Set up Environment Variables**
+   Ensure your `.env` file is properly configured with your Supabase credentials:
+   ```env
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
 
+3. **Start the Application**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on Device / Emulator**
+   * Press `i` to open in iOS Simulator.
+   * Press `a` to open in Android Emulator.
+   * Scan the QR code with your phone's camera (using Expo Go) to run on a physical device.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🛠 Tech Stack
+* **Frontend:** React Native, Expo, Expo Router
+* **Backend & Auth:** Supabase (PostgreSQL)
+* **Icons:** Ionicons
+* **Styling:** Custom StyleSheet system with a defined Theme context (Colors, Typography, Spacing).
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📄 License
+This project is licensed under the MIT License.

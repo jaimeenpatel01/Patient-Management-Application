@@ -11,6 +11,7 @@ export interface AuthState {
 
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
 }
@@ -69,6 +70,7 @@ export interface Appointment {
   duration_minutes: number;
   status: AppointmentStatus;
   notes: string | null;
+  patient?: { full_name: string };
   created_at: string;
   updated_at: string;
 }

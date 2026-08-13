@@ -83,8 +83,8 @@ export default function DashboardScreen() {
   const [overviewFilter, setOverviewFilter] = useState<DashboardFilter>('daily');
   const [paymentFilter, setPaymentFilter] = useState<DashboardFilter>('monthly');
 
-  const fetchStats = async (overview: DashboardFilter, payment: DashboardFilter) => {
-    const { data } = await getDashboardStats(overview, payment);
+  const fetchStats = async () => {
+    const { data } = await getDashboardStats();
     if (data) {
       setStats(data);
     }
@@ -92,14 +92,14 @@ export default function DashboardScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      fetchStats(overviewFilter, paymentFilter).finally(() => setLoading(false));
-    }, [overviewFilter, paymentFilter])
+      fetchStats().finally(() => setLoading(false));
+    }, [])
   );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    fetchStats(overviewFilter, paymentFilter).finally(() => setRefreshing(false));
-  }, [overviewFilter, paymentFilter]);
+    fetchStats().finally(() => setRefreshing(false));
+  }, []);
 
   let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
   const isDoctor = profile?.role === 'doctor' || !profile;
@@ -128,7 +128,6 @@ export default function DashboardScreen() {
       {/* Welcome */}
       <View style={styles.welcomeSection}>
         <View>
-          <Text style={styles.welcomeGreeting}>Good evening,</Text>
           <Text style={styles.welcomeName}>{displayName}</Text>
         </View>
         <View style={styles.avatarContainer}>
@@ -173,28 +172,28 @@ export default function DashboardScreen() {
         <View style={styles.statsGrid}>
           <StatCard
             title="Appointments"
-            value={stats?.overview.appointments.toString() ?? '0'}
+            value={stats?.[overviewFilter].overview.appointments.toString() ?? '0'}
             icon="calendar"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
           />
           <StatCard
             title="Patients"
-            value={stats?.overview.patients.toString() ?? '0'}
+            value={stats?.[overviewFilter].overview.patients.toString() ?? '0'}
             icon="people"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
           />
           <StatCard
             title="Collected"
-            value={`₹${stats?.overview.collected ?? 0}`}
+            value={`₹${stats?.[overviewFilter].overview.collected ?? 0}`}
             icon="checkmark-circle"
             color={Colors.success}
             backgroundColor={Colors.successLight}
           />
           <StatCard
             title="Pending"
-            value={`₹${stats?.overview.pending ?? 0}`}
+            value={`₹${stats?.[overviewFilter].overview.pending ?? 0}`}
             icon="time"
             color={Colors.warning}
             backgroundColor={Colors.warningLight}
@@ -211,17 +210,17 @@ export default function DashboardScreen() {
         <View style={[styles.monthlyCard, Shadows.sm]}>
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Total Patients</Text>
-            <Text style={styles.monthlyValue}>{stats?.payment.totalPatients ?? 0}</Text>
+            <Text style={styles.monthlyValue}>{stats?.[paymentFilter].payment.totalPatients ?? 0}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Revenue</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.payment.revenue ?? 0}</Text>
+            <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.[paymentFilter].payment.revenue ?? 0}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.monthlyRow}>
             <Text style={styles.monthlyLabel}>Outstanding</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.payment.outstanding ?? 0}</Text>
+            <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.[paymentFilter].payment.outstanding ?? 0}</Text>
           </View>
         </View>
       </View>

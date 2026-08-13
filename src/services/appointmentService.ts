@@ -7,7 +7,7 @@ export async function getAppointments(date?: string): Promise<{ data: Appointmen
 
   let query = supabase
     .from('appointments')
-    .select('*')
+    .select('*, patient:patients(full_name)')
     .eq('doctor_id', user.id)
     .order('appointment_date', { ascending: true })
     .order('appointment_time', { ascending: true });

@@ -1,7 +1,8 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, ScrollView
 } from 'react-native';
+import { SearchFilter } from '@/components/ui/SearchFilter';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getAppointments } from '@/services/appointmentService';
@@ -36,6 +37,8 @@ export default function AppointmentsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<FilterTab>('today');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
 
   const loadAppointments = useCallback(async () => {
     const date = activeTab === 'today' ? getTodayString() : undefined;
@@ -74,6 +77,7 @@ export default function AppointmentsScreen() {
           <Text style={styles.cardDuration}>{item.duration_minutes} min</Text>
         </View>
         <View style={styles.cardRight}>
+          <Text style={styles.cardName} numberOfLines={1}>{item.patient?.full_name || 'Unknown Patient'}</Text>
           <Text style={styles.cardDate}>{item.appointment_date}</Text>
           <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
             <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
@@ -90,6 +94,15 @@ export default function AppointmentsScreen() {
     { key: 'upcoming', label: 'Upcoming' },
     { key: 'all', label: 'All' },
   ];
+
+  const filteredAppointments = appointments.filter(a => {
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || 
+      (a.patient?.full_name?.toLowerCase().includes(searchLower) ?? false) ||
+      (a.notes?.toLowerCase().includes(searchLower) ?? false);
+    const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   if (isLoading) {
     return (
@@ -114,23 +127,59 @@ export default function AppointmentsScreen() {
         ))}
       </View>
 
-      {appointments.length > 0 && (
+      <View style={styles.filterContainer}>
+        <View style={styles.searchBoxWrapper}>
+          <SearchFilter
+            placeholder="Search patients or notes..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            containerStyle={{ borderWidth: 0, paddingHorizontal: 0 }}
+          />
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.statusFilters} contentContainerStyle={styles.statusFiltersContent}>
+          <TouchableOpacity 
+            style={[styles.filterChip, statusFilter === 'all' && styles.filterChipActive]}
+            onPress={() => setStatusFilter('all')}
+          >
+            <Text style={[styles.filterChipText, statusFilter === 'all' && styles.filterChipTextActive]}>All Status</Text>
+          </TouchableOpacity>
+          {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+            <TouchableOpacity 
+              key={key}
+              style={[styles.filterChip, statusFilter === key && styles.filterChipActive]}
+              onPress={() => setStatusFilter(key as AppointmentStatus)}
+            >
+              <Text style={[styles.filterChipText, statusFilter === key && styles.filterChipTextActive]}>{config.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {filteredAppointments.length > 0 && (
         <View style={styles.countContainer}>
-          <Text style={styles.countText}>{appointments.length} appointment{appointments.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.countText}>{filteredAppointments.length} appointment{filteredAppointments.length !== 1 ? 's' : ''}</Text>
         </View>
       )}
 
-      {appointments.length === 0 ? (
+      {filteredAppointments.length === 0 ? (
         <EmptyState
           icon="calendar-outline"
           title="No Appointments"
-          subtitle={activeTab === 'today' ? 'No appointments scheduled for today.' : 'No appointments found.'}
-          actionLabel="Add Appointment"
-          onAction={() => router.push('/appointment/add' as any)}
+          subtitle={searchQuery || statusFilter !== 'all' ? 'No appointments match your filters.' : (activeTab === 'today' ? 'No appointments scheduled for today.' : 'No appointments found.')}
+          actionLabel={searchQuery || statusFilter !== 'all' ? 'Clear Filters' : 'Add Appointment'}
+          onAction={() => {
+            if (searchQuery || statusFilter !== 'all') {
+              setSearchQuery('');
+              setStatusFilter('all');
+            } else {
+              router.push('/appointment/add' as any);
+            }
+          }}
         />
       ) : (
         <FlatList
-          data={appointments}
+          data={filteredAppointments}
           keyExtractor={(item) => item.id}
           renderItem={renderCard}
           contentContainerStyle={styles.listContent}
@@ -159,6 +208,14 @@ const styles = StyleSheet.create({
   countContainer: { paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm },
   countText: { fontSize: Typography.sm, color: Colors.textSecondary, fontWeight: Typography.medium },
   listContent: { paddingHorizontal: Spacing.base, paddingBottom: 100 },
+  filterContainer: { backgroundColor: Colors.surface, paddingBottom: Spacing.sm, borderBottomWidth: 1, borderBottomColor: Colors.borderLight },
+  searchBoxWrapper: { backgroundColor: Colors.background, marginHorizontal: Spacing.base, marginTop: Spacing.md, paddingHorizontal: Spacing.md, borderRadius: BorderRadius.md, borderWidth: 1, borderColor: Colors.border },
+  statusFilters: { marginTop: Spacing.sm },
+  statusFiltersContent: { paddingHorizontal: Spacing.base, gap: Spacing.sm },
+  filterChip: { paddingHorizontal: Spacing.md, paddingVertical: 6, borderRadius: BorderRadius.full, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.background },
+  filterChipActive: { backgroundColor: Colors.primaryFaded, borderColor: Colors.primary },
+  filterChipText: { fontSize: Typography.xs, color: Colors.textSecondary, fontWeight: Typography.medium },
+  filterChipTextActive: { color: Colors.primary },
   card: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: BorderRadius.lg,
     padding: Spacing.base, marginBottom: Spacing.sm, ...Shadows.sm,
@@ -167,7 +224,8 @@ const styles = StyleSheet.create({
   cardTime: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.primary },
   cardDuration: { fontSize: Typography.xs, color: Colors.textTertiary, marginTop: 2 },
   cardRight: { flex: 1, marginRight: Spacing.sm },
-  cardDate: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.text },
+  cardName: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.text, marginBottom: 2 },
+  cardDate: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.textSecondary },
   statusBadge: { alignSelf: 'flex-start', paddingHorizontal: Spacing.sm, paddingVertical: 2, borderRadius: BorderRadius.full, marginTop: 4 },
   statusText: { fontSize: Typography.xs, fontWeight: Typography.semibold },
   cardNotes: { fontSize: Typography.xs, color: Colors.textTertiary, marginTop: 4 },

@@ -15,15 +15,22 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 
-export default function LoginScreen() {
-  const { signIn } = useAuth();
+export default function RegisterScreen() {
+  const { signUp } = useAuth();
 
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
+    if (!fullName.trim()) {
+      setError('Please enter your full name.');
+      return false;
+    }
+
     if (!email.trim()) {
       setError('Please enter your email address.');
       return false;
@@ -37,7 +44,7 @@ export default function LoginScreen() {
     }
 
     if (!password) {
-      setError('Please enter your password.');
+      setError('Please enter a password.');
       return false;
     }
 
@@ -46,20 +53,29 @@ export default function LoginScreen() {
       return false;
     }
 
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return false;
+    }
+
     return true;
   };
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setError('');
 
     if (!validateForm()) return;
 
     setIsLoading(true);
-    const result = await signIn(email.trim(), password);
+    const result = await signUp(email.trim(), password, fullName.trim());
     setIsLoading(false);
 
     if (result.error) {
       setError(result.error);
+    } else {
+      // Registration usually auto-signs in, but just in case, we'll let AuthContext handle state
+      // or show a message if email confirmation is required.
+      // For now, we assume successful signup logs them in or requires them to check email.
     }
   };
 
@@ -73,25 +89,39 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.text} />
+        </TouchableOpacity>
+
         {/* Branding */}
         <View style={styles.branding}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="medical" size={40} color={Colors.textInverse} />
-          </View>
-          <Text style={styles.appName}>Doctor Management</Text>
-          <Text style={styles.appTagline}>Manage your clinic efficiently</Text>
+          <Text style={styles.appName}>Create Account</Text>
+          <Text style={styles.appTagline}>Join Doctor Management today</Text>
         </View>
 
-        {/* Login Form */}
+        {/* Register Form */}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Sign In</Text>
-
           {error ? (
             <View style={styles.errorContainer}>
               <Ionicons name="alert-circle" size={18} color={Colors.error} />
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
+
+          <Input
+            label="Full Name"
+            placeholder="Dr. John Doe"
+            leftIcon="person-outline"
+            autoComplete="name"
+            value={fullName}
+            onChangeText={(text) => {
+              setFullName(text);
+              if (error) setError('');
+            }}
+          />
 
           <Input
             label="Email"
@@ -108,37 +138,44 @@ export default function LoginScreen() {
 
           <Input
             label="Password"
-            placeholder="Enter your password"
+            placeholder="Create a password"
             leftIcon="lock-closed-outline"
             secureTextEntry
-            autoComplete="password"
+            autoComplete="new-password"
             value={password}
             onChangeText={(text) => {
               setPassword(text);
               if (error) setError('');
             }}
-            onSubmitEditing={handleLogin}
+          />
+
+          <Input
+            label="Confirm Password"
+            placeholder="Confirm your password"
+            leftIcon="lock-closed-outline"
+            secureTextEntry
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              if (error) setError('');
+            }}
+            onSubmitEditing={handleRegister}
             returnKeyType="go"
           />
 
           <Button
-            title="Sign In"
-            onPress={handleLogin}
+            title="Sign Up"
+            onPress={handleRegister}
             loading={isLoading}
             size="lg"
+            style={styles.registerButton}
           />
 
-          <TouchableOpacity
-            style={styles.forgotButton}
-            onPress={() => router.push('/(auth)/forgot-password')}
-          >
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
-              <Text style={styles.signupLink}>Sign Up</Text>
+          <View style={styles.loginContainer}>
+            <Text style={styles.loginText}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
+              <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -154,30 +191,23 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing['3xl'],
   },
+  backButton: {
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.xl,
+  },
   branding: {
-    alignItems: 'center',
     marginBottom: Spacing['2xl'],
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.xl,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: Spacing.base,
-  },
   appName: {
-    fontSize: Typography['2xl'],
+    fontSize: Typography['3xl'],
     fontWeight: Typography.bold,
     color: Colors.text,
   },
   appTagline: {
-    fontSize: Typography.sm,
+    fontSize: Typography.base,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
@@ -187,13 +217,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     borderWidth: 1,
     borderColor: Colors.border,
-  },
-  formTitle: {
-    fontSize: Typography.xl,
-    fontWeight: Typography.bold,
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.xl,
   },
   errorContainer: {
     flexDirection: 'row',
@@ -209,26 +232,19 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.sm,
     flex: 1,
   },
-  forgotButton: {
-    alignItems: 'center',
-    marginTop: Spacing.base,
-    paddingVertical: Spacing.sm,
+  registerButton: {
+    marginTop: Spacing.md,
   },
-  forgotText: {
-    fontSize: Typography.sm,
-    color: Colors.primary,
-    fontWeight: Typography.medium,
-  },
-  signupContainer: {
+  loginContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: Spacing.xl,
   },
-  signupText: {
+  loginText: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
   },
-  signupLink: {
+  loginLink: {
     fontSize: Typography.sm,
     color: Colors.primary,
     fontWeight: Typography.bold,

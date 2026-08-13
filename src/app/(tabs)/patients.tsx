@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getPatients, searchPatients } from '@/services/patientService';
+import { getPatients } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import type { Patient } from '@/types';
 
 function getInitials(name: string): string {
@@ -34,20 +35,17 @@ export default function PatientsScreen() {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   const loadPatients = useCallback(async () => {
     setError(null);
-    const result = searchQuery.trim()
-      ? await searchPatients(searchQuery.trim())
-      : await getPatients();
+    const result = await getPatients();
 
     if (result.error) {
       setError(result.error);
     }
     setPatients(result.data);
-  }, [searchQuery]);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -61,17 +59,6 @@ export default function PatientsScreen() {
     await loadPatients();
     setIsRefreshing(false);
   };
-
-  const handleSearch = useCallback(async (text: string) => {
-    setSearchQuery(text);
-    if (text.trim().length === 0) {
-      const result = await getPatients();
-      setPatients(result.data);
-    } else if (text.trim().length >= 2) {
-      const result = await searchPatients(text.trim());
-      setPatients(result.data);
-    }
-  }, []);
 
   const renderPatientCard = ({ item }: { item: Patient }) => (
     <TouchableOpacity
@@ -111,23 +98,14 @@ export default function PatientsScreen() {
     <View style={styles.container}>
       {/* Search bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={20} color={Colors.textTertiary} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search patients..."
-            placeholderTextColor={Colors.textTertiary}
-            value={searchQuery}
-            onChangeText={handleSearch}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => handleSearch('')}>
-              <Ionicons name="close-circle" size={20} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          )}
-        </View>
+        <PatientSearchPicker
+          patients={patients}
+          loading={isLoading}
+          value={null}
+          placeholder="Search for a patient..."
+          onSelect={(patient) => router.push(`/patient/${patient.id}` as any)}
+          style={{ backgroundColor: Colors.surfaceSecondary, borderWidth: 0 }}
+        />
       </View>
 
       {error && (
@@ -147,19 +125,13 @@ export default function PatientsScreen() {
       )}
 
       {/* Patient list or empty state */}
-      {patients.length === 0 && !searchQuery ? (
+      {patients.length === 0 ? (
         <EmptyState
           icon="people-outline"
           title="No Patients Yet"
           subtitle="Add your first patient to get started with managing their records."
           actionLabel="Add Patient"
           onAction={() => router.push('/patient/add' as any)}
-        />
-      ) : patients.length === 0 && searchQuery ? (
-        <EmptyState
-          icon="search-outline"
-          title="No Results"
-          subtitle={`No patients found matching "${searchQuery}"`}
         />
       ) : (
         <FlatList

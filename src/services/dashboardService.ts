@@ -16,8 +16,18 @@ export interface PaymentStats {
 }
 
 export interface DashboardStats {
-  overview: OverviewStats;
-  payment: PaymentStats;
+  daily: {
+    overview: OverviewStats;
+    payment: PaymentStats;
+  };
+  weekly: {
+    overview: OverviewStats;
+    payment: PaymentStats;
+  };
+  monthly: {
+    overview: OverviewStats;
+    payment: PaymentStats;
+  };
 }
 
 function getFilterDateRange(filter: DashboardFilter): { startDate: Date, endDate: Date } {
@@ -41,35 +51,23 @@ function formatDate(date: Date): string {
   return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
 }
 
-export async function getDashboardStats(
-  overviewFilter: DashboardFilter,
-  paymentFilter: DashboardFilter
-): Promise<{ data: DashboardStats | null; error: string | null }> {
+export async function getDashboardStats(): Promise<{ data: DashboardStats | null; error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: null, error: 'Not authenticated' };
 
   try {
-    const overviewRange = getFilterDateRange(overviewFilter);
-    const paymentRange = getFilterDateRange(paymentFilter);
-    
-    const overviewStartStr = formatDate(overviewRange.startDate);
-    const overviewEndStr = formatDate(overviewRange.endDate);
-    
-    const paymentStartStr = formatDate(paymentRange.startDate);
-    const paymentEndStr = formatDate(paymentRange.endDate);
+    const monthlyRange = getFilterDateRange('monthly');
+    const monthlyStartStr = formatDate(monthlyRange.startDate);
+    const monthlyEndStr = formatDate(monthlyRange.endDate);
 
-    // --- Overview Stats ---
-    const { data: overviewApps, error: appsError } = await supabase
+    const { data: apps, error: appsError } = await supabase
       .from('appointments')
-      .select('patient_id')
+      .select('patient_id, appointment_date')
       .eq('doctor_id', user.id)
-      .gte('appointment_date', overviewStartStr)
-      .lte('appointment_date', overviewEndStr);
+      .gte('appointment_date', monthlyStartStr)
+      .lte('appointment_date', monthlyEndStr);
     
     if (appsError) throw new Error(appsError.message);
-
-    const appointmentsCount = overviewApps?.length || 0;
-    const uniquePatientsCount = new Set(overviewApps?.map(a => a.patient_id)).size;
 
     // Fetch all payments to compute collected/pending dynamically
     const { data: allPayments, error: paymentsError } = await supabase
@@ -79,58 +77,52 @@ export async function getDashboardStats(
 
     if (paymentsError) throw new Error(paymentsError.message);
 
-    let overviewCollected = 0;
-    let overviewPending = 0;
-    let paymentRevenue = 0;
-    let paymentOutstanding = 0;
+    const filters: DashboardFilter[] = ['daily', 'weekly', 'monthly'];
+    const stats: DashboardStats = {} as any;
 
-    for (const p of allPayments || []) {
-      const createdStr = p.created_at.split('T')[0];
-      const paidStr = p.payment_date?.split('T')[0];
-      
-      const inOverviewCreated = createdStr >= overviewStartStr && createdStr <= overviewEndStr;
-      const inOverviewPaid = paidStr && paidStr >= overviewStartStr && paidStr <= overviewEndStr;
+    for (const filter of filters) {
+      const range = getFilterDateRange(filter);
+      const startStr = formatDate(range.startDate);
+      const endStr = formatDate(range.endDate);
 
-      if (p.status === 'paid' && (inOverviewPaid || inOverviewCreated)) {
-        overviewCollected += p.amount;
-      } else if ((p.status === 'pending' || p.status === 'partially_paid') && inOverviewCreated) {
-        overviewPending += p.amount;
+      const filterApps = apps?.filter(a => {
+        const d = a.appointment_date.split('T')[0];
+        return d >= startStr && d <= endStr;
+      }) || [];
+      const appointmentsCount = filterApps.length;
+      const uniquePatientsCount = new Set(filterApps.map(a => a.patient_id)).size;
+
+      let collected = 0;
+      let pending = 0;
+
+      for (const p of allPayments || []) {
+        const createdStr = p.created_at.split('T')[0];
+        const paidStr = p.payment_date?.split('T')[0];
+        
+        const inCreated = createdStr >= startStr && createdStr <= endStr;
+        const inPaid = paidStr && paidStr >= startStr && paidStr <= endStr;
+
+        if (p.status === 'paid' && (inPaid || inCreated)) {
+          collected += p.amount;
+        } else if ((p.status === 'pending' || p.status === 'partially_paid') && inCreated) {
+          pending += p.amount;
+        }
       }
 
-      const inPaymentCreated = createdStr >= paymentStartStr && createdStr <= paymentEndStr;
-      const inPaymentPaid = paidStr && paidStr >= paymentStartStr && paidStr <= paymentEndStr;
-
-      if (p.status === 'paid' && (inPaymentPaid || inPaymentCreated)) {
-        paymentRevenue += p.amount;
-      } else if ((p.status === 'pending' || p.status === 'partially_paid') && inPaymentCreated) {
-        paymentOutstanding += p.amount;
-      }
+      stats[filter] = {
+        overview: {
+          appointments: appointmentsCount,
+          patients: uniquePatientsCount,
+          collected: collected,
+          pending: pending,
+        },
+        payment: {
+          totalPatients: uniquePatientsCount,
+          revenue: collected,
+          outstanding: pending,
+        }
+      };
     }
-
-    // --- Payment Stats ---
-    const { data: paymentApps, error: paymentAppsError } = await supabase
-      .from('appointments')
-      .select('patient_id')
-      .eq('doctor_id', user.id)
-      .gte('appointment_date', paymentStartStr)
-      .lte('appointment_date', paymentEndStr);
-
-    if (paymentAppsError) throw new Error(paymentAppsError.message);
-    const paymentUniquePatients = new Set(paymentApps?.map(a => a.patient_id)).size;
-
-    const stats: DashboardStats = {
-      overview: {
-        appointments: appointmentsCount,
-        patients: uniquePatientsCount,
-        collected: overviewCollected,
-        pending: overviewPending,
-      },
-      payment: {
-        totalPatients: paymentUniquePatients,
-        revenue: paymentRevenue,
-        outstanding: paymentOutstanding,
-      }
-    };
 
     return { data: stats, error: null };
   } catch (error: any) {

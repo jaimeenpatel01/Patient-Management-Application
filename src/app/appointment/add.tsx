@@ -1,13 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity, ActivityIndicator,
+  View, Text, ScrollView, StyleSheet, Alert, TouchableOpacity,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createAppointment } from '@/services/appointmentService';
 import { getPatients } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
+import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { Button } from '@/components/ui/Button';
 import type { Patient, AppointmentStatus } from '@/types';
 
@@ -21,6 +23,7 @@ const STATUS_OPTIONS: { label: string; value: AppointmentStatus }[] = [
 
 export default function AddAppointmentScreen() {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -32,7 +35,6 @@ export default function AddAppointmentScreen() {
   const [durationMinutes, setDurationMinutes] = useState('30');
   const [status, setStatus] = useState<AppointmentStatus>('scheduled');
   const [notes, setNotes] = useState('');
-  const [patientSearch, setPatientSearch] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -41,11 +43,6 @@ export default function AddAppointmentScreen() {
     }, [])
   );
 
-  const filteredPatients = patientSearch.trim()
-    ? patients.filter((p) => p.full_name.toLowerCase().includes(patientSearch.toLowerCase()))
-    : patients;
-
-  const selectedPatient = patients.find((p) => p.id === selectedPatientId);
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
@@ -76,40 +73,20 @@ export default function AddAppointmentScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'New Appointment' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]} keyboardShouldPersistTaps="handled">
         {/* Patient selector */}
         <Text style={styles.sectionTitle}>Patient</Text>
-        {selectedPatient ? (
-          <View style={styles.selectedPatient}>
-            <Text style={styles.selectedName}>{selectedPatient.full_name}</Text>
-            <TouchableOpacity onPress={() => setSelectedPatientId(null)}>
-              <Ionicons name="close-circle" size={22} color={Colors.textTertiary} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <>
-            <Input
-              placeholder="Search patients..."
-              leftIcon="search-outline"
-              value={patientSearch}
-              onChangeText={setPatientSearch}
-              error={errors.patient}
-            />
-            {loadingPatients ? (
-              <ActivityIndicator size="small" color={Colors.primary} />
-            ) : (
-              <View style={styles.patientList}>
-                {filteredPatients.slice(0, 5).map((p) => (
-                  <TouchableOpacity key={p.id} style={styles.patientOption} onPress={() => { setSelectedPatientId(p.id); setPatientSearch(''); }}>
-                    <Text style={styles.patientOptionText}>{p.full_name}</Text>
-                    {p.phone && <Text style={styles.patientOptionSub}>{p.phone}</Text>}
-                  </TouchableOpacity>
-                ))}
-                {filteredPatients.length === 0 && <Text style={styles.noResults}>No patients found</Text>}
-              </View>
-            )}
-          </>
-        )}
+        <PatientSearchPicker
+          patients={patients}
+          loading={loadingPatients}
+          value={selectedPatientId}
+          onSelect={(patient) => {
+            setSelectedPatientId(patient.id);
+            if (errors.patient) setErrors((prev) => ({ ...prev, patient: '' }));
+          }}
+          onClear={() => setSelectedPatientId(null)}
+          error={errors.patient}
+        />
 
         {/* Appointment details */}
         <Text style={[styles.sectionTitle, { marginTop: Spacing.lg }]}>Details</Text>
@@ -141,19 +118,6 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.base, paddingBottom: Spacing['4xl'] },
   sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.semibold, color: Colors.text, marginBottom: Spacing.sm },
   fieldLabel: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.text, marginBottom: Spacing.sm },
-  selectedPatient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: Colors.primaryFaded, borderRadius: BorderRadius.lg, padding: Spacing.base, borderWidth: 1, borderColor: Colors.primary, marginBottom: Spacing.base,
-  },
-  selectedName: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.primary },
-  patientList: { marginBottom: Spacing.sm },
-  patientOption: {
-    paddingVertical: Spacing.md, paddingHorizontal: Spacing.base,
-    backgroundColor: Colors.surface, borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  patientOptionText: { fontSize: Typography.base, color: Colors.text, fontWeight: Typography.medium },
-  patientOptionSub: { fontSize: Typography.sm, color: Colors.textSecondary, marginTop: 2 },
-  noResults: { fontSize: Typography.sm, color: Colors.textTertiary, textAlign: 'center', paddingVertical: Spacing.base },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.base },
   chip: { paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surface },
   chipActive: { backgroundColor: Colors.primaryFaded, borderColor: Colors.primary },
