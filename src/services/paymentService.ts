@@ -29,6 +29,23 @@ export async function getPayments(): Promise<{ data: PaymentWithPatient[]; error
   return { data: (data as any) as PaymentWithPatient[], error: null };
 }
 
+// ─── Fetch payments for a patient ───────────────────────────────
+
+export async function getPaymentsByPatientId(patientId: string): Promise<{ data: Payment[]; error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: [], error: 'Not authenticated' };
+
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('patient_id', patientId)
+    .order('payment_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
+
+  if (error) return { data: [], error: error.message };
+  return { data: data as Payment[], error: null };
+}
+
 // ─── Get Revenue Statistics ─────────────────────────────────────
 
 export interface RevenueStats {

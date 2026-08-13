@@ -166,6 +166,9 @@ export default function PatientDetailScreen() {
             <Text style={styles.avatarLargeText}>{getInitials(patient.full_name)}</Text>
           </View>
           <Text style={styles.patientName}>{patient.full_name}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: patient.is_active ? Colors.success : Colors.error }]}>
+            <Text style={styles.statusBadgeText}>{patient.is_active ? 'Active' : 'Inactive'}</Text>
+          </View>
           {age && (
             <Text style={styles.patientAge}>
               {age} • {getGenderDisplay(patient.gender)}
@@ -181,9 +184,7 @@ export default function PatientDetailScreen() {
           <Text style={styles.sectionTitle}>Contact Information</Text>
           <View style={styles.infoCard}>
             <InfoRow icon="call-outline" label="Phone" value={patient.phone} />
-            <InfoRow icon="mail-outline" label="Email" value={patient.email} />
             <InfoRow icon="location-outline" label="Address" value={patient.address} />
-            <InfoRow icon="alert-circle-outline" label="Emergency Contact" value={patient.emergency_contact} />
           </View>
         </View>
 
@@ -193,6 +194,7 @@ export default function PatientDetailScreen() {
           <View style={styles.infoCard}>
             <InfoRow icon="calendar-outline" label="Date of Birth" value={patient.date_of_birth} />
             <InfoRow icon="person-outline" label="Gender" value={getGenderDisplay(patient.gender)} />
+            <InfoRow icon="home-outline" label="Visit Type" value={patient.visit_type} />
           </View>
         </View>
 
@@ -214,6 +216,26 @@ export default function PatientDetailScreen() {
             <Ionicons name="chevron-forward" size={24} color={Colors.textTertiary} />
           </TouchableOpacity>
         </View>
+
+        {/* Generate Summary */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Patient Summary</Text>
+          <TouchableOpacity 
+            style={styles.recordsButton}
+            onPress={() => router.push(`/patient/summary/${patient.id}` as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.recordsIconContainer}>
+              <Ionicons name="document-text-outline" size={24} color={Colors.primary} />
+            </View>
+            <View style={styles.recordsTextContainer}>
+              <Text style={styles.recordsTitle}>Generate Summary</Text>
+              <Text style={styles.recordsSubtitle}>View and export complete patient history</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={24} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
+
 
         {/* Documents & Media Link */}
         <View style={styles.section}>
@@ -333,6 +355,17 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
+  },
+  statusBadge: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    marginTop: Spacing.sm,
+  },
+  statusBadgeText: {
+    color: Colors.textInverse,
+    fontSize: Typography.xs,
+    fontWeight: Typography.bold,
   },
   section: {
     marginTop: Spacing.lg,

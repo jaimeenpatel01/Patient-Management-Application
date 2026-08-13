@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -78,7 +78,7 @@ export default function AddPaymentScreen() {
     setIsSubmitting(true);
     const { error } = await createPayment({
       patient_id: patientId,
-      appointment_id: null,
+      attendance_id: null,
       amount: Number(amount),
       payment_type: paymentType,
       payment_method: paymentMethod,
@@ -121,71 +121,73 @@ export default function AddPaymentScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Record Payment' }} />
-      <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]}>
-        
-        <Text style={styles.sectionTitle}>Patient</Text>
-        <PatientSearchPicker
-          patients={patients}
-          loading={loadingPatients}
-          value={patientId || null}
-          onSelect={(patient) => {
-            setPatientId(patient.id);
-            if (errors.patientId) setErrors((prev) => ({ ...prev, patientId: '' }));
-          }}
-          onClear={() => setPatientId('')}
-          error={errors.patientId}
-        />
-
-        <View style={styles.spacer} />
-
-        <Input
-          label="Amount (₹)"
-          placeholder="e.g. 500"
-          value={amount}
-          onChangeText={(val) => {
-            setAmount(val);
-            if (errors.amount) setErrors((prev) => ({ ...prev, amount: '' }));
-          }}
-          keyboardType="numeric"
-          error={errors.amount}
-        />
-
-        <View style={styles.spacer} />
-
-        <Text style={styles.fieldLabel}>Payment Type</Text>
-        {renderChips(PAYMENT_TYPES, paymentType, setPaymentType)}
-
-        <View style={styles.spacer} />
-
-        <Text style={styles.fieldLabel}>Payment Method</Text>
-        {renderChips(PAYMENT_METHODS, paymentMethod, setPaymentMethod)}
-
-        <View style={styles.spacer} />
-
-        <Text style={styles.fieldLabel}>Status</Text>
-        {renderChips(PAYMENT_STATUSES, status, setStatus)}
-
-        <View style={styles.spacer} />
-
-        <Input
-          label="Notes (Optional)"
-          placeholder="Add any extra details..."
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={3}
-        />
-
-        <View style={styles.submitContainer}>
-          <Button
-            title="Record Payment"
-            onPress={handleSubmit}
-            loading={isSubmitting}
-            icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]} keyboardShouldPersistTaps="handled">
+          
+          <Text style={styles.sectionTitle}>Patient</Text>
+          <PatientSearchPicker
+            patients={patients}
+            loading={loadingPatients}
+            value={patientId || null}
+            onSelect={(patient) => {
+              setPatientId(patient.id);
+              if (errors.patientId) setErrors((prev) => ({ ...prev, patientId: '' }));
+            }}
+            onClear={() => setPatientId('')}
+            error={errors.patientId}
           />
-        </View>
 
-      </ScrollView>
+          <View style={styles.spacer} />
+
+          <Input
+            label="Amount (₹)"
+            placeholder="e.g. 500"
+            value={amount}
+            onChangeText={(val) => {
+              setAmount(val);
+              if (errors.amount) setErrors((prev) => ({ ...prev, amount: '' }));
+            }}
+            keyboardType="numeric"
+            error={errors.amount}
+          />
+
+          <View style={styles.spacer} />
+
+          <Text style={styles.fieldLabel}>Payment Type</Text>
+          {renderChips(PAYMENT_TYPES, paymentType, setPaymentType)}
+
+          <View style={styles.spacer} />
+
+          <Text style={styles.fieldLabel}>Payment Method</Text>
+          {renderChips(PAYMENT_METHODS, paymentMethod, setPaymentMethod)}
+
+          <View style={styles.spacer} />
+
+          <Text style={styles.fieldLabel}>Status</Text>
+          {renderChips(PAYMENT_STATUSES, status, setStatus)}
+
+          <View style={styles.spacer} />
+
+          <Input
+            label="Notes (Optional)"
+            placeholder="Add any extra details..."
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={3}
+          />
+
+          <View style={styles.submitContainer}>
+            <Button
+              title="Record Payment"
+              onPress={handleSubmit}
+              loading={isSubmitting}
+              icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
+            />
+          </View>
+
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

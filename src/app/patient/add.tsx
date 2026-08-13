@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, Stack } from 'expo-router';
@@ -15,11 +17,17 @@ import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
-import type { Gender } from '@/types';
+import type { Gender, VisitType } from '@/types';
 
 const GENDER_OPTIONS: { label: string; value: Gender }[] = [
   { label: 'Male', value: 'male' },
   { label: 'Female', value: 'female' }
+];
+
+const VISIT_TYPE_OPTIONS: { label: string; value: VisitType }[] = [
+  { label: 'Home Visit', value: 'Home Visit' },
+  { label: 'Hospital Visit', value: 'Hospital Visit' },
+  { label: 'Doctor\'s Home Visit', value: "Doctor's Home Visit" },
 ];
 
 export default function AddPatientScreen() {
@@ -33,8 +41,8 @@ export default function AddPatientScreen() {
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<Gender | null>(null);
+  const [visitType, setVisitType] = useState<VisitType | null>(null);
   const [address, setAddress] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
   const [notes, setNotes] = useState('');
 
   const validate = (): boolean => {
@@ -67,6 +75,7 @@ export default function AddPatientScreen() {
       phone: phone.trim() || null,
       date_of_birth: dateOfBirth.trim() || null,
       gender: gender,
+      visit_type: visitType,
       address: address.trim() || null,
       notes: notes.trim() || null,
     });
@@ -83,18 +92,19 @@ export default function AddPatientScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Add Patient' }} />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Required section */}
-        <Text style={styles.sectionTitle}>Basic Information</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Required section */}
+          <Text style={styles.sectionTitle}>Basic Information</Text>
 
-        <Input
-          label="Full Name *"
-          placeholder="Enter patient full name"
+          <Input
+            label="Full Name *"
+            placeholder="Enter patient full name"
           leftIcon="person-outline"
           value={fullName}
           onChangeText={setFullName}
@@ -144,6 +154,30 @@ export default function AddPatientScreen() {
           ))}
         </View>
 
+        {/* Visit Type selector */}
+        <Text style={styles.fieldLabel}>Visit Type</Text>
+        <View style={styles.genderRow}>
+          {VISIT_TYPE_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.genderChip,
+                visitType === option.value && styles.genderChipActive,
+              ]}
+              onPress={() => setVisitType(visitType === option.value ? null : option.value)}
+            >
+              <Text
+                style={[
+                  styles.genderChipText,
+                  visitType === option.value && styles.genderChipTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Additional info */}
         <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
 
@@ -177,6 +211,7 @@ export default function AddPatientScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

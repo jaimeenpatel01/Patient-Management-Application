@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createConsultation } from '@/services/medicalService';
@@ -33,7 +33,7 @@ export default function AddConsultationScreen() {
     setIsSubmitting(true);
     const { error } = await createConsultation({
       patient_id: patientId,
-      appointment_id: null,
+      attendance_id: null,
       consultation_date: date,
       symptoms: symptoms.trim() || null,
       diagnosis: diagnosis.trim() || null,
@@ -50,7 +50,8 @@ export default function AddConsultationScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'New Consultation' }} />
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppDateTimePicker
           label="Date *"
           value={date}
@@ -67,6 +68,7 @@ export default function AddConsultationScreen() {
           <Button title="Save Consultation" onPress={handleSubmit} loading={isSubmitting} icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />} />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

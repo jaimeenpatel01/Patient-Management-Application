@@ -7,6 +7,8 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,13 +17,17 @@ import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
-import type { Gender } from '@/types';
+import type { Gender, VisitType } from '@/types';
 
 const GENDER_OPTIONS: { label: string; value: Gender }[] = [
   { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' },
-  { label: 'Other', value: 'other' },
-  { label: 'Prefer not to say', value: 'prefer_not_to_say' },
+  { label: 'Female', value: 'female' }
+];
+
+const VISIT_TYPE_OPTIONS: { label: string; value: VisitType }[] = [
+  { label: 'Home Visit', value: 'Home Visit' },
+  { label: 'Hospital Visit', value: 'Hospital Visit' },
+  { label: 'Doctor\'s Home Visit', value: "Doctor's Home Visit" },
 ];
 
 export default function EditPatientScreen() {
@@ -35,11 +41,11 @@ export default function EditPatientScreen() {
   // Form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [gender, setGender] = useState<Gender | null>(null);
+  const [visitType, setVisitType] = useState<VisitType | null>(null);
   const [address, setAddress] = useState('');
-  const [emergencyContact, setEmergencyContact] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [notes, setNotes] = useState('');
 
   useFocusEffect(
@@ -53,11 +59,11 @@ export default function EditPatientScreen() {
           const p = result.data;
           setFullName(p.full_name);
           setPhone(p.phone || '');
-          setEmail(p.email || '');
           setDateOfBirth(p.date_of_birth || '');
           setGender(p.gender);
+          setVisitType(p.visit_type);
           setAddress(p.address || '');
-          setEmergencyContact(p.emergency_contact || '');
+          setIsActive(p.is_active);
           setNotes(p.notes || '');
         }
         setIsLoading(false);
@@ -76,10 +82,6 @@ export default function EditPatientScreen() {
       newErrors.phone = 'Enter a valid phone number';
     }
 
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = 'Enter a valid email address';
-    }
-
     // AppDateTimePicker ensures correct format, so we can skip manual format check here
     if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
       newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
@@ -96,11 +98,11 @@ export default function EditPatientScreen() {
     const { error } = await updatePatient(id, {
       full_name: fullName.trim(),
       phone: phone.trim() || null,
-      email: email.trim() || null,
       date_of_birth: dateOfBirth.trim() || null,
       gender: gender,
+      visit_type: visitType,
       address: address.trim() || null,
-      emergency_contact: emergencyContact.trim() || null,
+      is_active: isActive,
       notes: notes.trim() || null,
     });
 
@@ -147,17 +149,18 @@ export default function EditPatientScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Edit Patient' }} />
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <Text style={styles.sectionTitle}>Basic Information</Text>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <Text style={styles.sectionTitle}>Basic Information</Text>
 
-        <Input
-          label="Full Name *"
-          placeholder="Enter patient full name"
+          <Input
+            label="Full Name *"
+            placeholder="Enter patient full name"
           leftIcon="person-outline"
           value={fullName}
           onChangeText={setFullName}
@@ -173,16 +176,6 @@ export default function EditPatientScreen() {
           onChangeText={setPhone}
           error={errors.phone}
           keyboardType="phone-pad"
-        />
-
-        <Input
-          label="Email"
-          placeholder="patient@example.com"
-          leftIcon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
-          error={errors.email}
-          keyboardType="email-address"
         />
 
         <AppDateTimePicker
@@ -216,7 +209,41 @@ export default function EditPatientScreen() {
           ))}
         </View>
 
+        {/* Visit Type selector */}
+        <Text style={styles.fieldLabel}>Visit Type</Text>
+        <View style={styles.genderRow}>
+          {VISIT_TYPE_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.value}
+              style={[
+                styles.genderChip,
+                visitType === option.value && styles.genderChipActive,
+              ]}
+              onPress={() => setVisitType(visitType === option.value ? null : option.value)}
+            >
+              <Text
+                style={[
+                  styles.genderChipText,
+                  visitType === option.value && styles.genderChipTextActive,
+                ]}
+              >
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
+
+        <View style={styles.toggleRow}>
+          <Text style={styles.fieldLabel}>Active Patient</Text>
+          <TouchableOpacity 
+            style={[styles.toggleButton, isActive ? styles.toggleActive : styles.toggleInactive]}
+            onPress={() => setIsActive(!isActive)}
+          >
+            <View style={[styles.toggleKnob, isActive ? styles.toggleKnobActive : styles.toggleKnobInactive]} />
+          </TouchableOpacity>
+        </View>
 
         <Input
           label="Address"
@@ -226,14 +253,6 @@ export default function EditPatientScreen() {
           onChangeText={setAddress}
           multiline
           numberOfLines={2}
-        />
-
-        <Input
-          label="Emergency Contact"
-          placeholder="Name & phone number"
-          leftIcon="alert-circle-outline"
-          value={emergencyContact}
-          onChangeText={setEmergencyContact}
         />
 
         <Input
@@ -255,6 +274,7 @@ export default function EditPatientScreen() {
           />
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
@@ -318,6 +338,37 @@ const styles = StyleSheet.create({
   },
   genderChipTextActive: {
     color: Colors.primary,
+  },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.base,
+  },
+  toggleButton: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+    padding: 2,
+  },
+  toggleActive: {
+    backgroundColor: Colors.primary,
+  },
+  toggleInactive: {
+    backgroundColor: Colors.border,
+  },
+  toggleKnob: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: Colors.surface,
+  },
+  toggleKnobActive: {
+    transform: [{ translateX: 20 }],
+  },
+  toggleKnobInactive: {
+    transform: [{ translateX: 0 }],
   },
   submitContainer: {
     marginTop: Spacing.xl,

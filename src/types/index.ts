@@ -33,7 +33,7 @@ export interface Profile {
 
 // ─── Status Types (used across the app) ───────────────────────
 
-export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+export type VisitType = 'Home Visit' | 'Hospital Visit' | "Doctor's Home Visit";
 
 export type PaymentStatus = 'paid' | 'pending' | 'partially_paid' | 'cancelled' | 'refunded';
 
@@ -53,20 +53,19 @@ export interface Patient {
   date_of_birth: string | null;
   gender: Gender | null;
   address: string | null;
+  visit_type: VisitType | null;
   notes: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
 
-export interface Appointment {
+export interface Attendance {
   id: string;
   doctor_id: string;
   patient_id: string;
-  appointment_date: string;
-  appointment_time: string;
-  duration_minutes: number;
-  status: AppointmentStatus;
+  attendance_date: string;
+  attendance_time: string;
   notes: string | null;
   patient?: { full_name: string };
   created_at: string;
@@ -77,7 +76,7 @@ export interface Consultation {
   id: string;
   doctor_id: string;
   patient_id: string;
-  appointment_id: string | null;
+  attendance_id: string | null;
   consultation_date: string;
   symptoms: string | null;
   diagnosis: string | null;
@@ -157,7 +156,7 @@ export interface Payment {
   id: string;
   doctor_id: string;
   patient_id: string;
-  appointment_id: string | null;
+  attendance_id: string | null;
   amount: number;
   payment_type: PaymentType;
   payment_method: PaymentMethod | null;

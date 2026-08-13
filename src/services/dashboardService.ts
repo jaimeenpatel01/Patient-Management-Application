@@ -3,14 +3,14 @@ import { supabase } from '@/lib/supabase';
 export type DashboardFilter = 'daily' | 'weekly' | 'monthly';
 
 export interface OverviewStats {
-  appointments: number;
-  patients: number;
+  activePatients: number;
+  totalPatients: number;
   collected: number;
   pending: number;
 }
 
 export interface PaymentStats {
-  totalPatients: number;
+  totalPatients: number; // For backward compatibility in payment section
   revenue: number;
   outstanding: number;
 }
@@ -56,25 +56,25 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
   if (!user) return { data: null, error: 'Not authenticated' };
 
   try {
-    const monthlyRange = getFilterDateRange('monthly');
-    const monthlyStartStr = formatDate(monthlyRange.startDate);
-    const monthlyEndStr = formatDate(monthlyRange.endDate);
+    // 1. Fetch Global Patient Counts
+    const { count: totalPatientsCount, error: totalErr } = await supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
+      .eq('doctor_id', user.id);
+    if (totalErr) throw new Error(totalErr.message);
 
-    const { data: apps, error: appsError } = await supabase
-      .from('appointments')
-      .select('patient_id, appointment_date')
+    const { count: activePatientsCount, error: activeErr } = await supabase
+      .from('patients')
+      .select('*', { count: 'exact', head: true })
       .eq('doctor_id', user.id)
-      .gte('appointment_date', monthlyStartStr)
-      .lte('appointment_date', monthlyEndStr);
-    
-    if (appsError) throw new Error(appsError.message);
+      .eq('is_active', true);
+    if (activeErr) throw new Error(activeErr.message);
 
-    // Fetch all payments to compute collected/pending dynamically
+    // 2. Fetch Payments for all filters
     const { data: allPayments, error: paymentsError } = await supabase
       .from('payments')
-      .select('amount, status, created_at, payment_date')
+      .select('amount, status, created_at, payment_date, patient_id')
       .eq('doctor_id', user.id);
-
     if (paymentsError) throw new Error(paymentsError.message);
 
     const filters: DashboardFilter[] = ['daily', 'weekly', 'monthly'];
@@ -85,15 +85,9 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
       const startStr = formatDate(range.startDate);
       const endStr = formatDate(range.endDate);
 
-      const filterApps = apps?.filter(a => {
-        const d = a.appointment_date.split('T')[0];
-        return d >= startStr && d <= endStr;
-      }) || [];
-      const appointmentsCount = filterApps.length;
-      const uniquePatientsCount = new Set(filterApps.map(a => a.patient_id)).size;
-
       let collected = 0;
       let pending = 0;
+      let paymentPatients = new Set<string>();
 
       for (const p of allPayments || []) {
         const createdStr = p.created_at.split('T')[0];
@@ -104,20 +98,22 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
 
         if (p.status === 'paid' && (inPaid || inCreated)) {
           collected += p.amount;
+          paymentPatients.add(p.patient_id);
         } else if ((p.status === 'pending' || p.status === 'partially_paid') && inCreated) {
           pending += p.amount;
+          paymentPatients.add(p.patient_id);
         }
       }
 
       stats[filter] = {
         overview: {
-          appointments: appointmentsCount,
-          patients: uniquePatientsCount,
+          activePatients: activePatientsCount || 0,
+          totalPatients: totalPatientsCount || 0,
           collected: collected,
           pending: pending,
         },
         payment: {
-          totalPatients: uniquePatientsCount,
+          totalPatients: paymentPatients.size,
           revenue: collected,
           outstanding: pending,
         }

@@ -40,7 +40,7 @@ export default function AddDocumentScreen() {
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsEditing: false, // Disabled due to native crop UI overlap with device controls
       quality: 0.8,
       base64: true,
     });

@@ -54,11 +54,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="appointments"
+        name="attendance"
         options={{
-          title: 'Appointments',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
+          title: 'Attendance',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'}
+              size={24}
+              color={color}
+            />
           ),
         }}
       />

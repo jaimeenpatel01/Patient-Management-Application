@@ -147,11 +147,11 @@ export default function DashboardScreen() {
             onPress={() => router.push('/patient/add')}
           />
           <QuickAction
-            icon="calendar-outline"
-            label="Appointment"
+            icon="checkmark-circle-outline"
+            label="Attendance"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
-            onPress={() => router.push('/appointment/add')}
+            onPress={() => router.push('/attendance/add' as any)}
           />
           <QuickAction
             icon="wallet-outline"
@@ -171,15 +171,15 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.statsGrid}>
           <StatCard
-            title="Appointments"
-            value={stats?.[overviewFilter].overview.appointments.toString() ?? '0'}
-            icon="calendar"
+            title="Active Patients"
+            value={stats?.[overviewFilter].overview.activePatients.toString() ?? '0'}
+            icon="pulse"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
           />
           <StatCard
-            title="Patients"
-            value={stats?.[overviewFilter].overview.patients.toString() ?? '0'}
+            title="Total Treated"
+            value={stats?.[overviewFilter].overview.totalPatients.toString() ?? '0'}
             icon="people"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}

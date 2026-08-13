@@ -72,7 +72,7 @@ export async function createPatient(input: CreatePatientInput): Promise<{ data: 
 
 // ─── Update an existing patient ───────────────────────────────
 
-export type UpdatePatientInput = Partial<CreatePatientInput>;
+export type UpdatePatientInput = Partial<Omit<Patient, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>;
 
 export async function updatePatient(id: string, input: UpdatePatientInput): Promise<{ data: Patient | null; error: string | null }> {
   const { data, error } = await supabase
