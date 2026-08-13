@@ -12,7 +12,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      } 
+      },
+      "env":{
+        "EXPO_PUBLIC_SUPABASE_URL":"https://slszmmuonicyojnosvsa.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsc3ptbXVvbmljeW9qbm9zdnNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MzY0MTUsImV4cCI6MjEwMjExMjQxNX0.odm1eVL6ORfSx4Nj3R5OC0y0Q0ilw-61En9pNgeD3cQ"
+      }
     },
     "production": {
       "autoIncrement": true
@@ -20,9 +24,5 @@
   },
   "submit": {
     "production": {}
-  },
-  "env":{
-    "EXPO_PUBLIC_SUPABASE_URL":"https://slszmmuonicyojnosvsa.supabase.co",
-    "EXPO_PUBLIC_SUPABASE_ANON_KEY":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsc3ptbXVvbmljeW9qbm9zdnNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY1MzY0MTUsImV4cCI6MjEwMjExMjQxNX0.odm1eVL6ORfSx4Nj3R5OC0y0Q0ilw-61En9pNgeD3cQ"
-  }
+  }  
 }
