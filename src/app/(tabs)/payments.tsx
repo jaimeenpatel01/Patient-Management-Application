@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { getPayments, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/paymentService';
+import { ActionMenu } from '@/components/ui/ActionMenu';
+import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/paymentService';
 
 export default function PaymentsScreen() {
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function PaymentsScreen() {
   const [stats, setStats] = useState<RevenueStats>({ totalPaid: 0, totalPending: 0, thisMonthPaid: 0 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
   const fetchData = async () => {
     const [paymentsRes, statsRes] = await Promise.all([
@@ -38,6 +40,20 @@ export default function PaymentsScreen() {
     setRefreshing(true);
     await fetchData();
     setRefreshing(false);
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Delete Payment', 'Are you sure you want to delete this payment record?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deletePayment(id);
+          fetchData();
+        },
+      },
+    ]);
   };
 
   const renderHeader = () => (
@@ -102,8 +118,9 @@ export default function PaymentsScreen() {
             </View>
           </View>
         </View>
-        {(item.notes || item.payment_method) && (
-          <View style={styles.paymentFooter}>
+        
+        <View style={styles.paymentFooter}>
+          <View style={styles.footerLeft}>
             {item.payment_method && (
               <Text style={styles.methodText}>Method: {item.payment_method.toUpperCase()}</Text>
             )}
@@ -111,7 +128,12 @@ export default function PaymentsScreen() {
               <Text style={styles.notesText} numberOfLines={1}>{item.notes}</Text>
             )}
           </View>
-        )}
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity onPress={() => setActiveActionId(item.id)} style={styles.actionBtn}>
+              <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     );
   };
@@ -144,6 +166,33 @@ export default function PaymentsScreen() {
         }
       />
       
+      <ActionMenu
+        visible={!!activeActionId}
+        onClose={() => setActiveActionId(null)}
+        options={[
+          {
+            label: 'Edit',
+            icon: 'pencil-outline',
+            color: Colors.primary,
+            onPress: () => {
+              const id = activeActionId;
+              setActiveActionId(null);
+              if (id) router.push(`/payment/add?id=${id}` as any);
+            },
+          },
+          {
+            label: 'Delete',
+            icon: 'trash-outline',
+            color: Colors.error,
+            onPress: () => {
+              const id = activeActionId;
+              setActiveActionId(null);
+              if (id) handleDelete(id);
+            },
+          },
+        ]}
+      />
+
       <TouchableOpacity 
         style={styles.fab}
         onPress={() => router.push('/payment/add' as any)}
@@ -204,11 +253,14 @@ const styles = StyleSheet.create({
   statusTextOther: { color: Colors.textSecondary },
   
   paymentFooter: { 
-    marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border,
+    marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.borderLight,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
   },
-  methodText: { fontSize: Typography.xs, color: Colors.textTertiary, fontWeight: Typography.medium },
-  notesText: { fontSize: Typography.xs, color: Colors.textTertiary, flex: 1, textAlign: 'right', marginLeft: Spacing.md, fontStyle: 'italic' },
+  footerLeft: { flex: 1, marginRight: Spacing.md },
+  methodText: { fontSize: Typography.xs, color: Colors.textTertiary, fontWeight: Typography.medium, marginBottom: 2 },
+  notesText: { fontSize: Typography.xs, color: Colors.textTertiary, fontStyle: 'italic' },
+  actionsContainer: { flexDirection: 'row', alignItems: 'center' },
+  actionBtn: { padding: Spacing.xs, marginLeft: Spacing.sm },
   
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.xl,

@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getPatientDocuments, getDocumentUrl, deleteDocument } from '@/services/documentService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ActionMenu } from '@/components/ui/ActionMenu';
 import type { Document } from '@/types';
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -34,6 +35,7 @@ export default function PatientDocumentsScreen() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeActionDoc, setActiveActionDoc] = useState<Document | null>(null);
 
   const loadDocuments = useCallback(async () => {
     if (!patientId) return;
@@ -43,7 +45,6 @@ export default function PatientDocumentsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       loadDocuments().finally(() => setIsLoading(false));
     }, [loadDocuments])
   );
@@ -98,8 +99,8 @@ export default function PatientDocumentsScreen() {
           {item.notes && <Text style={styles.fileNotes} numberOfLines={1}>{item.notes}</Text>}
         </View>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(item)}>
-        <Ionicons name="trash-outline" size={20} color={Colors.error} />
+      <TouchableOpacity style={styles.deleteButton} onPress={() => setActiveActionDoc(item)}>
+        <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
       </TouchableOpacity>
     </View>
   );
@@ -133,6 +134,24 @@ export default function PatientDocumentsScreen() {
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
           />
         )}
+        
+        <ActionMenu
+          visible={!!activeActionDoc}
+          onClose={() => setActiveActionDoc(null)}
+          options={[
+            {
+              label: 'Delete',
+              icon: 'trash-outline',
+              color: Colors.error,
+              onPress: () => {
+                const doc = activeActionDoc;
+                setActiveActionDoc(null);
+                if (doc) handleDelete(doc);
+              },
+            },
+          ]}
+        />
+
         <TouchableOpacity style={styles.fab} onPress={() => router.push(`/patient/${patientId}/add-document` as any)} activeOpacity={0.8}>
           <Ionicons name="cloud-upload" size={24} color={Colors.textInverse} />
         </TouchableOpacity>

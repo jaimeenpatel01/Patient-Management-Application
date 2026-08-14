@@ -35,7 +35,6 @@ export default function PatientSummaryScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       fetchSummary();
     }, [id])
   );

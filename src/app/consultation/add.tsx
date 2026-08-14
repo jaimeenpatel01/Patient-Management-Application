@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { createConsultation } from '@/services/medicalService';
+import { createConsultation, updateConsultation } from '@/services/medicalService';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
+import { supabase } from '@/lib/supabase';
 
 export default function AddConsultationScreen() {
-  const { patientId } = useLocalSearchParams<{ patientId: string }>();
+  const { patientId, id } = useLocalSearchParams<{ patientId: string; id?: string }>();
   const router = useRouter();
+  const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -19,6 +21,23 @@ export default function AddConsultationScreen() {
   const [diagnosis, setDiagnosis] = useState('');
   const [assessment, setAssessment] = useState('');
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    if (id) {
+      const fetchRecord = async () => {
+        const { data } = await supabase.from('consultations').select('*').eq('id', id).single();
+        if (data) {
+          setDate(data.consultation_date);
+          setSymptoms(data.symptoms || '');
+          setDiagnosis(data.diagnosis || '');
+          setAssessment(data.assessment || '');
+          setNotes(data.notes || '');
+        }
+        setIsFetchingRecord(false);
+      };
+      fetchRecord();
+    }
+  }, [id]);
 
   const handleSubmit = async () => {
     if (!patientId) {
@@ -31,25 +50,48 @@ export default function AddConsultationScreen() {
     }
     setErrors({});
     setIsSubmitting(true);
-    const { error } = await createConsultation({
-      patient_id: patientId,
-      attendance_id: null,
-      consultation_date: date,
-      symptoms: symptoms.trim() || null,
-      diagnosis: diagnosis.trim() || null,
-      assessment: assessment.trim() || null,
-      notes: notes.trim() || null,
-      follow_up_date: null,
-    });
+    let error;
+
+    if (id) {
+      const res = await updateConsultation(id, {
+        consultation_date: date,
+        symptoms: symptoms.trim() || null,
+        diagnosis: diagnosis.trim() || null,
+        assessment: assessment.trim() || null,
+        notes: notes.trim() || null,
+      });
+      error = res.error;
+    } else {
+      const res = await createConsultation({
+        patient_id: patientId,
+        attendance_id: null,
+        consultation_date: date,
+        symptoms: symptoms.trim() || null,
+        diagnosis: diagnosis.trim() || null,
+        assessment: assessment.trim() || null,
+        notes: notes.trim() || null,
+        follow_up_date: null,
+      });
+      error = res.error;
+    }
+    
     setIsSubmitting(false);
 
     if (error) Alert.alert('Error', error);
     else router.back();
   };
 
+  if (isFetchingRecord) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <>
-      <Stack.Screen options={{ title: 'New Consultation' }} />
+      <Stack.Screen options={{ title: id ? 'Edit Consultation' : 'New Consultation' }} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <AppDateTimePicker
@@ -65,7 +107,7 @@ export default function AddConsultationScreen() {
         <Input label="Notes" placeholder="Additional notes..." value={notes} onChangeText={setNotes} multiline numberOfLines={3} />
 
         <View style={styles.submitContainer}>
-          <Button title="Save Consultation" onPress={handleSubmit} loading={isSubmitting} icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />} />
+          <Button title={id ? "Save Changes" : "Save Consultation"} onPress={handleSubmit} loading={isSubmitting} icon={<Ionicons name={id ? "save-outline" : "checkmark-circle-outline"} size={20} color={Colors.textInverse} />} />
         </View>
       </ScrollView>
       </KeyboardAvoidingView>

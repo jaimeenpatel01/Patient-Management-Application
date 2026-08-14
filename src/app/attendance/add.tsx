@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
-import { useRouter, Stack } from 'expo-router';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { createAttendance } from '@/services/attendanceService';
+import { createAttendance, updateAttendance } from '@/services/attendanceService';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
@@ -12,19 +12,22 @@ import type { Patient } from '@/types';
 import { getPatients } from '@/services/patientService';
 import { useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { supabase } from '@/lib/supabase'; // to fetch existing record
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
+  
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   
-  // Format current time HH:MM
   const now = new Date();
   const currentHours = String(now.getHours()).padStart(2, '0');
   const currentMins = String(now.getMinutes()).padStart(2, '0');
@@ -43,6 +46,22 @@ export default function MarkAttendanceScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    if (id) {
+      const fetchRecord = async () => {
+        const { data } = await supabase.from('attendances').select('*').eq('id', id).single();
+        if (data) {
+          setSelectedPatientId(data.patient_id);
+          setAttendanceDate(data.attendance_date);
+          setAttendanceTime(data.attendance_time.substring(0, 5));
+          setNotes(data.notes || '');
+        }
+        setIsFetchingRecord(false);
+      };
+      fetchRecord();
+    }
+  }, [id]);
+
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!selectedPatientId) e.patient = 'Select a patient';
@@ -56,12 +75,25 @@ export default function MarkAttendanceScreen() {
     if (!validate() || !selectedPatientId) return;
 
     setIsSubmitting(true);
-    const { error } = await createAttendance({
-      patient_id: selectedPatientId,
-      attendance_date: attendanceDate,
-      attendance_time: attendanceTime,
-      notes: notes.trim() || null,
-    });
+    let error;
+    if (id) {
+      const res = await updateAttendance(id, {
+        patient_id: selectedPatientId,
+        attendance_date: attendanceDate,
+        attendance_time: attendanceTime,
+        notes: notes.trim() || null,
+      });
+      error = res.error;
+    } else {
+      const res = await createAttendance({
+        patient_id: selectedPatientId,
+        attendance_date: attendanceDate,
+        attendance_time: attendanceTime,
+        notes: notes.trim() || null,
+      });
+      error = res.error;
+    }
+    
     setIsSubmitting(false);
 
     if (error) {
@@ -71,9 +103,17 @@ export default function MarkAttendanceScreen() {
     }
   };
 
+  if (isFetchingRecord) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Mark Attendance' }} />
+      <Stack.Screen options={{ title: id ? 'Edit Attendance' : 'Mark Attendance' }} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, Spacing['4xl']) }]} keyboardShouldPersistTaps="handled">
         
@@ -116,10 +156,10 @@ export default function MarkAttendanceScreen() {
 
         <View style={styles.submitContainer}>
           <Button 
-            title="Mark Attendance" 
+            title={id ? 'Save Changes' : 'Mark Attendance'} 
             onPress={handleSubmit} 
             loading={isSubmitting} 
-            icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />} 
+            icon={<Ionicons name={id ? 'save-outline' : 'checkmark-circle-outline'} size={20} color={Colors.textInverse} />} 
           />
         </View>
       </ScrollView>

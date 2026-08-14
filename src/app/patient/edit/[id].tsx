@@ -51,7 +51,6 @@ export default function EditPatientScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!id) return;
-      setIsLoading(true);
       getPatientById(id).then((result) => {
         if (result.error || !result.data) {
           setLoadError(result.error || 'Patient not found');

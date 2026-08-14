@@ -1,12 +1,13 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl,
+  View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Alert
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getConsultations } from '@/services/medicalService';
+import { getConsultations, deleteConsultation } from '@/services/medicalService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ActionMenu } from '@/components/ui/ActionMenu';
 import type { Consultation } from '@/types';
 
 export default function PatientConsultationsScreen() {
@@ -15,6 +16,7 @@ export default function PatientConsultationsScreen() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
   const loadConsultations = useCallback(async () => {
     if (!patientId) return;
@@ -24,7 +26,6 @@ export default function PatientConsultationsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setIsLoading(true);
       loadConsultations().finally(() => setIsLoading(false));
     }, [loadConsultations])
   );
@@ -33,6 +34,20 @@ export default function PatientConsultationsScreen() {
     setIsRefreshing(true);
     await loadConsultations();
     setIsRefreshing(false);
+  };
+
+  const handleDelete = (id: string) => {
+    Alert.alert('Delete Consultation', 'Are you sure you want to delete this consultation?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await deleteConsultation(id);
+          loadConsultations();
+        },
+      },
+    ]);
   };
 
   const renderCard = ({ item }: { item: Consultation }) => (
@@ -57,7 +72,11 @@ export default function PatientConsultationsScreen() {
           </Text>
         )}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity onPress={() => setActiveActionId(item.id)} style={styles.actionBtn}>
+          <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -90,6 +109,34 @@ export default function PatientConsultationsScreen() {
             refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={Colors.primary} />}
           />
         )}
+        
+        <ActionMenu
+          visible={!!activeActionId}
+          onClose={() => setActiveActionId(null)}
+          options={[
+            {
+              label: 'Edit',
+              icon: 'pencil-outline',
+              color: Colors.primary,
+              onPress: () => {
+                const id = activeActionId;
+                setActiveActionId(null);
+                if (id) router.push(`/consultation/add?patientId=${patientId}&id=${id}` as any);
+              },
+            },
+            {
+              label: 'Delete',
+              icon: 'trash-outline',
+              color: Colors.error,
+              onPress: () => {
+                const id = activeActionId;
+                setActiveActionId(null);
+                if (id) handleDelete(id);
+              },
+            },
+          ]}
+        />
+
         <TouchableOpacity style={styles.fab} onPress={() => router.push(`/consultation/add?patientId=${patientId}` as any)} activeOpacity={0.8}>
           <Ionicons name="add" size={28} color={Colors.textInverse} />
         </TouchableOpacity>
@@ -114,6 +161,8 @@ const styles = StyleSheet.create({
   cardDate: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.text, marginBottom: 4 },
   cardText: { fontSize: Typography.sm, color: Colors.textSecondary, marginTop: 2 },
   label: { fontWeight: Typography.medium, color: Colors.text },
+  actionsContainer: { flexDirection: 'row', alignItems: 'center' },
+  actionBtn: { padding: Spacing.sm, marginLeft: Spacing.xs },
   fab: {
     position: 'absolute', right: Spacing.lg, bottom: Spacing.lg, width: 56, height: 56, borderRadius: 28,
     backgroundColor: Colors.primary, justifyContent: 'center', alignItems: 'center', ...Shadows.lg,

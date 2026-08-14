@@ -71,7 +71,6 @@ export default function PatientDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       if (!id) return;
-      setIsLoading(true);
       getPatientById(id).then((result) => {
         if (result.error) {
           setError(result.error);

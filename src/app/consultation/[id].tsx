@@ -86,7 +86,6 @@ export default function ConsultationDetailScreen() {
     useCallback(() => {
       if (!id) return;
       const loadData = async () => {
-        setIsLoading(true);
         // We don't have a getConsultationById in the service yet, so we query it directly
         const { data: cData } = await supabase.from('consultations').select('*').eq('id', id).single();
         if (cData) setConsultation(cData);

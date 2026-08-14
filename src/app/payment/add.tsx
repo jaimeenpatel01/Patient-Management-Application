@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { getPatients } from '@/services/patientService';
-import { createPayment } from '@/services/paymentService';
+import { createPayment, updatePayment } from '@/services/paymentService';
 import type { Patient, PaymentType, PaymentMethod, PaymentStatus } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 const PAYMENT_TYPES: { label: string; value: PaymentType }[] = [
   { label: 'Consultation', value: 'consultation' },
@@ -32,10 +33,12 @@ const PAYMENT_STATUSES: { label: string; value: PaymentStatus }[] = [
 
 export default function AddPaymentScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const insets = useSafeAreaInsets();
   
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
+  const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -62,6 +65,24 @@ export default function AddPaymentScreen() {
     setLoadingPatients(false);
   };
 
+  useEffect(() => {
+    if (id) {
+      const fetchRecord = async () => {
+        const { data } = await supabase.from('payments').select('*').eq('id', id).single();
+        if (data) {
+          setPatientId(data.patient_id);
+          setAmount(data.amount.toString());
+          setPaymentType(data.payment_type as PaymentType);
+          setPaymentMethod((data.payment_method || 'upi') as PaymentMethod);
+          setStatus(data.status as PaymentStatus);
+          setNotes(data.notes || '');
+        }
+        setIsFetchingRecord(false);
+      };
+      fetchRecord();
+    }
+  }, [id]);
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!patientId) newErrors.patientId = 'Please select a patient';
@@ -76,22 +97,36 @@ export default function AddPaymentScreen() {
     if (!validate()) return;
 
     setIsSubmitting(true);
-    const { error } = await createPayment({
-      patient_id: patientId,
-      attendance_id: null,
-      amount: Number(amount),
-      payment_type: paymentType,
-      payment_method: paymentMethod,
-      status: status,
-      payment_date: new Date().toISOString(),
-      notes: notes.trim() || null,
-    });
+    let error;
+    if (id) {
+      const res = await updatePayment(id, {
+        patient_id: patientId,
+        amount: Number(amount),
+        payment_type: paymentType,
+        payment_method: paymentMethod,
+        status: status,
+        notes: notes.trim() || null,
+      });
+      error = res.error;
+    } else {
+      const res = await createPayment({
+        patient_id: patientId,
+        attendance_id: null,
+        amount: Number(amount),
+        payment_type: paymentType,
+        payment_method: paymentMethod,
+        status: status,
+        payment_date: new Date().toISOString(),
+        notes: notes.trim() || null,
+      });
+      error = res.error;
+    }
     setIsSubmitting(false);
 
     if (error) {
       Alert.alert('Error', error);
     } else {
-      Alert.alert('Success', 'Payment recorded successfully', [
+      Alert.alert('Success', id ? 'Payment updated successfully' : 'Payment recorded successfully', [
         { text: 'OK', onPress: () => router.back() }
       ]);
     }
@@ -118,9 +153,17 @@ export default function AddPaymentScreen() {
     </View>
   );
 
+  if (isFetchingRecord) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Record Payment' }} />
+      <Stack.Screen options={{ title: id ? 'Edit Payment' : 'Record Payment' }} />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]} keyboardShouldPersistTaps="handled">
           
@@ -179,10 +222,10 @@ export default function AddPaymentScreen() {
 
           <View style={styles.submitContainer}>
             <Button
-              title="Record Payment"
+              title={id ? 'Save Changes' : 'Record Payment'}
               onPress={handleSubmit}
               loading={isSubmitting}
-              icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
+              icon={<Ionicons name={id ? 'save-outline' : 'checkmark-circle-outline'} size={20} color={Colors.textInverse} />}
             />
           </View>
 

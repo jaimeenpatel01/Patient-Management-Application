@@ -129,3 +129,13 @@ export async function updatePaymentStatus(id: string, status: PaymentStatus): Pr
   if (error) return { data: null, error: error.message };
   return { data: data as Payment, error: null };
 }
+
+export async function updatePayment(id: string, input: Partial<Omit<Payment, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>): Promise<{ data: Payment | null; error: string | null }> {
+  const { data, error } = await supabase.from('payments').update(input).eq('id', id).select().single();
+  return { data: (data as Payment) || null, error: error?.message || null };
+}
+
+export async function deletePayment(id: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('payments').delete().eq('id', id);
+  return { error: error?.message || null };
+}

@@ -49,3 +49,19 @@ export async function deleteAttendance(id: string) {
     return { error: error.message };
   }
 }
+
+export async function updateAttendance(id: string, input: Partial<Omit<Attendance, 'id' | 'created_at' | 'updated_at' | 'doctor_id'>>) {
+  try {
+    const { data, error } = await supabase
+      .from('attendances')
+      .update(input)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { data: data as Attendance, error: null };
+  } catch (error: any) {
+    return { data: null, error: error.message };
+  }
+}

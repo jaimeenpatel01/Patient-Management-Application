@@ -52,3 +52,13 @@ export async function createExercisePlan(input: Omit<ExercisePlan, 'id' | 'docto
   const { data, error } = await supabase.from('exercise_plans').insert({ ...input, doctor_id: user.id }).select().single();
   return { data: (data as ExercisePlan) || null, error: error?.message || null };
 }
+
+export async function updateConsultation(id: string, input: Partial<Omit<Consultation, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>): Promise<{ data: Consultation | null; error: string | null }> {
+  const { data, error } = await supabase.from('consultations').update(input).eq('id', id).select().single();
+  return { data: (data as Consultation) || null, error: error?.message || null };
+}
+
+export async function deleteConsultation(id: string): Promise<{ error: string | null }> {
+  const { error } = await supabase.from('consultations').delete().eq('id', id);
+  return { error: error?.message || null };
+}
