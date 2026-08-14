@@ -17,6 +17,13 @@ export default function PatientLayout() {
         headerShadowVisible: false,
         headerTintColor: Colors.primary,
       }}
-    />
+    >
+      <Stack.Screen name="[id]/index" options={{ title: 'Loading...' }} />
+      <Stack.Screen name="[id]/consultations" options={{ title: 'Loading...' }} />
+      <Stack.Screen name="[id]/documents" options={{ title: 'Loading...' }} />
+      <Stack.Screen name="add" options={{ title: 'Add Patient' }} />
+      <Stack.Screen name="edit/[id]" options={{ title: 'Loading...' }} />
+      <Stack.Screen name="summary/[id]" options={{ title: 'Loading...' }} />
+    </Stack>
   );
 }

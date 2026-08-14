@@ -18,6 +18,7 @@ export default function PatientConsultationsScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
+
   const loadConsultations = useCallback(async () => {
     if (!patientId) return;
     const { data } = await getConsultations(patientId);
@@ -137,7 +138,7 @@ export default function PatientConsultationsScreen() {
           ]}
         />
 
-        <TouchableOpacity style={styles.fab} onPress={() => router.push(`/consultation/add?patientId=${patientId}` as any)} activeOpacity={0.8}>
+        <TouchableOpacity style={[styles.fab, { bottom: Spacing.lg }]} onPress={() => router.push(`/consultation/add?patientId=${patientId}` as any)} activeOpacity={0.8}>
           <Ionicons name="add" size={28} color={Colors.textInverse} />
         </TouchableOpacity>
       </View>

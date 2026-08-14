@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Alert,
   TouchableOpacity,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createPatient } from '@/services/patientService';
@@ -32,7 +30,6 @@ const VISIT_TYPE_OPTIONS: { label: string; value: VisitType }[] = [
 
 export default function AddPatientScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -52,8 +49,8 @@ export default function AddPatientScreen() {
       newErrors.fullName = 'Full name is required';
     }
 
-    if (phone && !/^[+]?[\d\s-()]{7,15}$/.test(phone.trim())) {
-      newErrors.phone = 'Enter a valid phone number';
+    if (phone && !/^\d{10}$/.test(phone.trim())) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
     // If dateOfBirth is not set, it's ok since it's optional
@@ -92,13 +89,15 @@ export default function AddPatientScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Add Patient' }} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        extraHeight={150}
+      >
           {/* Required section */}
           <Text style={styles.sectionTitle}>Basic Information</Text>
 
@@ -114,12 +113,13 @@ export default function AddPatientScreen() {
 
         <Input
           label="Phone Number"
-          placeholder="+91 98765 43210"
+          placeholder="9876543210"
           leftIcon="call-outline"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
           error={errors.phone}
           keyboardType="phone-pad"
+          maxLength={10}
         />
 
         <AppDateTimePicker
@@ -210,8 +210,7 @@ export default function AddPatientScreen() {
             icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
           />
         </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </>
   );
 }

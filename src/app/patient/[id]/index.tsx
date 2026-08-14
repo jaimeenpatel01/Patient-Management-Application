@@ -47,9 +47,23 @@ function getInitials(name: string): string {
     .slice(0, 2);
 }
 
-function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null }) {
+import * as Clipboard from 'expo-clipboard';
+
+function InfoRow({ icon, label, value, copyable }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null, copyable?: boolean }) {
+  const handleCopy = async () => {
+    if (value) {
+      await Clipboard.setStringAsync(value);
+      Alert.alert('Copied', `${label} copied to clipboard.`, [{ text: 'OK', style: 'cancel' }]);
+    }
+  };
+
   return (
-    <View style={styles.infoRow}>
+    <TouchableOpacity 
+      style={styles.infoRow} 
+      onPress={copyable ? handleCopy : undefined} 
+      disabled={!copyable}
+      activeOpacity={0.6}
+    >
       <View style={styles.infoIconContainer}>
         <Ionicons name={icon} size={18} color={Colors.primary} />
       </View>
@@ -57,7 +71,10 @@ function InfoRow({ icon, label, value }: { icon: keyof typeof Ionicons.glyphMap;
         <Text style={styles.infoLabel}>{label}</Text>
         <Text style={styles.infoValue}>{value || 'Not provided'}</Text>
       </View>
-    </View>
+      {copyable && value ? (
+        <Ionicons name="copy-outline" size={16} color={Colors.textTertiary} style={{ alignSelf: 'center', marginLeft: Spacing.sm }} />
+      ) : null}
+    </TouchableOpacity>
   );
 }
 
@@ -182,8 +199,8 @@ export default function PatientDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Contact Information</Text>
           <View style={styles.infoCard}>
-            <InfoRow icon="call-outline" label="Phone" value={patient.phone} />
-            <InfoRow icon="location-outline" label="Address" value={patient.address} />
+            <InfoRow icon="call-outline" label="Phone" value={patient.phone} copyable={true} />
+            <InfoRow icon="location-outline" label="Address" value={patient.address} copyable={true} />
           </View>
         </View>
 

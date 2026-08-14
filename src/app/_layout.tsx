@@ -42,14 +42,17 @@ function RootNavigator() {
   );
 }
 
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { Colors } from '@/constants/theme';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <RootNavigator />
-      </AuthProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['bottom', 'left', 'right']}>
+        <AuthProvider>
+          <RootNavigator />
+        </AuthProvider>
+      </SafeAreaView>
     </SafeAreaProvider>
   );
 }

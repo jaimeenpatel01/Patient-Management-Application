@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createConsultation, updateConsultation } from '@/services/medicalService';
@@ -92,8 +93,14 @@ export default function AddConsultationScreen() {
   return (
     <>
       <Stack.Screen options={{ title: id ? 'Edit Consultation' : 'New Consultation' }} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+
+        <KeyboardAwareScrollView 
+          style={styles.container} 
+          contentContainerStyle={styles.content} 
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          extraScrollHeight={50}
+        >
         <AppDateTimePicker
           label="Date *"
           value={date}
@@ -109,8 +116,8 @@ export default function AddConsultationScreen() {
         <View style={styles.submitContainer}>
           <Button title={id ? "Save Changes" : "Save Consultation"} onPress={handleSubmit} loading={isSubmitting} icon={<Ionicons name={id ? "save-outline" : "checkmark-circle-outline"} size={20} color={Colors.textInverse} />} />
         </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+
     </>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { getPatientById } from '@/services/patientService';
 import { getAttendances } from '@/services/attendanceService';
@@ -7,6 +7,9 @@ import { getPaymentsByPatientId } from '@/services/paymentService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import type { Patient, Attendance, Payment } from '@/types';
 import { useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 export default function PatientSummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -55,9 +58,89 @@ export default function PatientSummaryScreen() {
     );
   }
 
+  const handleExport = async () => {
+    try {
+      const html = `
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 20px; color: #333; }
+              h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+              h2 { color: #2980b9; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+              table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+              th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+              th { background-color: #f8f9fa; color: #333; font-weight: bold; }
+              .info p { margin: 8px 0; font-size: 16px; }
+              .info strong { display: inline-block; width: 140px; color: #555; }
+            </style>
+          </head>
+          <body>
+            <h1>Patient Summary: ${patient.full_name}</h1>
+            <div class="info">
+              <p><strong>Status:</strong> ${patient.is_active ? 'Active' : 'Inactive'}</p>
+              <p><strong>Visit Type:</strong> ${patient.visit_type || 'N/A'}</p>
+              <p><strong>Phone:</strong> ${patient.phone || 'N/A'}</p>
+              <p><strong>Date of Birth:</strong> ${patient.date_of_birth || 'N/A'}</p>
+              <p><strong>Gender:</strong> <span style="text-transform: capitalize;">${patient.gender || 'N/A'}</span></p>
+              <p><strong>Address:</strong> ${patient.address || 'N/A'}</p>
+            </div>
+
+            <h2>Attendance History (${attendances.length})</h2>
+            ${attendances.length > 0 ? `
+            <table>
+              <tr><th>Date</th><th>Day</th><th>Time</th></tr>
+              ${attendances.map(a => `
+                <tr>
+                  <td>${a.attendance_date}</td>
+                  <td>${new Date(a.attendance_date).toLocaleDateString('en-US', { weekday: 'short' })}</td>
+                  <td>${a.attendance_time.substring(0,5)}</td>
+                </tr>
+              `).join('')}
+            </table>
+            ` : '<p>No attendance records found.</p>'}
+
+            <h2>Payment History (${payments.length})</h2>
+            ${payments.length > 0 ? `
+            <table>
+              <tr><th>Date</th><th>Type</th><th>Amount</th><th>Status</th></tr>
+              ${payments.map(p => `
+                <tr>
+                  <td>${p.payment_date ? new Date(p.payment_date).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'N/A'}</td>
+                  <td style="text-transform: capitalize;">${p.payment_type.replace('_', ' ')}</td>
+                  <td>&#8377;${p.amount}</td>
+                  <td style="text-transform: uppercase; font-weight: bold; color: ${p.status === 'paid' ? '#27ae60' : '#f39c12'}">${p.status}</td>
+                </tr>
+              `).join('')}
+            </table>
+            ` : '<p>No payment records found.</p>'}
+          </body>
+        </html>
+      `;
+
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, {
+        UTI: '.pdf',
+        mimeType: 'application/pdf',
+        dialogTitle: `${patient.full_name} Summary`,
+      });
+    } catch (error: any) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Patient Summary' }} />
+      <Stack.Screen 
+        options={{ 
+          title: 'Patient Summary',
+          headerRight: () => (
+            <TouchableOpacity onPress={handleExport} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <Ionicons name="share-outline" size={24} color={Colors.primary} />
+            </TouchableOpacity>
+          )
+        }} 
+      />
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
         
         {/* Basic Info */}

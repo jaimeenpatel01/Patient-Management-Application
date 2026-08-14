@@ -2,14 +2,13 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
-  StyleSheet,
   Alert,
+  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getPatientById, updatePatient } from '@/services/patientService';
@@ -77,8 +76,8 @@ export default function EditPatientScreen() {
       newErrors.fullName = 'Full name is required';
     }
 
-    if (phone && !/^[+]?[\d\s-()]{7,15}$/.test(phone.trim())) {
-      newErrors.phone = 'Enter a valid phone number';
+    if (phone && !/^\d{10}$/.test(phone.trim())) {
+      newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
     // AppDateTimePicker ensures correct format, so we can skip manual format check here
@@ -148,13 +147,15 @@ export default function EditPatientScreen() {
   return (
     <>
       <Stack.Screen options={{ title: 'Edit Patient' }} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          style={styles.container}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+        extraHeight={150}
+      >
           <Text style={styles.sectionTitle}>Basic Information</Text>
 
           <Input
@@ -172,9 +173,10 @@ export default function EditPatientScreen() {
           placeholder="+91 98765 43210"
           leftIcon="call-outline"
           value={phone}
-          onChangeText={setPhone}
+          onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
           error={errors.phone}
           keyboardType="phone-pad"
+          maxLength={10}
         />
 
         <AppDateTimePicker
@@ -272,8 +274,7 @@ export default function EditPatientScreen() {
             icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
           />
         </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </>
   );
 }

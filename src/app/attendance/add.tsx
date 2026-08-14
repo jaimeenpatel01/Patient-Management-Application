@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createAttendance, updateAttendance } from '@/services/attendanceService';
@@ -11,13 +12,11 @@ import { Button } from '@/components/ui/Button';
 import type { Patient } from '@/types';
 import { getPatients } from '@/services/patientService';
 import { useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase'; // to fetch existing record
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const insets = useSafeAreaInsets();
   
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
@@ -114,8 +113,14 @@ export default function MarkAttendanceScreen() {
   return (
     <>
       <Stack.Screen options={{ title: id ? 'Edit Attendance' : 'Mark Attendance' }} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom, Spacing['4xl']) }]} keyboardShouldPersistTaps="handled">
+
+        <KeyboardAwareScrollView 
+          style={styles.container} 
+          contentContainerStyle={[styles.content, { paddingBottom: Spacing['4xl'] }]} 
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          extraScrollHeight={50}
+        >
         
         <Text style={styles.sectionTitle}>Patient</Text>
         <PatientSearchPicker
@@ -162,8 +167,8 @@ export default function MarkAttendanceScreen() {
             icon={<Ionicons name={id ? 'save-outline' : 'checkmark-circle-outline'} size={20} color={Colors.textInverse} />} 
           />
         </View>
-      </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
+
     </>
   );
 }

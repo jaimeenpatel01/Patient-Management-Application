@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -34,7 +34,7 @@ const PAYMENT_STATUSES: { label: string; value: PaymentStatus }[] = [
 export default function AddPaymentScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
-  const insets = useSafeAreaInsets();
+
   
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
@@ -164,8 +164,14 @@ export default function AddPaymentScreen() {
   return (
     <>
       <Stack.Screen options={{ title: id ? 'Edit Payment' : 'Record Payment' }} />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: Math.max(insets.bottom + 24, 48) }]} keyboardShouldPersistTaps="handled">
+
+        <KeyboardAwareScrollView 
+          style={styles.container} 
+          contentContainerStyle={[styles.content, { paddingBottom: 48 }]} 
+          keyboardShouldPersistTaps="handled"
+          enableOnAndroid={true}
+          extraScrollHeight={50}
+        >
           
           <Text style={styles.sectionTitle}>Patient</Text>
           <PatientSearchPicker
@@ -229,8 +235,8 @@ export default function AddPaymentScreen() {
             />
           </View>
 
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </KeyboardAwareScrollView>
+
     </>
   );
 }

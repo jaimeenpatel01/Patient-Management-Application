@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal, Platform } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/medicalService';
@@ -163,6 +163,30 @@ export default function ConsultationDetailScreen() {
                 </View>
               </View>
             )}
+
+            {consultation.diagnosis && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconContainer}>
+                  <Ionicons name="bandage-outline" size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>Primary Diagnosis</Text>
+                  <Text style={styles.infoValue}>{consultation.diagnosis}</Text>
+                </View>
+              </View>
+            )}
+
+            {consultation.notes && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoIconContainer}>
+                  <Ionicons name="document-text-outline" size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.infoContent}>
+                  <Text style={styles.infoLabel}>Treatment / Notes</Text>
+                  <Text style={styles.infoValue}>{consultation.notes}</Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -239,7 +263,7 @@ export default function ConsultationDetailScreen() {
 
       {/* Add Modal */}
       <Modal transparent visible={modalVisible} animationType="fade" onRequestClose={() => setModalVisible(false)}>
-        <KeyboardAvoidingView style={styles.modalOverlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
               Add {modalType === 'diagnosis' ? 'Diagnosis' : modalType === 'treatment' ? 'Treatment' : 'Exercise Plan'}
@@ -263,7 +287,7 @@ export default function ConsultationDetailScreen() {
               <Button title="Save" fullWidth={false} onPress={handleAddItem} loading={isSubmitting} disabled={!newItemTitle.trim()} />
             </View>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </>
   );

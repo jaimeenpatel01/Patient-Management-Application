@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { SearchFilter } from '@/components/ui/SearchFilter';
+
 import type { Patient } from '@/types';
 
 interface PatientSearchPickerProps {

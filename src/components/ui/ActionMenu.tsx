@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export interface ActionMenuOption {
   label: string;
@@ -19,14 +18,13 @@ interface ActionMenuProps {
 }
 
 export function ActionMenu({ visible, onClose, options, title }: ActionMenuProps) {
-  const insets = useSafeAreaInsets();
 
   return (
     <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={[styles.menuContainer, { paddingBottom: Math.max(insets.bottom, Spacing.lg) }]}>
+            <View style={[styles.menuContainer, { paddingBottom: Spacing.lg }]}>
               {title && (
                 <View style={styles.header}>
                   <Text style={styles.title}>{title}</Text>

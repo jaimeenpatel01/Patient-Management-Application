@@ -11,6 +11,9 @@ export default function ConsultationLayout() {
         headerShadowVisible: false,
         headerTintColor: Colors.primary,
       }}
-    />
+    >
+      <Stack.Screen name="[id]" options={{ title: 'Loading...' }} />
+      <Stack.Screen name="add" options={{ title: 'Loading...' }} />
+    </Stack>
   );
 }
