@@ -122,10 +122,10 @@ export function PatientSearchPicker({
           {/* Search box */}
           <View style={styles.searchWrapper}>
             <SearchFilter
-              placeholder="Search patients..."
+              placeholder="Search patient"
               value={searchQuery}
               onChangeText={setSearchQuery}
-              containerStyle={{ borderWidth: 0, paddingHorizontal: 0, height: 'auto', backgroundColor: 'transparent' }}
+              containerStyle={{ borderWidth: 0, paddingHorizontal: 0, height: 40, backgroundColor: 'transparent' }}
             />
           </View>
 

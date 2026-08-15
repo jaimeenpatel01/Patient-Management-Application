@@ -49,14 +49,28 @@ export default function AddPatientScreen() {
       newErrors.fullName = 'Full name is required';
     }
 
-    if (phone && !/^\d{10}$/.test(phone.trim())) {
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!/^\d{10}$/.test(phone.trim())) {
       newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
-    // If dateOfBirth is not set, it's ok since it's optional
-    // If we wanted to validate format we could, but AppDateTimePicker guarantees YYYY-MM-DD
-    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
+    if (!dateOfBirth.trim()) {
+      newErrors.dateOfBirth = 'Date of birth is required';
+    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
       newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
+    }
+
+    if (!gender) {
+      newErrors.gender = 'Gender is required';
+    }
+
+    if (!visitType) {
+      newErrors.visitType = 'Visit type is required';
+    }
+
+    if (!address.trim()) {
+      newErrors.address = 'Address is required';
     }
 
     setErrors(newErrors);
@@ -112,7 +126,7 @@ export default function AddPatientScreen() {
         />
 
         <Input
-          label="Phone Number"
+          label="Phone Number *"
           placeholder="9876543210"
           leftIcon="call-outline"
           value={phone}
@@ -123,7 +137,7 @@ export default function AddPatientScreen() {
         />
 
         <AppDateTimePicker
-          label="Date of Birth"
+          label="Date of Birth *"
           value={dateOfBirth}
           onChange={setDateOfBirth}
           mode="date"
@@ -131,7 +145,7 @@ export default function AddPatientScreen() {
         />
 
         {/* Gender selector */}
-        <Text style={styles.fieldLabel}>Gender</Text>
+        <Text style={styles.fieldLabel}>Gender *</Text>
         <View style={styles.genderRow}>
           {GENDER_OPTIONS.map((option) => (
             <TouchableOpacity
@@ -153,9 +167,10 @@ export default function AddPatientScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
 
         {/* Visit Type selector */}
-        <Text style={styles.fieldLabel}>Visit Type</Text>
+        <Text style={styles.fieldLabel}>Visit Type *</Text>
         <View style={styles.genderRow}>
           {VISIT_TYPE_OPTIONS.map((option) => (
             <TouchableOpacity
@@ -177,16 +192,18 @@ export default function AddPatientScreen() {
             </TouchableOpacity>
           ))}
         </View>
+        {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
 
         {/* Additional info */}
         <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
 
         <Input
-          label="Address"
-          placeholder="Enter address"
+          label="Full Address *"
+          placeholder="Enter patient's full address"
           leftIcon="location-outline"
           value={address}
           onChangeText={setAddress}
+          error={errors.address}
           multiline
           numberOfLines={2}
         />
@@ -261,6 +278,13 @@ const styles = StyleSheet.create({
   },
   genderChipTextActive: {
     color: Colors.primary,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: Typography.xs,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.base,
+    marginLeft: Spacing.xs,
   },
   submitContainer: {
     marginTop: Spacing.xl,

@@ -74,12 +74,7 @@ export default function PatientsScreen() {
           <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
           <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
         </View>
-        {item.email && (
-          <View style={styles.patientMeta}>
-            <Ionicons name="mail-outline" size={14} color={Colors.textTertiary} />
-            <Text style={styles.patientMetaText} numberOfLines={1}>{item.email}</Text>
-          </View>
-        )}
+
       </View>
       <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
     </TouchableOpacity>

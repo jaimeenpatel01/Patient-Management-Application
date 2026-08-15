@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import Constants from 'expo-constants';
 import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
@@ -187,7 +188,7 @@ export default function ProfileScreen() {
           <InfoRow
             icon="information-circle-outline"
             label="Version"
-            value="1.1.0"
+            value="1.2.0"
           />
         </View>
       </View>
