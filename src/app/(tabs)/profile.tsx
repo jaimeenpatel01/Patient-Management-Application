@@ -5,15 +5,92 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  TouchableOpacity,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 export default function ProfileScreen() {
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleAvatarUpload = async () => {
+    if (!user) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setIsUploading(true);
+      const uri = result.assets[0].uri;
+      const base64Data = result.assets[0].base64;
+
+      if (!base64Data) {
+        Alert.alert('Error', 'Could not read image data.');
+        setIsUploading(false);
+        return;
+      }
+      
+      const { publicUrl, error: uploadError } = await uploadAvatar(user.id, uri, base64Data);
+      
+      if (uploadError || !publicUrl) {
+        Alert.alert('Upload Failed', uploadError || 'Could not upload image');
+        setIsUploading(false);
+        return;
+      }
+
+      const { error: updateError } = await updateProfile(user.id, { avatar_url: publicUrl });
+      
+      if (updateError) {
+        Alert.alert('Update Failed', updateError);
+      } else {
+        await refreshProfile();
+      }
+      setIsUploading(false);
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    if (!user || !profile?.avatar_url) return;
+    
+    setIsUploading(true);
+    const { error } = await removeAvatar(user.id, profile.avatar_url);
+    if (error) {
+      Alert.alert('Remove Failed', error);
+    } else {
+      await refreshProfile();
+    }
+    setIsUploading(false);
+  };
+
+  const handleAvatarPress = () => {
+    if (!profile?.avatar_url) {
+      handleAvatarUpload();
+      return;
+    }
+
+    Alert.alert(
+      'Profile Photo',
+      'What would you like to do?',
+      [
+        { text: 'Upload New Photo', onPress: handleAvatarUpload },
+        { text: 'Remove Photo', style: 'destructive', onPress: handleAvatarRemove },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
 
   let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
   const isDoctor = profile?.role === 'doctor' || !profile;
@@ -51,9 +128,18 @@ export default function ProfileScreen() {
     >
       {/* Profile Card */}
       <View style={[styles.profileCard, Shadows.sm]}>
-        <View style={styles.avatarLarge}>
-          <Ionicons name="person" size={40} color={Colors.primary} />
-        </View>
+        <TouchableOpacity style={styles.avatarLarge} onPress={handleAvatarPress} disabled={isUploading}>
+          {isUploading ? (
+            <ActivityIndicator color={Colors.primary} />
+          ) : profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+          ) : (
+            <Ionicons name="person" size={40} color={Colors.primary} />
+          )}
+          <View style={styles.editBadge}>
+            <Ionicons name="pencil" size={14} color={Colors.textInverse} />
+          </View>
+        </TouchableOpacity>
         <Text style={styles.profileName}>
           {displayName}
         </Text>
@@ -164,6 +250,25 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.base,
+    position: 'relative',
+  },
+  avatarImage: {
+    width: 80,
+    height: 80,
+    borderRadius: BorderRadius.full,
+  },
+  editBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: Colors.primary,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
   },
   profileName: {
     fontSize: Typography.xl,

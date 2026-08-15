@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
@@ -131,13 +131,17 @@ export default function DashboardScreen() {
           <Text style={styles.welcomeName}>{displayName}</Text>
         </View>
         <View style={styles.avatarContainer}>
-          <Ionicons name="person" size={24} color={Colors.primary} />
+          {profile?.avatar_url ? (
+            <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+          ) : (
+            <Ionicons name="person" size={24} color={Colors.primary} />
+          )}
         </View>
       </View>
 
       {/* Quick Actions */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <Text style={[styles.sectionTitle, { marginBottom: Spacing.md }]}>Quick Actions</Text>
         <View style={styles.quickActionsRow}>
           <QuickAction
             icon="person-add-outline"
@@ -260,6 +264,12 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryFaded,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
   },
   section: {
     marginBottom: Spacing.xl,
