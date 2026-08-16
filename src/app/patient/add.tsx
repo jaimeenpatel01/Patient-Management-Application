@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createPatient } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
-import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
+
 import { Button } from '@/components/ui/Button';
 import type { Gender, VisitType } from '@/types';
 
@@ -36,7 +36,7 @@ export default function AddPatientScreen() {
   // Form state
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [age, setAge] = useState('');
   const [gender, setGender] = useState<Gender | null>(null);
   const [visitType, setVisitType] = useState<VisitType | null>(null);
   const [address, setAddress] = useState('');
@@ -55,10 +55,10 @@ export default function AddPatientScreen() {
       newErrors.phone = 'Phone number must be exactly 10 digits';
     }
 
-    if (!dateOfBirth.trim()) {
-      newErrors.dateOfBirth = 'Date of birth is required';
-    } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth.trim())) {
-      newErrors.dateOfBirth = 'Use format YYYY-MM-DD';
+    if (!age.trim()) {
+      newErrors.age = 'Age is required';
+    } else if (isNaN(Number(age.trim())) || Number(age.trim()) < 0) {
+      newErrors.age = 'Please enter a valid age';
     }
 
     if (!gender) {
@@ -84,7 +84,7 @@ export default function AddPatientScreen() {
     const { error } = await createPatient({
       full_name: fullName.trim(),
       phone: phone.trim() || null,
-      date_of_birth: dateOfBirth.trim() || null,
+      age: age.trim() ? parseInt(age.trim(), 10) : null,
       gender: gender,
       visit_type: visitType,
       address: address.trim() || null,
@@ -136,12 +136,15 @@ export default function AddPatientScreen() {
           maxLength={10}
         />
 
-        <AppDateTimePicker
-          label="Date of Birth *"
-          value={dateOfBirth}
-          onChange={setDateOfBirth}
-          mode="date"
-          error={errors.dateOfBirth}
+        <Input
+          label="Age *"
+          placeholder="e.g. 35"
+          leftIcon="calendar-outline"
+          value={age}
+          onChangeText={(text) => setAge(text.replace(/[^0-9]/g, '').slice(0, 3))}
+          error={errors.age}
+          keyboardType="number-pad"
+          maxLength={3}
         />
 
         {/* Gender selector */}

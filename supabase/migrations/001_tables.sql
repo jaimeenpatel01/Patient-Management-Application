@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS public.patients (
   full_name TEXT NOT NULL,
   phone TEXT,
   email TEXT,
-  date_of_birth DATE,
+  age INTEGER,
   gender TEXT CHECK (gender IN ('male', 'female', 'other', 'prefer_not_to_say')),
   address TEXT,
   emergency_contact TEXT,

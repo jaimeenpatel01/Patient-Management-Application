@@ -51,7 +51,7 @@ export interface Patient {
   doctor_id: string;
   full_name: string;
   phone: string | null;
-  date_of_birth: string | null;
+  age: number | null;
   gender: Gender | null;
   address: string | null;
   visit_type: VisitType | null;

@@ -81,7 +81,7 @@ export default function PatientSummaryScreen() {
               <p><strong>Status:</strong> ${patient.is_active ? 'Active' : 'Inactive'}</p>
               <p><strong>Visit Type:</strong> ${patient.visit_type || 'N/A'}</p>
               <p><strong>Phone:</strong> ${patient.phone || 'N/A'}</p>
-              <p><strong>Date of Birth:</strong> ${patient.date_of_birth || 'N/A'}</p>
+              <p><strong>Age:</strong> ${patient.age !== null && patient.age !== undefined ? patient.age : 'N/A'}</p>
               <p><strong>Gender:</strong> <span style="text-transform: capitalize;">${patient.gender || 'N/A'}</span></p>
               <p><strong>Address:</strong> ${patient.address || 'N/A'}</p>
             </div>
@@ -169,8 +169,8 @@ export default function PatientSummaryScreen() {
                 <Text style={[styles.tableCell, { flex: 2 }]}>{patient.phone || 'N/A'}</Text>
               </View>
               <View style={[styles.tableRow, styles.borderBottom]}>
-                <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1 }]}>DOB</Text>
-                <Text style={[styles.tableCell, { flex: 2 }]}>{patient.date_of_birth || 'N/A'}</Text>
+                <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1 }]}>Age</Text>
+                <Text style={[styles.tableCell, { flex: 2 }]}>{patient.age !== null && patient.age !== undefined ? patient.age : 'N/A'}</Text>
               </View>
               <View style={[styles.tableRow, styles.borderBottom]}>
                 <Text style={[styles.tableCell, styles.tableHeaderText, { flex: 1 }]}>Gender</Text>

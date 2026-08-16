@@ -15,17 +15,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { Button } from '@/components/ui/Button';
 import type { Patient } from '@/types';
 
-function calculateAge(dateOfBirth: string | null): string | null {
-  if (!dateOfBirth) return null;
-  const today = new Date();
-  const birth = new Date(dateOfBirth);
-  let age = today.getFullYear() - birth.getFullYear();
-  const monthDiff = today.getMonth() - birth.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--;
-  }
-  return `${age} years`;
-}
+
 
 function getGenderDisplay(gender: string | null): string {
   if (!gender) return 'Not specified';
@@ -154,7 +144,7 @@ export default function PatientDetailScreen() {
     );
   }
 
-  const age = calculateAge(patient.date_of_birth);
+  const ageDisplay = patient.age !== null && patient.age !== undefined ? `${patient.age} years` : null;
 
   return (
     <>
@@ -185,12 +175,12 @@ export default function PatientDetailScreen() {
           <View style={[styles.statusBadge, { backgroundColor: patient.is_active ? Colors.success : Colors.error }]}>
             <Text style={styles.statusBadgeText}>{patient.is_active ? 'Active' : 'Inactive'}</Text>
           </View>
-          {age && (
+          {ageDisplay && (
             <Text style={styles.patientAge}>
-              {age} • {getGenderDisplay(patient.gender)}
+              {ageDisplay} • {getGenderDisplay(patient.gender)}
             </Text>
           )}
-          {!age && (
+          {!ageDisplay && (
             <Text style={styles.patientAge}>{getGenderDisplay(patient.gender)}</Text>
           )}
         </View>
@@ -208,7 +198,7 @@ export default function PatientDetailScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Medical Details</Text>
           <View style={styles.infoCard}>
-            <InfoRow icon="calendar-outline" label="Date of Birth" value={patient.date_of_birth} />
+            <InfoRow icon="calendar-outline" label="Age" value={patient.age !== null && patient.age !== undefined ? patient.age.toString() : null} />
             <InfoRow icon="person-outline" label="Gender" value={getGenderDisplay(patient.gender)} />
             <InfoRow icon="home-outline" label="Visit Type" value={patient.visit_type} />
           </View>
