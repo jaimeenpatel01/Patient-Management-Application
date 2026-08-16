@@ -118,3 +118,15 @@ export const Shadows = {
     elevation: 5,
   },
 } as const;
+
+/** Shared header options for Stack navigators across route groups */
+export const STACK_HEADER_OPTIONS = {
+  headerStyle: { backgroundColor: Colors.surface },
+  headerTitleStyle: {
+    fontWeight: Typography.semibold,
+    fontSize: Typography.lg,
+    color: Colors.text,
+  },
+  headerShadowVisible: false,
+  headerTintColor: Colors.primary,
+} as const;

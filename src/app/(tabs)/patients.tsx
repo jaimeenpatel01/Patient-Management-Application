@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
@@ -15,16 +14,8 @@ import { getPatients } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
+import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
-
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
 
 function formatPhone(phone: string | null): string {
   return phone || 'No phone';
@@ -59,7 +50,7 @@ export default function PatientsScreen() {
     setIsRefreshing(false);
   };
 
-  const renderPatientCard = ({ item }: { item: Patient }) => (
+  const renderPatientCard = useCallback(({ item }: { item: Patient }) => (
     <TouchableOpacity
       style={styles.patientCard}
       onPress={() => router.push(`/patient/${item.id}` as any)}
@@ -74,11 +65,10 @@ export default function PatientsScreen() {
           <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
           <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
         </View>
-
       </View>
       <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
     </TouchableOpacity>
-  );
+  ), [router]);
 
   if (isLoading) {
     return (
@@ -176,21 +166,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.lg,
-    paddingHorizontal: Spacing.md,
-    height: 44,
-    gap: Spacing.sm,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: Typography.base,
-    color: Colors.text,
-    paddingVertical: 0,
-  },
+
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',

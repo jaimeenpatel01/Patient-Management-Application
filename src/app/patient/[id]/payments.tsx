@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } f
 import { useLocalSearchParams, Stack } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPaymentsByPatientId } from '@/services/paymentService';
 import type { Payment } from '@/types';
 
@@ -28,10 +29,7 @@ export default function PatientPaymentsScreen() {
     setIsRefreshing(false);
   };
 
-  const renderPayment = ({ item }: { item: Payment }) => {
-    const isPaid = item.status === 'paid';
-    const isPending = item.status === 'pending';
-    
+  const renderPayment = useCallback(({ item }: { item: Payment }) => {
     return (
       <View style={styles.paymentCard}>
         <View style={styles.paymentHeader}>
@@ -42,21 +40,7 @@ export default function PatientPaymentsScreen() {
           </View>
           <View style={styles.amountInfo}>
             <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
-            <View style={[
-              styles.statusBadge, 
-              isPaid ? styles.statusBadgePaid : 
-              isPending ? styles.statusBadgePending : 
-              styles.statusBadgeOther
-            ]}>
-              <Text style={[
-                styles.statusText,
-                isPaid ? styles.statusTextPaid : 
-                isPending ? styles.statusTextPending : 
-                styles.statusTextOther
-              ]}>
-                {item.status.toUpperCase()}
-              </Text>
-            </View>
+            <StatusBadge status={item.status} />
           </View>
         </View>
         {(item.notes || item.payment_method) && (
@@ -71,7 +55,7 @@ export default function PatientPaymentsScreen() {
         )}
       </View>
     );
-  };
+  }, []);
 
   if (isLoading) {
     return (
@@ -118,14 +102,6 @@ const styles = StyleSheet.create({
   paymentDate: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.text, textTransform: 'capitalize' },
   amountInfo: { alignItems: 'flex-end' },
   amountText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text, marginBottom: 4 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: BorderRadius.full },
-  statusBadgePaid: { backgroundColor: Colors.successLight },
-  statusBadgePending: { backgroundColor: Colors.warningLight },
-  statusBadgeOther: { backgroundColor: Colors.surfaceSecondary },
-  statusText: { fontSize: Typography.xs, fontWeight: Typography.bold },
-  statusTextPaid: { color: Colors.success },
-  statusTextPending: { color: Colors.warning },
-  statusTextOther: { color: Colors.textSecondary },
   paymentFooter: { 
     marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'

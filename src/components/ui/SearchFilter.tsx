@@ -11,7 +11,7 @@ interface SearchFilterProps {
   containerStyle?: StyleProp<ViewStyle>;
 }
 
-export function SearchFilter({ 
+export const SearchFilter = React.memo(function SearchFilter({ 
   value, 
   onChangeText, 
   placeholder = 'Search...', 
@@ -54,7 +54,7 @@ export function SearchFilter({
       ) : null}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   searchBox: {

@@ -6,14 +6,14 @@ interface LoadingScreenProps {
   message?: string;
 }
 
-export function LoadingScreen({ message }: LoadingScreenProps) {
+export const LoadingScreen = React.memo(function LoadingScreen({ message }: LoadingScreenProps) {
   return (
     <View style={styles.container}>
       <ActivityIndicator size="large" color={Colors.primary} />
       {message && <Text style={styles.message}>{message}</Text>}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

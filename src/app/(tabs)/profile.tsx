@@ -10,8 +10,8 @@ import {
   Image,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import Constants from 'expo-constants';
-import { uploadAvatar, updateProfile, removeAvatar, removeAvatarFile } from '@/services/profileService';
+import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
+import { getDoctorDisplayName } from '@/lib/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
@@ -95,14 +95,7 @@ export default function ProfileScreen() {
     );
   };
 
-  let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
-  const isDoctor = profile?.role === 'doctor' || !profile;
-  if (isDoctor) {
-    const lowerName = displayName.toLowerCase();
-    if (!lowerName.startsWith('dr.') && !lowerName.startsWith('dr ')) {
-      displayName = `Dr. ${displayName}`;
-    }
-  }
+  const displayName = getDoctorDisplayName(profile?.full_name ?? null, user?.email);
 
   const handleSignOut = () => {
     Alert.alert(
@@ -190,7 +183,7 @@ export default function ProfileScreen() {
           <InfoRow
             icon="information-circle-outline"
             label="Version"
-            value="1.2.0"
+            value="1.2.1"
           />
         </View>
       </View>

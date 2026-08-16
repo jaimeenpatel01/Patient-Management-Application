@@ -12,7 +12,7 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-export function EmptyState({
+export const EmptyState = React.memo(function EmptyState({
   icon = 'folder-open-outline',
   title,
   subtitle,
@@ -37,7 +37,7 @@ export function EmptyState({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

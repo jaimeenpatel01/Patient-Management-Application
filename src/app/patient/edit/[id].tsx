@@ -6,28 +6,18 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getPatientById, updatePatient } from '@/services/patientService';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
-
 import { Button } from '@/components/ui/Button';
+import { ChipSelector } from '@/components/ui/ChipSelector';
+import { GENDER_OPTIONS, VISIT_TYPE_OPTIONS } from '@/constants/options';
+import { validatePatientForm } from '@/lib/validators';
 import type { Gender, VisitType } from '@/types';
-
-const GENDER_OPTIONS: { label: string; value: Gender }[] = [
-  { label: 'Male', value: 'male' },
-  { label: 'Female', value: 'female' }
-];
-
-const VISIT_TYPE_OPTIONS: { label: string; value: VisitType }[] = [
-  { label: 'Home Visit', value: 'Home Visit' },
-  { label: 'Hospital Visit', value: 'Hospital Visit' },
-  { label: 'Doctor\'s Home Visit', value: "Doctor's Home Visit" },
-];
 
 export default function EditPatientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -70,36 +60,7 @@ export default function EditPatientScreen() {
   );
 
   const validate = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    if (!fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    }
-
-    if (!phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!/^\d{10}$/.test(phone.trim())) {
-      newErrors.phone = 'Phone number must be exactly 10 digits';
-    }
-
-    if (!age.trim()) {
-      newErrors.age = 'Age is required';
-    } else if (isNaN(Number(age.trim())) || Number(age.trim()) < 0) {
-      newErrors.age = 'Please enter a valid age';
-    }
-
-    if (!gender) {
-      newErrors.gender = 'Gender is required';
-    }
-
-    if (!visitType) {
-      newErrors.visitType = 'Visit type is required';
-    }
-
-    if (!address.trim()) {
-      newErrors.address = 'Address is required';
-    }
-
+    const newErrors = validatePatientForm({ fullName, phone, age, gender, visitType, address });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -207,52 +168,22 @@ export default function EditPatientScreen() {
 
         {/* Gender selector */}
         <Text style={styles.fieldLabel}>Gender *</Text>
-        <View style={styles.genderRow}>
-          {GENDER_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.genderChip,
-                gender === option.value && styles.genderChipActive,
-              ]}
-              onPress={() => setGender(gender === option.value ? null : option.value)}
-            >
-              <Text
-                style={[
-                  styles.genderChipText,
-                  gender === option.value && styles.genderChipTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ChipSelector
+          options={GENDER_OPTIONS}
+          value={gender}
+          onChange={setGender}
+          allowDeselect
+        />
         {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
 
         {/* Visit Type selector */}
         <Text style={styles.fieldLabel}>Visit Type *</Text>
-        <View style={styles.genderRow}>
-          {VISIT_TYPE_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.genderChip,
-                visitType === option.value && styles.genderChipActive,
-              ]}
-              onPress={() => setVisitType(visitType === option.value ? null : option.value)}
-            >
-              <Text
-                style={[
-                  styles.genderChipText,
-                  visitType === option.value && styles.genderChipTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ChipSelector
+          options={VISIT_TYPE_OPTIONS}
+          value={visitType}
+          onChange={setVisitType}
+          allowDeselect
+        />
         {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
 
         <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
@@ -334,32 +265,6 @@ const styles = StyleSheet.create({
     fontWeight: Typography.medium,
     color: Colors.text,
     marginBottom: Spacing.sm,
-  },
-  genderRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.sm,
-    marginBottom: Spacing.base,
-  },
-  genderChip: {
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  genderChipActive: {
-    backgroundColor: Colors.primaryFaded,
-    borderColor: Colors.primary,
-  },
-  genderChipText: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
-  },
-  genderChipTextActive: {
-    color: Colors.primary,
   },
   toggleRow: {
     flexDirection: 'row',

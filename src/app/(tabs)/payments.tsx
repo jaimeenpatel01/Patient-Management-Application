@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/paymentService';
 
 export default function PaymentsScreen() {
@@ -86,10 +87,7 @@ export default function PaymentsScreen() {
     </View>
   );
 
-  const renderPayment = ({ item }: { item: PaymentWithPatient }) => {
-    const isPaid = item.status === 'paid';
-    const isPending = item.status === 'pending';
-    
+  const PaymentItem = memo(({ item }: { item: PaymentWithPatient }) => {
     return (
       <View style={styles.paymentCard}>
         <View style={styles.paymentHeader}>
@@ -101,21 +99,7 @@ export default function PaymentsScreen() {
           </View>
           <View style={styles.amountInfo}>
             <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
-            <View style={[
-              styles.statusBadge, 
-              isPaid ? styles.statusBadgePaid : 
-              isPending ? styles.statusBadgePending : 
-              styles.statusBadgeOther
-            ]}>
-              <Text style={[
-                styles.statusText,
-                isPaid ? styles.statusTextPaid : 
-                isPending ? styles.statusTextPending : 
-                styles.statusTextOther
-              ]}>
-                {item.status.toUpperCase()}
-              </Text>
-            </View>
+            <StatusBadge status={item.status} />
           </View>
         </View>
         
@@ -136,7 +120,7 @@ export default function PaymentsScreen() {
         </View>
       </View>
     );
-  };
+  });
 
   if (loading) {
     return (
@@ -151,7 +135,7 @@ export default function PaymentsScreen() {
       <FlatList
         data={payments}
         keyExtractor={(item) => item.id}
-        renderItem={renderPayment}
+        renderItem={({ item }) => <PaymentItem item={item} />}
         ListHeaderComponent={renderHeader}
         contentContainerStyle={styles.listContent}
         refreshControl={
@@ -242,15 +226,6 @@ const styles = StyleSheet.create({
   
   amountInfo: { alignItems: 'flex-end' },
   amountText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text, marginBottom: 4 },
-  
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: BorderRadius.full },
-  statusBadgePaid: { backgroundColor: Colors.successLight },
-  statusBadgePending: { backgroundColor: Colors.warningLight },
-  statusBadgeOther: { backgroundColor: Colors.surfaceSecondary },
-  statusText: { fontSize: Typography.xs, fontWeight: Typography.bold },
-  statusTextPaid: { color: Colors.success },
-  statusTextPending: { color: Colors.warning },
-  statusTextOther: { color: Colors.textSecondary },
   
   paymentFooter: { 
     marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.borderLight,
