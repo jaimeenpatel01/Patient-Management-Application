@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import Constants from 'expo-constants';
-import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
+import { uploadAvatar, updateProfile, removeAvatar, removeAvatarFile } from '@/services/profileService';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
@@ -44,6 +44,8 @@ export default function ProfileScreen() {
         return;
       }
       
+      const oldAvatarUrl = profile?.avatar_url;
+
       const { publicUrl, error: uploadError } = await uploadAvatar(user.id, uri, base64Data);
       
       if (uploadError || !publicUrl) {
