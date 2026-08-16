@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/medicalService';

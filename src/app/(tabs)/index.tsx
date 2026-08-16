@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { getDashboardStats, DashboardStats, DashboardFilter } from '@/services/dashboardService';
+import { getDoctorDisplayName } from '@/lib/formatters';
 
 interface QuickActionProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -14,7 +15,7 @@ interface QuickActionProps {
   onPress: () => void;
 }
 
-function QuickAction({ icon, label, color, backgroundColor, onPress }: QuickActionProps) {
+const QuickAction = React.memo(function QuickAction({ icon, label, color, backgroundColor, onPress }: QuickActionProps) {
   return (
     <TouchableOpacity style={styles.quickAction} activeOpacity={0.7} onPress={onPress}>
       <View style={[styles.quickActionIcon, { backgroundColor }]}>
@@ -23,23 +24,23 @@ function QuickAction({ icon, label, color, backgroundColor, onPress }: QuickActi
       <Text style={styles.quickActionLabel}>{label}</Text>
     </TouchableOpacity>
   );
-}
+});
 
 interface FilterTabsProps {
   value: DashboardFilter;
   onChange: (value: DashboardFilter) => void;
 }
 
-function FilterTabs({ value, onChange }: FilterTabsProps) {
-  const options: { label: string; value: DashboardFilter }[] = [
-    { label: 'Daily', value: 'daily' },
-    { label: 'Weekly', value: 'weekly' },
-    { label: 'Monthly', value: 'monthly' },
-  ];
+const FILTER_OPTIONS: { label: string; value: DashboardFilter }[] = [
+  { label: 'Daily', value: 'daily' },
+  { label: 'Weekly', value: 'weekly' },
+  { label: 'Monthly', value: 'monthly' },
+];
 
+const FilterTabs = React.memo(function FilterTabs({ value, onChange }: FilterTabsProps) {
   return (
     <View style={styles.filterTabs}>
-      {options.map((opt) => (
+      {FILTER_OPTIONS.map((opt) => (
         <TouchableOpacity
           key={opt.value}
           style={[styles.filterTab, value === opt.value && styles.filterTabActive]}
@@ -52,7 +53,7 @@ function FilterTabs({ value, onChange }: FilterTabsProps) {
       ))}
     </View>
   );
-}
+});
 
 interface StatCardProps {
   title: string;
@@ -62,7 +63,7 @@ interface StatCardProps {
   backgroundColor: string;
 }
 
-function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps) {
+const StatCard = React.memo(function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps) {
   return (
     <View style={[styles.statCard, Shadows.sm]}>
       <View style={[styles.statIcon, { backgroundColor }]}>
@@ -72,7 +73,7 @@ function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps)
       <Text style={styles.statTitle}>{title}</Text>
     </View>
   );
-}
+});
 
 export default function DashboardScreen() {
   const { user, profile } = useAuth();
@@ -101,14 +102,7 @@ export default function DashboardScreen() {
     fetchStats().finally(() => setRefreshing(false));
   }, []);
 
-  let displayName = profile?.full_name || user?.email?.split('@')[0] || 'Doctor';
-  const isDoctor = profile?.role === 'doctor' || !profile;
-  if (isDoctor) {
-    const lowerName = displayName.toLowerCase();
-    if (!lowerName.startsWith('dr.') && !lowerName.startsWith('dr ')) {
-      displayName = `Dr. ${displayName}`;
-    }
-  }
+  const displayName = getDoctorDisplayName(profile?.full_name ?? null, user?.email);
 
   if (loading) {
     return (
@@ -246,10 +240,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.xl,
-  },
-  welcomeGreeting: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
   },
   welcomeName: {
     fontSize: Typography['2xl'],
@@ -393,19 +383,5 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: Colors.borderLight,
-  },
-  notice: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: Colors.infoLight,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    gap: Spacing.sm,
-  },
-  noticeText: {
-    fontSize: Typography.xs,
-    color: Colors.info,
-    flex: 1,
-    lineHeight: Typography.xs * Typography.normal,
   },
 });

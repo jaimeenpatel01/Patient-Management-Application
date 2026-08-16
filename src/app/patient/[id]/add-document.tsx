@@ -9,17 +9,10 @@ import { uploadDocument } from '@/services/documentService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { ChipSelector } from '@/components/ui/ChipSelector';
+import { DOCUMENT_CATEGORIES } from '@/constants/options';
 import type { DocumentCategory } from '@/types';
 
-const CATEGORIES: { label: string; value: DocumentCategory }[] = [
-  { label: 'X-Ray', value: 'xray' },
-  { label: 'MRI', value: 'mri' },
-  { label: 'Prescription', value: 'prescription' },
-  { label: 'Report', value: 'report' },
-  { label: 'Progress Photo', value: 'progress_photo' },
-  { label: 'Exercise Doc', value: 'exercise_doc' },
-  { label: 'Other', value: 'other' },
-];
 
 export default function AddDocumentScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
@@ -39,7 +32,7 @@ export default function AddDocumentScreen() {
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: false, // Disabled due to native crop UI overlap with device controls
       quality: 0.8,
       base64: true,
@@ -168,19 +161,11 @@ export default function AddDocumentScreen() {
         <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Details</Text>
         
         <Text style={styles.fieldLabel}>Category</Text>
-        <View style={styles.chipRow}>
-          {CATEGORIES.map((opt) => (
-            <TouchableOpacity 
-              key={opt.value} 
-              style={[styles.chip, category === opt.value && styles.chipActive]} 
-              onPress={() => setCategory(opt.value)}
-            >
-              <Text style={[styles.chipText, category === opt.value && styles.chipTextActive]}>
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ChipSelector
+          options={DOCUMENT_CATEGORIES}
+          value={category}
+          onChange={setCategory}
+        />
 
         <Input 
           label="Notes (Optional)" 
@@ -229,13 +214,5 @@ const styles = StyleSheet.create({
   removeFileBtn: { padding: Spacing.xs },
   previewImage: { width: '100%', height: 200, borderRadius: BorderRadius.md, marginTop: Spacing.md },
   errorText: { fontSize: Typography.sm, color: Colors.error, marginTop: Spacing.sm },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm, marginBottom: Spacing.lg },
-  chip: {
-    paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full,
-    borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surface,
-  },
-  chipActive: { backgroundColor: Colors.primaryFaded, borderColor: Colors.primary },
-  chipText: { fontSize: Typography.sm, color: Colors.textSecondary, fontWeight: Typography.medium },
-  chipTextActive: { color: Colors.primary },
   submitContainer: { marginTop: Spacing.lg },
 });

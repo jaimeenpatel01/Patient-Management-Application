@@ -18,7 +18,7 @@ interface ActionMenuProps {
   title?: string;
 }
 
-export function ActionMenu({ visible, onClose, options, title }: ActionMenuProps) {
+export const ActionMenu = React.memo(function ActionMenu({ visible, onClose, options, title }: ActionMenuProps) {
 
   return (
     <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
@@ -53,7 +53,7 @@ export function ActionMenu({ visible, onClose, options, title }: ActionMenuProps
       </TouchableWithoutFeedback>
     </Modal>
   );
-}
+});
 
 const styles = StyleSheet.create({
   overlay: {

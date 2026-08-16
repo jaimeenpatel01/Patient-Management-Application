@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform } from 'react
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { formatTime12Hour } from '@/lib/formatters';
 
 interface CustomDateTimePickerProps {
   label?: string;
@@ -55,16 +56,6 @@ export function AppDateTimePicker({ label, value, onChange, mode = 'date', error
     if (selectedDate) {
       onChange(formatDate(selectedDate));
     }
-  };
-
-  const formatTime12Hour = (val: string) => {
-    const [h, m] = val.split(':');
-    if (!h || !m) return val;
-    let hour = parseInt(h, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12;
-    hour = hour ? hour : 12;
-    return `${String(hour).padStart(2, '0')}:${m} ${ampm}`;
   };
 
   const displayValue = value ? (mode === 'date' ? value : formatTime12Hour(value)) : (mode === 'date' ? 'YYYY-MM-DD' : 'hh:mm AM/PM');

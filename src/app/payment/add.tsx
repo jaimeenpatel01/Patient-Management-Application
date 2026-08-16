@@ -1,35 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { ChipSelector } from '@/components/ui/ChipSelector';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
+import { PAYMENT_TYPES, PAYMENT_METHODS, PAYMENT_STATUSES } from '@/constants/options';
 import { getPatients } from '@/services/patientService';
 import { createPayment, updatePayment } from '@/services/paymentService';
 import type { Patient, PaymentType, PaymentMethod, PaymentStatus } from '@/types';
 import { supabase } from '@/lib/supabase';
 
-const PAYMENT_TYPES: { label: string; value: PaymentType }[] = [
-  { label: 'Consultation', value: 'consultation' },
-  { label: 'Physiotherapy Session', value: 'physiotherapy_session' },
-  { label: 'Package', value: 'package' },
-  { label: 'Other', value: 'other' },
-];
-
-const PAYMENT_METHODS: { label: string; value: PaymentMethod }[] = [
-  { label: 'Cash', value: 'cash' },
-  { label: 'UPI', value: 'upi' },
-  { label: 'Other', value: 'other' },
-];
-
-const PAYMENT_STATUSES: { label: string; value: PaymentStatus }[] = [
-  { label: 'Paid', value: 'paid' },
-  { label: 'Pending', value: 'pending' },
-  { label: 'Partially Paid', value: 'partially_paid' },
-];
 
 export default function AddPaymentScreen() {
   const router = useRouter();
@@ -132,26 +116,6 @@ export default function AddPaymentScreen() {
     }
   };
 
-  // Generic render for chips selection
-  const renderChips = <T extends string>(
-    options: { label: string; value: T }[], 
-    selectedValue: T, 
-    onSelect: (val: T) => void
-  ) => (
-    <View style={styles.chipRow}>
-      {options.map((opt) => (
-        <TouchableOpacity
-          key={opt.value}
-          style={[styles.chip, selectedValue === opt.value && styles.chipActive]}
-          onPress={() => onSelect(opt.value)}
-        >
-          <Text style={[styles.chipText, selectedValue === opt.value && styles.chipTextActive]}>
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
 
   if (isFetchingRecord) {
     return (
@@ -203,17 +167,17 @@ export default function AddPaymentScreen() {
           <View style={styles.spacer} />
 
           <Text style={styles.fieldLabel}>Payment Type</Text>
-          {renderChips(PAYMENT_TYPES, paymentType, setPaymentType)}
+          <ChipSelector options={PAYMENT_TYPES} value={paymentType} onChange={setPaymentType} />
 
           <View style={styles.spacer} />
 
           <Text style={styles.fieldLabel}>Payment Method</Text>
-          {renderChips(PAYMENT_METHODS, paymentMethod, setPaymentMethod)}
+          <ChipSelector options={PAYMENT_METHODS} value={paymentMethod} onChange={setPaymentMethod} />
 
           <View style={styles.spacer} />
 
           <Text style={styles.fieldLabel}>Status</Text>
-          {renderChips(PAYMENT_STATUSES, status, setStatus)}
+          <ChipSelector options={PAYMENT_STATUSES} value={status} onChange={setStatus} />
 
           <View style={styles.spacer} />
 
@@ -246,15 +210,6 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.base, paddingBottom: Spacing['4xl'] },
   sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.semibold, color: Colors.text, marginBottom: Spacing.base },
   fieldLabel: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.text, marginBottom: Spacing.sm },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.sm },
-  chip: {
-    paddingHorizontal: Spacing.base, paddingVertical: Spacing.sm, borderRadius: BorderRadius.full,
-    borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surface,
-  },
-  chipActive: { backgroundColor: Colors.primaryFaded, borderColor: Colors.primary },
-  chipText: { fontSize: Typography.sm, color: Colors.textSecondary, fontWeight: Typography.medium },
-  chipTextActive: { color: Colors.primary },
   spacer: { height: Spacing.lg },
-  errorText: { fontSize: Typography.sm, color: Colors.error, marginTop: Spacing.xs },
   submitContainer: { marginTop: Spacing.xl },
 });

@@ -10,9 +10,11 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { getPatientById, deletePatient } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
+import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
 
 
@@ -28,16 +30,6 @@ function getGenderDisplay(gender: string | null): string {
   return labels[gender] || gender;
 }
 
-function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-}
-
-import * as Clipboard from 'expo-clipboard';
 
 function InfoRow({ icon, label, value, copyable }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null, copyable?: boolean }) {
   const handleCopy = async () => {

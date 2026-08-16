@@ -6,6 +6,7 @@ import { getAttendances, deleteAttendance } from '@/services/attendanceService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
+import { formatTime12Hour } from '@/lib/formatters';
 import type { Attendance } from '@/types';
 
 export default function AttendanceScreen() {
@@ -46,17 +47,7 @@ export default function AttendanceScreen() {
     ]);
   };
 
-  const formatTime12Hour = (val: string) => {
-    const [h, m] = val.split(':');
-    if (!h || !m) return val;
-    let hour = parseInt(h, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12;
-    hour = hour ? hour : 12;
-    return `${String(hour).padStart(2, '0')}:${m} ${ampm}`;
-  };
-
-  const renderCard = ({ item }: { item: Attendance }) => {
+  const renderCard = useCallback(({ item }: { item: Attendance }) => {
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
@@ -89,7 +80,7 @@ export default function AttendanceScreen() {
         ) : null}
       </View>
     );
-  };
+  }, []);
 
   if (isLoading && !isRefreshing) {
     return (
