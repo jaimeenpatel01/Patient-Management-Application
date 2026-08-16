@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { SearchFilter } from '@/components/ui/SearchFilter';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Patient } from '@/types';
 
@@ -104,7 +105,7 @@ export function PatientSearchPicker({
           setSearchQuery('');
         }}
       >
-        <View style={styles.modalContainer}>
+        <SafeAreaView style={styles.modalContainer}>
           {/* Header */}
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>Select Patient</Text>
@@ -168,7 +169,7 @@ export function PatientSearchPicker({
               }
             />
           )}
-        </View>
+        </SafeAreaView>
       </Modal>
     </>
   );

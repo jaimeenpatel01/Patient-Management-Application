@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export interface ActionMenuOption {
   label: string;
@@ -24,7 +25,7 @@ export function ActionMenu({ visible, onClose, options, title }: ActionMenuProps
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <View style={[styles.menuContainer, { paddingBottom: Spacing.lg }]}>
+            <SafeAreaView edges={['bottom']} style={[styles.menuContainer, { paddingBottom: Spacing.lg }]}>
               {title && (
                 <View style={styles.header}>
                   <Text style={styles.title}>{title}</Text>
@@ -46,7 +47,7 @@ export function ActionMenu({ visible, onClose, options, title }: ActionMenuProps
               <TouchableOpacity style={styles.cancelButton} activeOpacity={0.7} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
-            </View>
+            </SafeAreaView>
           </TouchableWithoutFeedback>
         </View>
       </TouchableWithoutFeedback>
