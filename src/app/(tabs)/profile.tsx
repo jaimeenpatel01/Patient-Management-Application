@@ -183,7 +183,7 @@ export default function ProfileScreen() {
           <InfoRow
             icon="information-circle-outline"
             label="Version"
-            value="1.2.0"
+            value="1.2.1"
           />
         </View>
       </View>
