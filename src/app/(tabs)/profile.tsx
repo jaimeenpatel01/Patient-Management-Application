@@ -215,7 +215,7 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
         <Ionicons name={icon} size={20} color={Colors.textSecondary} />
         <Text style={styles.infoLabel}>{label}{' '}</Text>
       </View>
-      <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
+      <Text style={styles.infoValue}>{value}</Text>
     </View>
   );
 }
@@ -275,6 +275,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
+    alignItems:'center',
+    justifyContent:'center',
+    textAlign:'center',
+    alignSelf:'center'
   },
   roleBadge: {
     backgroundColor: Colors.primaryFaded,
@@ -326,7 +330,7 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     fontWeight: Typography.medium,
     color: Colors.text,
-    maxWidth: '50%',
+    maxWidth: '65%',
     textAlign: 'right',
   },
   divider: {

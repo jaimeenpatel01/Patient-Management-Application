@@ -15,10 +15,11 @@ function RootNavigator() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
+    const isResetPasswordFlow = inAuthGroup && (segments[1] === 'reset-password' || segments[1] === 'forgot-password');
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (session && inAuthGroup) {
+    } else if (session && inAuthGroup && !isResetPasswordFlow) {
       router.replace('/(tabs)');
     }
   }, [session, isLoading, segments]);
