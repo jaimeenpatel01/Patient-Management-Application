@@ -97,6 +97,8 @@ export function AppDateTimePicker({ label, value, onChange, mode = 'date', error
                 value={parseDate()}
                 mode={mode}
                 display="spinner"
+                themeVariant="light"
+                textColor={Colors.text}
                 onChange={handleChange}
                 style={styles.iosPicker}
               />
@@ -172,5 +174,6 @@ const styles = StyleSheet.create({
   },
   iosPicker: {
     height: 200,
+    width: '100%',
   },
 });
