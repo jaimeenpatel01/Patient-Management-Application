@@ -18,6 +18,8 @@ export interface AuthContextType extends AuthState {
   verifyRecoveryOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
+  isFirstTimeGoogleSignIn: boolean;
+  setIsFirstTimeGoogleSignIn: (val: boolean) => void;
 }
 
 // ─── Profile Types ────────────────────────────────────────────

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 
 function RootNavigator() {
-  const { session, isLoading } = useAuth();
+  const { session, isLoading, isFirstTimeGoogleSignIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -20,9 +20,15 @@ function RootNavigator() {
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (session && inAuthGroup && !isResetPasswordFlow) {
-      router.replace('/(tabs)');
+      if (isFirstTimeGoogleSignIn) {
+        if (segments[1] !== 'complete-profile') {
+          router.replace('/(auth)/complete-profile');
+        }
+      } else {
+        router.replace('/(tabs)');
+      }
     }
-  }, [session, isLoading, segments]);
+  }, [session, isLoading, segments, isFirstTimeGoogleSignIn]);
 
   if (isLoading) {
     return <LoadingScreen message="Loading..." />;

@@ -22,6 +22,7 @@ export default function LoginScreen() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
   const validateForm = (): boolean => {
     if (!email.trim()) {
@@ -104,47 +105,60 @@ export default function LoginScreen() {
             </View>
           ) : null}
 
-          <Input
-            label="Email"
-            placeholder="doctor@clinic.com"
-            leftIcon="mail-outline"
-            keyboardType="email-address"
-            autoComplete="email"
-            value={email}
-            onChangeText={(text) => {
-              setEmail(text);
-              if (error) setError('');
-            }}
-          />
+          {showEmailForm ? (
+            <>
+              <Input
+                label="Email"
+                placeholder="doctor@clinic.com"
+                leftIcon="mail-outline"
+                keyboardType="email-address"
+                autoComplete="email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (error) setError('');
+                }}
+              />
 
-          <Input
-            label="Password"
-            placeholder="Enter your password"
-            leftIcon="lock-closed-outline"
-            secureTextEntry
-            autoComplete="password"
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              if (error) setError('');
-            }}
-            onSubmitEditing={handleLogin}
-            returnKeyType="go"
-          />
+              <Input
+                label="Password"
+                placeholder="Enter your password"
+                leftIcon="lock-closed-outline"
+                secureTextEntry
+                autoComplete="password"
+                value={password}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  if (error) setError('');
+                }}
+                onSubmitEditing={handleLogin}
+                returnKeyType="go"
+              />
 
-          <Button
-            title="Sign In"
-            onPress={handleLogin}
-            loading={isLoading}
-            size="lg"
-          />
+              <Button
+                title="Sign In"
+                onPress={handleLogin}
+                loading={isLoading}
+                size="lg"
+              />
 
-          <TouchableOpacity
-            style={styles.forgotButton}
-            onPress={() => router.push('/(auth)/forgot-password')}
-          >
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.forgotButton}
+                onPress={() => router.push('/(auth)/forgot-password')}
+              >
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              style={styles.emailOptionButton}
+              onPress={() => setShowEmailForm(true)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="mail" size={24} color={Colors.text} />
+              <Text style={styles.emailOptionText}>Email and Password</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Divider */}
           <View style={styles.dividerContainer}>
@@ -273,6 +287,23 @@ const styles = StyleSheet.create({
     color: Colors.textTertiary,
     marginHorizontal: Spacing.md,
     fontWeight: Typography.medium,
+  },
+  emailOptionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    gap: Spacing.md,
+  },
+  emailOptionText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
   },
   googleButton: {
     flexDirection: 'row',
