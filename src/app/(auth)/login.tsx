@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
@@ -163,9 +164,11 @@ export default function LoginScreen() {
               <Text style={styles.googleButtonText}>Signing in...</Text>
             ) : (
               <>
-                <View style={styles.googleIconContainer}>
-                  <Text style={styles.googleIcon}>G</Text>
-                </View>
+                <Image
+                  source={require('@/assets/images/google-icon.png')}
+                  style={styles.googleIconImage}
+                  resizeMode="contain"
+                />
                 <Text style={styles.googleButtonText}>Sign in with Google</Text>
               </>
             )}
@@ -286,18 +289,9 @@ const styles = StyleSheet.create({
   googleButtonDisabled: {
     opacity: 0.6,
   },
-  googleIconContainer: {
+  googleIconImage: {
     width: 24,
     height: 24,
-    borderRadius: 12,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  googleIcon: {
-    fontSize: 18,
-    fontWeight: Typography.bold,
-    color: '#4285F4',
   },
   googleButtonText: {
     fontSize: Typography.base,
