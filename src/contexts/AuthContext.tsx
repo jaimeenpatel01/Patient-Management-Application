@@ -11,6 +11,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFirstTimeGoogleSignIn, setIsFirstTimeGoogleSignIn] = useState(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
@@ -120,6 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Only set avatar on first sign-in (avatar_url is null = never set before)
         if (profileData && !profileData.avatar_url) {
+          setIsFirstTimeGoogleSignIn(true);
           const googlePhotoUrl =
             data.user.user_metadata?.avatar_url ||
             data.user.user_metadata?.picture ||
@@ -212,6 +214,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyRecoveryOtp,
         updatePassword,
         refreshProfile,
+        isFirstTimeGoogleSignIn,
+        setIsFirstTimeGoogleSignIn,
       }}
     >
       {children}
