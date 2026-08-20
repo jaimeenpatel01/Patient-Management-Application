@@ -12,6 +12,27 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+/**
+ * Configure Google Sign-In lazily — only when actually needed.
+ * This avoids crashing in Expo Go where the native module isn't available.
+ * Returns true if configuration succeeded, false if the native module is missing.
+ */
+let googleSigninConfigured = false;
+
+export function ensureGoogleSigninConfigured(): boolean {
+  if (googleSigninConfigured) return true;
+  try {
+    const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+    GoogleSignin.configure({
+      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    });
+    googleSigninConfigured = true;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,

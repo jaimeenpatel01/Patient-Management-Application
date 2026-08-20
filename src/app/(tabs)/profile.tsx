@@ -8,8 +8,11 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Modal,
+  TextInput,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { supabase } from '@/lib/supabase';
 import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
 import { getDoctorDisplayName } from '@/lib/formatters';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,9 +21,13 @@ import { Button } from '@/components/ui/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 export default function ProfileScreen() {
-  const { user, profile, signOut, refreshProfile } = useAuth();
+  const { user, profile, signOut, refreshProfile, updatePassword } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const handleAvatarUpload = async () => {
     if (!user) return;
@@ -116,12 +123,56 @@ export default function ProfileScreen() {
     );
   };
 
+  const handleUpdatePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters.');
+      return;
+    }
+    setIsUpdatingPassword(true);
+    const { error } = await updatePassword(newPassword);
+    setIsUpdatingPassword(false);
+    
+    if (error) {
+      Alert.alert('Update Failed', error);
+    } else {
+      Alert.alert('Success', 'Password updated successfully');
+      setIsPasswordModalVisible(false);
+      setNewPassword('');
+    }
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete all your data.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            setIsDeletingAccount(true);
+            const { error } = await supabase.rpc('delete_user');
+            if (error) {
+              Alert.alert('Error', error.message || 'Failed to delete account.');
+              setIsDeletingAccount(false);
+            } else {
+              await signOut();
+              // No need to setIsDeletingAccount(false) as we are navigating away
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={{ flex: 1, backgroundColor: Colors.background }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
       {/* Profile Card */}
       <View style={[styles.profileCard, Shadows.sm]}>
         <TouchableOpacity style={styles.avatarLarge} onPress={handleAvatarPress} disabled={isUploading}>
@@ -183,9 +234,30 @@ export default function ProfileScreen() {
           <InfoRow
             icon="information-circle-outline"
             label="Version"
-            value="1.2.1"
+            value="1.4.0"
           />
         </View>
+      </View>
+
+      {/* Account Actions */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Account Actions</Text>
+        {user?.app_metadata?.provider !== 'google' && (
+          <Button
+            title="Update Password"
+            onPress={() => setIsPasswordModalVisible(true)}
+            variant="outline"
+            icon={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
+            style={{ marginBottom: Spacing.base }}
+          />
+        )}
+        <Button
+          title="Delete Account"
+          onPress={handleDeleteAccount}
+          variant="danger"
+          loading={isDeletingAccount}
+          icon={<Ionicons name="trash-outline" size={20} color={Colors.textInverse} />}
+        />
       </View>
 
       {/* Sign Out */}
@@ -193,12 +265,64 @@ export default function ProfileScreen() {
         <Button
           title="Sign Out"
           onPress={handleSignOut}
-          variant="danger"
+          variant="secondary"
           loading={isSigningOut}
-          icon={<Ionicons name="log-out-outline" size={20} color={Colors.textInverse} />}
+          icon={<Ionicons name="log-out-outline" size={20} color={Colors.text} />}
         />
       </View>
     </ScrollView>
+
+    {/* Update Password Modal */}
+    <Modal
+      visible={isPasswordModalVisible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={() => setIsPasswordModalVisible(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Update Password</Text>
+          <Text style={styles.modalSubtitle}>Enter your new password below.</Text>
+          
+          <View style={styles.inputContainer}>
+            <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
+            <TextInput
+              style={styles.input}
+              placeholder="New Password (min 6 chars)"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+              placeholderTextColor={Colors.textTertiary}
+            />
+          </View>
+
+          <View style={styles.modalActions}>
+            <TouchableOpacity 
+              style={styles.modalCancelButton}
+              onPress={() => {
+                setIsPasswordModalVisible(false);
+                setNewPassword('');
+              }}
+              disabled={isUpdatingPassword}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalSubmitButton}
+              onPress={handleUpdatePassword}
+              disabled={isUpdatingPassword}
+            >
+              {isUpdatingPassword ? (
+                <ActivityIndicator color={Colors.textInverse} size="small" />
+              ) : (
+                <Text style={styles.modalSubmitText}>Update</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  </View>
   );
 }
 
@@ -340,5 +464,83 @@ const styles = StyleSheet.create({
   },
   signOutSection: {
     marginTop: Spacing.sm,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.xl,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  modalSubtitle: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    marginBottom: Spacing.xl,
+    backgroundColor: Colors.background,
+  },
+  inputIcon: {
+    marginRight: Spacing.sm,
+  },
+  input: {
+    flex: 1,
+    height: 48,
+    color: Colors.text,
+    fontSize: Typography.base,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.md,
+  },
+  modalCancelButton: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+  },
+  modalCancelText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.base,
+    fontWeight: Typography.medium,
+  },
+  modalSubmitButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    minWidth: 100,
+    alignItems: 'center',
+  },
+  modalSubmitText: {
+    color: Colors.textInverse,
+    fontSize: Typography.base,
+    fontWeight: Typography.medium,
   },
 });

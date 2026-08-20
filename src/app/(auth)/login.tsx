@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
@@ -14,12 +15,13 @@ import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 
 export default function LoginScreen() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const validateForm = (): boolean => {
     if (!email.trim()) {
@@ -55,6 +57,17 @@ export default function LoginScreen() {
     setIsLoading(true);
     const result = await signIn(email.trim(), password);
     setIsLoading(false);
+
+    if (result.error) {
+      setError(result.error);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsGoogleLoading(true);
+    const result = await signInWithGoogle();
+    setIsGoogleLoading(false);
 
     if (result.error) {
       setError(result.error);
@@ -131,6 +144,34 @@ export default function LoginScreen() {
             onPress={() => router.push('/(auth)/forgot-password')}
           >
             <Text style={styles.forgotText}>Forgot Password?</Text>
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or continue with</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Google Sign-In Button */}
+          <TouchableOpacity
+            style={[styles.googleButton, isGoogleLoading && styles.googleButtonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading || isLoading}
+            activeOpacity={0.7}
+          >
+            {isGoogleLoading ? (
+              <Text style={styles.googleButtonText}>Signing in...</Text>
+            ) : (
+              <>
+                <Image
+                  source={require('@/assets/images/google-icon.png')}
+                  style={styles.googleIconImage}
+                  resizeMode="contain"
+                />
+                <Text style={styles.googleButtonText}>Sign in with Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           <View style={styles.signupContainer}>
@@ -216,6 +257,46 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.primary,
     fontWeight: Typography.medium,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    marginHorizontal: Spacing.md,
+    fontWeight: Typography.medium,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    gap: Spacing.md,
+  },
+  googleButtonDisabled: {
+    opacity: 0.6,
+  },
+  googleIconImage: {
+    width: 24,
+    height: 24,
+  },
+  googleButtonText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
   },
   signupContainer: {
     flexDirection: 'row',

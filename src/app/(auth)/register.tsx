@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 
 export default function RegisterScreen() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,6 +22,7 @@ export default function RegisterScreen() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const validateForm = (): boolean => {
     if (!fullName.trim()) {
@@ -77,6 +78,17 @@ export default function RegisterScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setIsGoogleLoading(true);
+    const result = await signInWithGoogle();
+    setIsGoogleLoading(false);
+
+    if (result.error) {
+      setError(result.error);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <KeyboardAwareScrollView
@@ -108,6 +120,32 @@ export default function RegisterScreen() {
               <Text style={styles.errorText}>{error}</Text>
             </View>
           ) : null}
+
+          {/* Google Sign-In Button (top of form for quick sign-up) */}
+          <TouchableOpacity
+            style={[styles.googleButton, isGoogleLoading && styles.googleButtonDisabled]}
+            onPress={handleGoogleSignIn}
+            disabled={isGoogleLoading || isLoading}
+            activeOpacity={0.7}
+          >
+            {isGoogleLoading ? (
+              <Text style={styles.googleButtonText}>Signing up...</Text>
+            ) : (
+              <>
+                <View style={styles.googleIconContainer}>
+                  <Text style={styles.googleIcon}>G</Text>
+                </View>
+                <Text style={styles.googleButtonText}>Sign up with Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.dividerContainer}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or sign up with email</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
           <Input
             label="Full Name"
@@ -229,6 +267,55 @@ const styles = StyleSheet.create({
     color: Colors.error,
     marginLeft: Spacing.sm,
     flex: 1,
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1.5,
+    borderColor: Colors.border,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.base,
+    gap: Spacing.md,
+  },
+  googleButtonDisabled: {
+    opacity: 0.6,
+  },
+  googleIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  googleIcon: {
+    fontSize: 18,
+    fontWeight: Typography.bold,
+    color: '#4285F4',
+  },
+  googleButtonText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: Spacing.lg,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+  dividerText: {
+    fontSize: Typography.xs,
+    color: Colors.textTertiary,
+    marginHorizontal: Spacing.md,
+    fontWeight: Typography.medium,
   },
   registerButton: {
     marginTop: Spacing.md,
