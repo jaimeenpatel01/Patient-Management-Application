@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Doctor Management App",
+    "name": "PhysioDesk",
     "slug": "doctor-management-app",
     "version": "1.4.0",
     "orientation": "portrait",
@@ -8,7 +8,7 @@
     "scheme": "doctor-management-app",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -29,9 +29,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F8FFFE",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 280
         }
       ],
       "@react-native-community/datetimepicker",

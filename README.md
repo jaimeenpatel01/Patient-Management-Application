@@ -1,6 +1,6 @@
-# Doctor Management Application
+# PhysioDesk
 
-Welcome to the **Doctor Management Application**, a comprehensive and modern platform designed for healthcare professionals to effortlessly manage their clinic, patients, appointments, and payments. Built with React Native (Expo) and Supabase, this application provides a seamless mobile experience for both iOS and Android.
+Welcome to **PhysioDesk**, a comprehensive and modern platform designed for healthcare professionals to effortlessly manage their clinic, patients, appointments, and payments. Built with React Native (Expo) and Supabase, this application provides a seamless mobile experience for both iOS and Android.
 
 ## 🌟 Key Features & Functionality
 
@@ -8,6 +8,8 @@ This application comes fully loaded with features tailored specifically to a doc
 
 ### 1. Authentication
 * **Sign Up / Sign In:** Secure email and password authentication powered by Supabase.
+* **Google Sign-In:** Quick and secure one-tap authentication using Google accounts.
+* **Profile Completion:** Streamlined onboarding flow for new users to set up their initial details.
 * **Forgot Password:** Easy recovery flow for forgotten credentials.
 * **Protected Routes:** Ensure that sensitive clinic data is only accessible to authenticated medical professionals.
 
@@ -42,6 +44,7 @@ The dashboard and statistical modules come with built-in time filters that calcu
 ### 7. User Profile (Profile Tab)
 * View your current account details (Email, Role, Display Name).
 * Manage your app settings and session safely.
+* **Account Deletion:** Users have complete control over their data with the ability to permanently delete their account.
 
 ---
 

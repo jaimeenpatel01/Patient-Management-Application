@@ -1,5 +1,5 @@
 /**
- * Design tokens for the Doctor Management App.
+ * Design tokens for PhysioDesk.
  * Healthcare-professional palette with teal primary.
  */
 

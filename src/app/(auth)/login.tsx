@@ -87,10 +87,11 @@ export default function LoginScreen() {
       >
         {/* Branding */}
         <View style={styles.branding}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="medical" size={40} color={Colors.textInverse} />
-          </View>
-          <Text style={styles.appName}>Doctor Management</Text>
+          <Image
+            source={require('@/assets/images/physiodesk-icon-240x240.png')}
+            style={styles.appIcon}
+          />
+          <Text style={styles.appName}>PhysioDesk</Text>
           <Text style={styles.appTagline}>Manage your clinic efficiently</Text>
         </View>
 
@@ -215,13 +216,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Spacing['2xl'],
   },
-  iconContainer: {
+  appIcon: {
     width: 80,
     height: 80,
     borderRadius: BorderRadius.xl,
-    backgroundColor: Colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: Spacing.base,
   },
   appName: {
