@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Dimensions,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
@@ -13,6 +14,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+/** Decorative "+" cross element */
+function CrossMark({ style }: { style?: object }) {
+  return (
+    <View style={[styles.cross, style]} pointerEvents="none">
+      <View style={styles.crossH} />
+      <View style={styles.crossV} />
+    </View>
+  );
+}
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle } = useAuth();
@@ -30,7 +43,6 @@ export default function LoginScreen() {
       return false;
     }
 
-    // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
       setError('Please enter a valid email address.');
@@ -52,16 +64,11 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     setError('');
-
     if (!validateForm()) return;
-
     setIsLoading(true);
     const result = await signIn(email.trim(), password);
     setIsLoading(false);
-
-    if (result.error) {
-      setError(result.error);
-    }
+    if (result.error) setError(result.error);
   };
 
   const handleGoogleSignIn = async () => {
@@ -69,16 +76,29 @@ export default function LoginScreen() {
     setIsGoogleLoading(true);
     const result = await signInWithGoogle();
     setIsGoogleLoading(false);
-
-    if (result.error) {
-      setError(result.error);
-    }
+    if (result.error) setError(result.error);
   };
 
   return (
     <View style={styles.container}>
+      {/* ── Background decoration ── */}
+
+      {/* Bottom teal wave blob — outer ring */}
+      <View style={styles.waveOuter} pointerEvents="none">
+        <View style={styles.waveInner} />
+      </View>
+
+      {/* Scattered "+" cross marks */}
+      <CrossMark style={{ top: SCREEN_HEIGHT * 0.08,  left: SCREEN_WIDTH * 0.08 }} />
+      <CrossMark style={{ top: SCREEN_HEIGHT * 0.14,  right: SCREEN_WIDTH * 0.1 }} />
+      <CrossMark style={{ top: SCREEN_HEIGHT * 0.55,  left: SCREEN_WIDTH * 0.06 }} />
+      <CrossMark style={{ top: SCREEN_HEIGHT * 0.62,  right: SCREEN_WIDTH * 0.07 }} />
+      <CrossMark style={{ bottom: SCREEN_HEIGHT * 0.22, left: SCREEN_WIDTH * 0.14 }} />
+      <CrossMark style={{ bottom: SCREEN_HEIGHT * 0.18, right: SCREEN_WIDTH * 0.12 }} />
+
+      {/* ── Scrollable content ── */}
       <KeyboardAwareScrollView
-        style={styles.container}
+        style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -204,7 +224,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     flexGrow: 1,
@@ -212,6 +232,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing['3xl'],
   },
+
+  // ── Background decoration ──────────────────────────────────
+  scrollView: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  waveOuter: {
+    position: 'absolute',
+    bottom: -SCREEN_HEIGHT * 0.29,
+    left: -SCREEN_WIDTH * 0.25,
+    width: SCREEN_WIDTH * 1.5,
+    height: SCREEN_HEIGHT * 0.42,
+    borderRadius: SCREEN_WIDTH * 0.75,
+    backgroundColor: 'rgba(21,159,143,0.18)',
+    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  waveInner: {
+    width: SCREEN_WIDTH * 1.3,
+    height: SCREEN_HEIGHT * 0.36,
+    borderRadius: SCREEN_WIDTH * 0.65,
+    backgroundColor: 'rgba(21,159,143,0.32)',
+    marginBottom: -SCREEN_HEIGHT * 0.02,
+  },
+  cross: {
+    position: 'absolute',
+    width: 14,
+    height: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  crossH: {
+    position: 'absolute',
+    width: 16,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(21,159,143,0.55)',
+  },
+  crossV: {
+    position: 'absolute',
+    width: 3,
+    height: 16,
+    borderRadius: 2,
+    backgroundColor: 'rgba(21,159,143,0.55)',
+  },
+
+  // ── Branding ───────────────────────────────────────────────
   branding: {
     alignItems: 'center',
     marginBottom: Spacing['2xl'],
@@ -232,6 +300,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginTop: Spacing.xs,
   },
+
+  // ── Form card ─────────────────────────────────────────────
   formCard: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.xl,
