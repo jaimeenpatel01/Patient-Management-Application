@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator,
   Image,
   Alert,
 } from 'react-native';
@@ -37,7 +36,7 @@ export default function CompleteProfileScreen() {
     if (profile?.avatar_url && !avatarUri && !avatarBase64) {
       setAvatarUri(profile.avatar_url);
     }
-  }, [profile]);
+  }, [profile, avatarBase64, avatarUri, fullName]);
 
   const handleAvatarUpload = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -130,7 +129,7 @@ export default function CompleteProfileScreen() {
       >
         <View style={styles.branding}>
           <Text style={styles.appName}>Complete Profile</Text>
-          <Text style={styles.appTagline}>Let's set up your clinic details</Text>
+          <Text style={styles.appTagline}>Let&apos;s set up your clinic details</Text>
         </View>
 
         <View style={styles.formCard}>
