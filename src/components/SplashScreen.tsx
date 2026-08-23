@@ -12,17 +12,25 @@ import {
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // ════════════════════════════════════════════════════════════════════════════════
-//  DevSplashScreen
-//  ─────────────────
-//  A hot-reloadable splash screen for rapid design iteration.
-//  Edit colors, layout, animations, etc. and see changes instantly.
-//
-//  Once you're happy with the design, export the final layout as
-//  a static image for the native splash screen.
+//  SplashScreen
+//  ─────────────
+//  Animated JS splash that sits on top of the app after the native splash hides.
+//  Plays entrance animations, holds briefly, then fades out via `onFinished`.
 // ════════════════════════════════════════════════════════════════════════════════
 
-export default function DevSplashScreen() {
+interface SplashScreenProps {
+  /** Called when all animations finish and the splash has faded out. */
+  onFinished: () => void;
+  /** How long (ms) to hold the completed splash before fading out. Default 800. */
+  holdDuration?: number;
+}
+
+export default function SplashScreen({
+  onFinished,
+  holdDuration = 800,
+}: SplashScreenProps) {
   // ── Animations ──────────────────────────────────────────────────────────────
+  const containerOpacity = useRef(new Animated.Value(1)).current;
   const logoScale = useRef(new Animated.Value(0.6)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const titleOpacity = useRef(new Animated.Value(0)).current;
@@ -32,7 +40,6 @@ export default function DevSplashScreen() {
   const taglineOpacity = useRef(new Animated.Value(0)).current;
   const taglineTranslateY = useRef(new Animated.Value(15)).current;
   const bottomWaveOpacity = useRef(new Animated.Value(0)).current;
-  const pulseAnim = useRef(new Animated.Value(1)).current;
 
   // Decorative cross animations
   const cross1Opacity = useRef(new Animated.Value(0)).current;
@@ -107,7 +114,20 @@ export default function DevSplashScreen() {
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+
+      // 5. Hold the completed splash for a moment
+      Animated.delay(holdDuration),
+
+      // 6. Fade out the entire splash
+      Animated.timing(containerOpacity, {
+        toValue: 0,
+        duration: 400,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onFinished();
+    });
 
     // Decorative crosses fade in with stagger
     Animated.stagger(150, [
@@ -116,135 +136,117 @@ export default function DevSplashScreen() {
       Animated.timing(cross3Opacity, { toValue: 0.22, duration: 600, useNativeDriver: true }),
       Animated.timing(cross4Opacity, { toValue: 0.15, duration: 600, useNativeDriver: true }),
     ]).start();
-
-    // Continuous subtle pulse on the spine icon
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1.08,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 1500,
-          easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
-        }),
-      ]),
-    ).start();
   }, []);
 
   return (
-    <View style={styles.container}>
-      {/* ── Background gradient (simulated with layered views) ─────────── */}
-      <View style={styles.bgTop} />
-      <View style={styles.bgBottom} />
+    <Animated.View style={[StyleSheet.absoluteFill, { opacity: containerOpacity, zIndex: 999 }]}>
+      <View style={styles.container}>
+        {/* ── Background gradient (simulated with layered views) ─────────── */}
+        <View style={styles.bgTop} />
+        <View style={styles.bgBottom} />
 
-      {/* ── Decorative dot grid (top-left) ─────────────────────────────── */}
-      <View style={styles.dotGridTopLeft}>
-        {Array.from({ length: 4 }).map((_, row) => (
-          <View key={row} style={styles.dotRow}>
-            {Array.from({ length: 4 }).map((_, col) => (
-              <View key={col} style={styles.dot} />
-            ))}
-          </View>
-        ))}
-      </View>
+        {/* ── Decorative dot grid (top-left) ─────────────────────────────── */}
+        <View style={styles.dotGridTopLeft}>
+          {Array.from({ length: 4 }).map((_, row) => (
+            <View key={row} style={styles.dotRow}>
+              {Array.from({ length: 4 }).map((_, col) => (
+                <View key={col} style={styles.dot} />
+              ))}
+            </View>
+          ))}
+        </View>
 
-      {/* ── Decorative dot grid (bottom-right) ─────────────────────────── */}
-      <View style={styles.dotGridBottomRight}>
-        {Array.from({ length: 5 }).map((_, row) => (
-          <View key={row} style={styles.dotRow}>
-            {Array.from({ length: 5 }).map((_, col) => (
-              <View key={col} style={styles.dot} />
-            ))}
-          </View>
-        ))}
-      </View>
+        {/* ── Decorative dot grid (bottom-left) ────────────────────────────── */}
+        <View style={styles.dotGridBottomRight}>
+          {Array.from({ length: 5 }).map((_, row) => (
+            <View key={row} style={styles.dotRow}>
+              {Array.from({ length: 5 }).map((_, col) => (
+                <View key={col} style={styles.dot} />
+              ))}
+            </View>
+          ))}
+        </View>
 
-      {/* ── Decorative crosses ─────────────────────────────────────────── */}
-      <Animated.Text style={[styles.cross, styles.cross1, { opacity: cross1Opacity }]}>+</Animated.Text>
-      <Animated.Text style={[styles.cross, styles.cross2, { opacity: cross2Opacity }]}>+</Animated.Text>
-      <Animated.Text style={[styles.cross, styles.cross3, { opacity: cross3Opacity }]}>+</Animated.Text>
-      <Animated.Text style={[styles.cross, styles.cross4, { opacity: cross4Opacity }]}>+</Animated.Text>
-      <Animated.Text style={[styles.cross, styles.cross5, { opacity: cross2Opacity }]}>+</Animated.Text>
-      <Animated.Text style={[styles.cross, styles.cross6, { opacity: cross3Opacity }]}>+</Animated.Text>
+        {/* ── Decorative crosses ─────────────────────────────────────────── */}
+        <Animated.Text style={[styles.cross, styles.cross1, { opacity: cross1Opacity }]}>+</Animated.Text>
+        <Animated.Text style={[styles.cross, styles.cross2, { opacity: cross2Opacity }]}>+</Animated.Text>
+        <Animated.Text style={[styles.cross, styles.cross3, { opacity: cross3Opacity }]}>+</Animated.Text>
+        <Animated.Text style={[styles.cross, styles.cross4, { opacity: cross4Opacity }]}>+</Animated.Text>
+        <Animated.Text style={[styles.cross, styles.cross5, { opacity: cross2Opacity }]}>+</Animated.Text>
+        <Animated.Text style={[styles.cross, styles.cross6, { opacity: cross3Opacity }]}>+</Animated.Text>
 
-      {/* ── Main content ───────────────────────────────────────────────── */}
-      <View style={styles.content}>
+        {/* ── Main content ───────────────────────────────────────────────── */}
+        <View style={styles.content}>
 
-        {/* App Icon / Logo */}
+          {/* App Icon / Logo */}
+          <Animated.View
+            style={[
+              styles.logoContainer,
+              {
+                opacity: logoOpacity,
+                transform: [{ scale: logoScale }],
+              },
+            ]}
+          >
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </Animated.View>
+
+          {/* App Name */}
+          <Animated.View
+            style={{
+              opacity: titleOpacity,
+              transform: [{ translateY: titleTranslateY }],
+            }}
+          >
+            <Text style={styles.title}>
+              <Text style={styles.titlePhysio}>Physio</Text>
+              <Text style={styles.titleDesk}>Desk</Text>
+            </Text>
+          </Animated.View>
+
+          {/* Subtitle */}
+          <Animated.View
+            style={{
+              opacity: subtitleOpacity,
+              transform: [{ translateY: subtitleTranslateY }],
+            }}
+          >
+            <View style={styles.subtitleRow}>
+              <View style={styles.subtitleLine} />
+              <Text style={styles.subtitle}>PHYSIO CLINIC MANAGEMENT</Text>
+              <View style={styles.subtitleLine} />
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* ── Bottom section ─────────────────────────────────────────────── */}
         <Animated.View
           style={[
-            styles.logoContainer,
+            styles.bottomSection,
             {
-              opacity: logoOpacity,
-              transform: [{ scale: logoScale }],
+              opacity: taglineOpacity,
+              transform: [{ translateY: taglineTranslateY }],
             },
           ]}
         >
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logoImage}
-            resizeMode="contain"
-          />
+          <Text style={styles.tagline}>Manage Clinic. Better Care.</Text>
         </Animated.View>
 
-        {/* App Name */}
-        <Animated.View
-          style={{
-            opacity: titleOpacity,
-            transform: [{ translateY: titleTranslateY }],
-          }}
-        >
-          <Text style={styles.title}>
-            <Text style={styles.titlePhysio}>Physio</Text>
-            <Text style={styles.titleDesk}>Desk</Text>
-          </Text>
-        </Animated.View>
-
-        {/* Subtitle */}
-        <Animated.View
-          style={{
-            opacity: subtitleOpacity,
-            transform: [{ translateY: subtitleTranslateY }],
-          }}
-        >
-          <View style={styles.subtitleRow}>
-            <View style={styles.subtitleLine} />
-            <Text style={styles.subtitle}>PHYSIO CLINIC MANAGEMENT</Text>
-            <View style={styles.subtitleLine} />
-          </View>
+        {/* ── Bottom wave decoration ─────────────────────────────────────── */}
+        <Animated.View style={[styles.waveContainer, { opacity: bottomWaveOpacity }]}>
+          <View style={styles.wave1} />
+          <View style={styles.wave2} />
+          <View style={styles.wave3} />
         </Animated.View>
       </View>
-
-      {/* ── Bottom section ─────────────────────────────────────────────── */}
-      <Animated.View
-        style={[
-          styles.bottomSection,
-          {
-            opacity: taglineOpacity,
-            transform: [{ translateY: taglineTranslateY }],
-          },
-        ]}
-      >
-        <Text style={styles.tagline}>Manage Clinic. Better Care.</Text>
-      </Animated.View>
-
-      {/* ── Bottom wave decoration ─────────────────────────────────────── */}
-      <Animated.View style={[styles.waveContainer, { opacity: bottomWaveOpacity }]}>
-        <View style={styles.wave1} />
-        <View style={styles.wave2} />
-        <View style={styles.wave3} />
-      </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-//  Styles — edit these for fast-refresh iteration!
 // ═══════════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container: {
@@ -324,7 +326,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 28,
-    // Shadow
     shadowColor: '#0D9488',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
@@ -374,20 +375,6 @@ const styles = StyleSheet.create({
   bottomSection: {
     alignItems: 'center',
     marginBottom: 100,
-  },
-  spineIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(13, 148, 136, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(13, 148, 136, 0.15)',
-  },
-  spineIcon: {
-    fontSize: 24,
   },
   tagline: {
     fontSize: 16,
