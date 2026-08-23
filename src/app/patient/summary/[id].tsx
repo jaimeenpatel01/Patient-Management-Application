@@ -1,12 +1,11 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack , useFocusEffect } from 'expo-router';
 import { getPatientById } from '@/services/patientService';
 import { getAttendances } from '@/services/attendanceService';
 import { getPaymentsByPatientId } from '@/services/paymentService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import type { Patient, Attendance, Payment } from '@/types';
-import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';

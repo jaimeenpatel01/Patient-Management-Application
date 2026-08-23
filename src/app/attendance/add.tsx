@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter, Stack, useLocalSearchParams } from 'expo-router';
+import { useRouter, Stack, useLocalSearchParams , useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { createAttendance, updateAttendance } from '@/services/attendanceService';
 import { Colors, Typography, Spacing } from '@/constants/theme';
@@ -11,7 +11,6 @@ import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import type { Patient } from '@/types';
 import { getPatients } from '@/services/patientService';
-import { useFocusEffect } from 'expo-router';
 import { supabase } from '@/lib/supabase'; // to fetch existing record
 
 export default function MarkAttendanceScreen() {

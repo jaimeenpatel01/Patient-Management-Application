@@ -161,12 +161,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    // Also sign out from Google SDK to clear cached account
+    // Sign out from Google SDK only when the native module is actually present.
+    // In Expo Go the TurboModule isn't linked, so we skip it entirely.
     try {
-      const { GoogleSignin } = require('@react-native-google-signin/google-signin');
-      await GoogleSignin.signOut();
+      const { NativeModules } = require('react-native');
+      if (NativeModules.RNGoogleSignin) {
+        const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+        await GoogleSignin.signOut();
+      }
     } catch {
-      // Ignore – module may not be available (Expo Go) or no Google session
+      // Ignore – no Google session or module unavailable
     }
     await supabase.auth.signOut();
   }, []);

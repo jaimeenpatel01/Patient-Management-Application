@@ -109,7 +109,7 @@ export default function RegisterScreen() {
         {/* Branding */}
         <View style={styles.branding}>
           <Text style={styles.appName}>Create Account</Text>
-          <Text style={styles.appTagline}>Join Doctor Management today</Text>
+          <Text style={styles.appTagline}>Join PhysioDesk today</Text>
         </View>
 
         {/* Register Form */}

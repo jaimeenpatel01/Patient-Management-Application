@@ -121,6 +121,7 @@ export default function PaymentsScreen() {
       </View>
     );
   });
+  PaymentItem.displayName = 'PaymentItem';
 
   if (loading) {
     return (

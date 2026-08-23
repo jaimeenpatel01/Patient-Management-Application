@@ -42,3 +42,5 @@ export const DOCUMENT_CATEGORIES: { label: string; value: DocumentCategory }[] =
   { label: 'Exercise Doc', value: 'exercise_doc' },
   { label: 'Other', value: 'other' },
 ];
+
+export const APP_VERSION = '1.4.1';

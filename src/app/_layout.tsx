@@ -1,11 +1,25 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import {
+  Animated,
+  Image,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { Colors } from '@/constants/theme';
+import AnimatedSplash from '@/components/SplashScreen';
 
+// Keep the native splash visible until we're ready to show our JS one.
+SplashScreen.preventAutoHideAsync();
+
+// ─── Root navigator ───────────────────────────────────────────────────────────
 function RootNavigator() {
   const { session, isLoading, isFirstTimeGoogleSignIn } = useAuth();
   const segments = useSegments();
@@ -15,7 +29,9 @@ function RootNavigator() {
     if (isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isResetPasswordFlow = inAuthGroup && (segments[1] === 'reset-password' || segments[1] === 'forgot-password');
+    const isResetPasswordFlow =
+      inAuthGroup &&
+      (segments[1] === 'reset-password' || segments[1] === 'forgot-password');
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
@@ -49,16 +65,29 @@ function RootNavigator() {
   );
 }
 
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/theme';
-
+// ─── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
+  const [showSplash, setShowSplash] = useState(true);
+
+  // Hide the native splash immediately — our animated JS splash takes over.
+  useEffect(() => {
+    SplashScreen.hideAsync();
+  }, []);
+
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }} edges={['bottom', 'left', 'right']}>
+      <SafeAreaView
+        style={{ flex: 1, backgroundColor: Colors.background }}
+        edges={['bottom', 'left', 'right']}
+      >
         <AuthProvider>
           <RootNavigator />
         </AuthProvider>
+
+        {/* Animated JS splash rendered on top of everything */}
+        {showSplash && (
+          <AnimatedSplash onFinished={() => setShowSplash(false)} />
+        )}
       </SafeAreaView>
     </SafeAreaProvider>
   );

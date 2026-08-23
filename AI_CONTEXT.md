@@ -1,4 +1,4 @@
-# Doctor Management App - AI Context & Project Documentation
+# PhysioDesk - AI Context & Project Documentation
 
 This document contains all the necessary context, architectural decisions, and phase breakdowns for any AI agent working on this project.
 
