@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { APP_VERSION } from '@/constants/options';
 
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile, updatePassword } = useAuth();
@@ -234,7 +235,7 @@ export default function ProfileScreen() {
           <InfoRow
             icon="information-circle-outline"
             label="Version"
-            value="1.4.1"
+            value={APP_VERSION}
           />
         </View>
       </View>
