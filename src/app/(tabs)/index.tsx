@@ -17,7 +17,7 @@ interface QuickActionProps {
 
 const QuickAction = React.memo(function QuickAction({ icon, label, color, backgroundColor, onPress }: QuickActionProps) {
   return (
-    <TouchableOpacity style={styles.quickAction} activeOpacity={0.7} onPress={onPress}>
+    <TouchableOpacity style={[styles.quickAction, Shadows.sm]} activeOpacity={0.7} onPress={onPress}>
       <View style={[styles.quickActionIcon, { backgroundColor }]}>
         <Ionicons name={icon} size={22} color={color} />
       </View>
@@ -45,6 +45,7 @@ const FilterTabs = React.memo(function FilterTabs({ value, onChange }: FilterTab
           key={opt.value}
           style={[styles.filterTab, value === opt.value && styles.filterTabActive]}
           onPress={() => onChange(opt.value)}
+          activeOpacity={0.7}
         >
           <Text style={[styles.filterTabText, value === opt.value && styles.filterTabTextActive]}>
             {opt.label}
@@ -65,7 +66,7 @@ interface StatCardProps {
 
 const StatCard = React.memo(function StatCard({ title, value, icon, color, backgroundColor }: StatCardProps) {
   return (
-    <View style={[styles.statCard, Shadows.sm]}>
+    <View style={[styles.statCard, Shadows.md]}>
       <View style={[styles.statIcon, { backgroundColor }]}>
         <Ionicons name={icon} size={20} color={color} />
       </View>
@@ -103,6 +104,12 @@ export default function DashboardScreen() {
   }, []);
 
   const displayName = getDoctorDisplayName(profile?.full_name ?? null, user?.email);
+  
+  // Simple greeting based on time
+  const hour = new Date().getHours();
+  let greeting = 'Good Evening';
+  if (hour < 12) greeting = 'Good Morning';
+  else if (hour < 17) greeting = 'Good Afternoon';
 
   if (loading) {
     return (
@@ -121,16 +128,17 @@ export default function DashboardScreen() {
     >
       {/* Welcome */}
       <View style={styles.welcomeSection}>
-        <View>
-          <Text style={styles.welcomeName}>{displayName}</Text>
+        <View style={styles.welcomeTextContainer}>
+          <Text style={styles.greetingText}>{greeting},</Text>
+          <Text style={styles.welcomeName} numberOfLines={1}>{displayName}</Text>
         </View>
-        <View style={styles.avatarContainer}>
+        <TouchableOpacity style={styles.avatarContainer} onPress={() => router.push('/profile')} activeOpacity={0.8}>
           {profile?.avatar_url ? (
             <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
           ) : (
             <Ionicons name="person" size={24} color={Colors.primary} />
           )}
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Quick Actions */}
@@ -138,21 +146,21 @@ export default function DashboardScreen() {
         <Text style={[styles.sectionTitle, { marginBottom: Spacing.md }]}>Quick Actions</Text>
         <View style={styles.quickActionsRow}>
           <QuickAction
-            icon="person-add-outline"
+            icon="person-add"
             label="Add Patient"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
             onPress={() => router.push('/patient/add')}
           />
           <QuickAction
-            icon="checkmark-circle-outline"
+            icon="checkmark-circle"
             label="Attendance"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
             onPress={() => router.push('/attendance/add' as any)}
           />
           <QuickAction
-            icon="wallet-outline"
+            icon="wallet"
             label="Payment"
             color={Colors.success}
             backgroundColor={Colors.successLight}
@@ -205,20 +213,23 @@ export default function DashboardScreen() {
           <Text style={styles.sectionTitle}>Payments</Text>
           <FilterTabs value={paymentFilter} onChange={setPaymentFilter} />
         </View>
-        <View style={[styles.monthlyCard, Shadows.sm]}>
-          <View style={styles.monthlyRow}>
-            <Text style={styles.monthlyLabel}>Total Patients</Text>
-            <Text style={styles.monthlyValue}>{stats?.[paymentFilter].payment.totalPatients ?? 0}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.monthlyRow}>
-            <Text style={styles.monthlyLabel}>Revenue</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.[paymentFilter].payment.revenue ?? 0}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.monthlyRow}>
-            <Text style={styles.monthlyLabel}>Outstanding</Text>
-            <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.[paymentFilter].payment.outstanding ?? 0}</Text>
+        <View style={[styles.monthlyCard, Shadows.md]}>
+          <View style={styles.monthlyAccent} />
+          <View style={styles.monthlyContent}>
+            <View style={styles.monthlyRow}>
+              <Text style={styles.monthlyLabel}>Total Patients</Text>
+              <Text style={styles.monthlyValue}>{stats?.[paymentFilter].payment.totalPatients ?? 0}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.monthlyRow}>
+              <Text style={styles.monthlyLabel}>Revenue</Text>
+              <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.[paymentFilter].payment.revenue ?? 0}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.monthlyRow}>
+              <Text style={styles.monthlyLabel}>Outstanding</Text>
+              <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.[paymentFilter].payment.outstanding ?? 0}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -233,36 +244,49 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: Spacing.base,
-    paddingBottom: Spacing['3xl'],
+    paddingBottom: Spacing['4xl'],
   },
   welcomeSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing['2xl'],
+    marginTop: Spacing.xs,
+  },
+  welcomeTextContainer: {
+    flex: 1,
+    marginRight: Spacing.md,
+  },
+  greetingText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.medium,
   },
   welcomeName: {
     fontSize: Typography['2xl'],
     fontWeight: Typography.bold,
     color: Colors.text,
-    marginTop: Spacing.xs,
+    marginTop: 2,
   },
   avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: BorderRadius.full,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.primaryFaded,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    ...Shadows.sm,
   },
   avatarImage: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
   },
   section: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing['2xl'],
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -271,19 +295,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   sectionTitle: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
     color: Colors.text,
   },
   filterTabs: {
     flexDirection: 'row',
     backgroundColor: Colors.surfaceSecondary,
     borderRadius: BorderRadius.full,
-    padding: 2,
+    padding: 3,
   },
   filterTab: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 4,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
     borderRadius: BorderRadius.full,
   },
   filterTabActive: {
@@ -309,20 +333,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius.lg,
     padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    borderWidth: 0,
   },
   quickActionIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.lg,
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.sm,
   },
   quickActionLabel: {
     fontSize: Typography.xs,
-    fontWeight: Typography.medium,
+    fontWeight: Typography.semibold,
     color: Colors.text,
     textAlign: 'center',
   },
@@ -334,36 +357,44 @@ const styles = StyleSheet.create({
   statCard: {
     width: '48%',
     flexGrow: 1,
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    borderWidth: 0,
   },
   statIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.md,
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   statValue: {
-    fontSize: Typography.xl,
+    fontSize: Typography['2xl'],
     fontWeight: Typography.bold,
     color: Colors.text,
   },
   statTitle: {
-    fontSize: Typography.xs,
+    fontSize: Typography.sm,
     color: Colors.textSecondary,
+    fontWeight: Typography.medium,
     marginTop: Spacing.xs,
   },
   monthlyCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    borderWidth: 0,
+  },
+  monthlyAccent: {
+    width: 6,
+    backgroundColor: Colors.primary,
+  },
+  monthlyContent: {
+    flex: 1,
+    padding: Spacing.lg,
   },
   monthlyRow: {
     flexDirection: 'row',
@@ -374,10 +405,11 @@ const styles = StyleSheet.create({
   monthlyLabel: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
+    fontWeight: Typography.medium,
   },
   monthlyValue: {
-    fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
     color: Colors.text,
   },
   divider: {

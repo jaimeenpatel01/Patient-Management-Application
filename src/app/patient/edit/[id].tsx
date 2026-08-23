@@ -10,6 +10,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAlert } from '@/contexts/AlertContext';
 import { getPatientById, updatePatient } from '@/services/patientService';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
@@ -22,6 +23,7 @@ import type { Gender, VisitType } from '@/types';
 export default function EditPatientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -83,7 +85,7 @@ export default function EditPatientScreen() {
     setIsSubmitting(false);
 
     if (error) {
-      Alert.alert('Error', error);
+      showAlert('Error', error);
     } else {
       router.back();
     }

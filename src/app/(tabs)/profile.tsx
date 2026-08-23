@@ -10,25 +10,30 @@ import {
   Image,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
+import { useRef } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '@/lib/supabase';
 import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
 import { getDoctorDisplayName } from '@/lib/formatters';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
+import { useAlert } from '@/contexts/AlertContext';
 import { Button } from '@/components/ui/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { APP_VERSION } from '@/constants/options';
 
 export default function ProfileScreen() {
   const { user, profile, signOut, refreshProfile, updatePassword } = useAuth();
+  const { showAlert } = useAlert();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const passwordInputRef = useRef<TextInput>(null);
 
   const handleAvatarUpload = async () => {
     if (!user) return;
@@ -47,7 +52,7 @@ export default function ProfileScreen() {
       const base64Data = result.assets[0].base64;
 
       if (!base64Data) {
-        Alert.alert('Error', 'Could not read image data.');
+        showAlert('Error', 'Could not read image data.');
         setIsUploading(false);
         return;
       }
@@ -57,7 +62,7 @@ export default function ProfileScreen() {
       const { publicUrl, error: uploadError } = await uploadAvatar(user.id, uri, base64Data);
       
       if (uploadError || !publicUrl) {
-        Alert.alert('Upload Failed', uploadError || 'Could not upload image');
+        showAlert('Upload Failed', uploadError || 'Could not upload image');
         setIsUploading(false);
         return;
       }
@@ -65,7 +70,7 @@ export default function ProfileScreen() {
       const { error: updateError } = await updateProfile(user.id, { avatar_url: publicUrl });
       
       if (updateError) {
-        Alert.alert('Update Failed', updateError);
+        showAlert('Update Failed', updateError);
       } else {
         await refreshProfile();
       }
@@ -79,7 +84,7 @@ export default function ProfileScreen() {
     setIsUploading(true);
     const { error } = await removeAvatar(user.id, profile.avatar_url);
     if (error) {
-      Alert.alert('Remove Failed', error);
+      showAlert('Remove Failed', error);
     } else {
       await refreshProfile();
     }
@@ -92,7 +97,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    Alert.alert(
+    showAlert(
       'Profile Photo',
       'What would you like to do?',
       [
@@ -106,7 +111,7 @@ export default function ProfileScreen() {
   const displayName = getDoctorDisplayName(profile?.full_name ?? null, user?.email);
 
   const handleSignOut = () => {
-    Alert.alert(
+    showAlert(
       'Sign Out',
       'Are you sure you want to sign out?',
       [
@@ -126,7 +131,7 @@ export default function ProfileScreen() {
 
   const handleUpdatePassword = async () => {
     if (!newPassword || newPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
+      showAlert('Error', 'Password must be at least 6 characters.');
       return;
     }
     setIsUpdatingPassword(true);
@@ -134,16 +139,16 @@ export default function ProfileScreen() {
     setIsUpdatingPassword(false);
     
     if (error) {
-      Alert.alert('Update Failed', error);
+      showAlert('Update Failed', error);
     } else {
-      Alert.alert('Success', 'Password updated successfully');
+      showAlert('Success', 'Password updated successfully');
       setIsPasswordModalVisible(false);
       setNewPassword('');
     }
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
+    showAlert(
       'Delete Account',
       'Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete all your data.',
       [
@@ -155,7 +160,7 @@ export default function ProfileScreen() {
             setIsDeletingAccount(true);
             const { error } = await supabase.rpc('delete_user');
             if (error) {
-              Alert.alert('Error', error.message || 'Failed to delete account.');
+              showAlert('Error', error.message || 'Failed to delete account.');
               setIsDeletingAccount(false);
             } else {
               await signOut();
@@ -175,7 +180,8 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
       {/* Profile Card */}
-      <View style={[styles.profileCard, Shadows.sm]}>
+      <View style={[styles.profileCard, Shadows.lg]}>
+        <View style={styles.profileHeaderBg} />
         <TouchableOpacity style={styles.avatarLarge} onPress={handleAvatarPress} disabled={isUploading}>
           {isUploading ? (
             <ActivityIndicator color={Colors.primary} />
@@ -185,7 +191,7 @@ export default function ProfileScreen() {
             <Ionicons name="person" size={40} color={Colors.primary} />
           )}
           <View style={styles.editBadge}>
-            <Ionicons name="pencil" size={14} color={Colors.textInverse} />
+            <Ionicons name="camera" size={14} color={Colors.textInverse} />
           </View>
         </TouchableOpacity>
         <Text style={styles.profileName}>
@@ -199,22 +205,22 @@ export default function ProfileScreen() {
 
       {/* Account Info */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>Account Details</Text>
         <View style={[styles.infoCard, Shadows.sm]}>
           <InfoRow
-            icon="mail-outline"
+            icon="mail"
             label="Email"
             value={user?.email ?? 'N/A'}
           />
           <View style={styles.divider} />
           <InfoRow
-            icon="shield-checkmark-outline"
+            icon="shield-checkmark"
             label="Role"
             value="Doctor"
           />
           <View style={styles.divider} />
           <InfoRow
-            icon="time-outline"
+            icon="calendar"
             label="Member Since"
             value={user?.created_at
               ? new Date(user.created_at).toLocaleDateString('en-IN', {
@@ -233,7 +239,7 @@ export default function ProfileScreen() {
         <Text style={styles.sectionTitle}>App</Text>
         <View style={[styles.infoCard, Shadows.sm]}>
           <InfoRow
-            icon="information-circle-outline"
+            icon="information-circle"
             label="Version"
             value={APP_VERSION}
           />
@@ -248,7 +254,7 @@ export default function ProfileScreen() {
             title="Update Password"
             onPress={() => setIsPasswordModalVisible(true)}
             variant="outline"
-            icon={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
+            icon={<Ionicons name="lock-closed" size={20} color={Colors.primary} />}
             style={{ marginBottom: Spacing.base }}
           />
         )}
@@ -257,7 +263,7 @@ export default function ProfileScreen() {
           onPress={handleDeleteAccount}
           variant="danger"
           loading={isDeletingAccount}
-          icon={<Ionicons name="trash-outline" size={20} color={Colors.textInverse} />}
+          icon={<Ionicons name="trash" size={20} color={Colors.textInverse} />}
         />
       </View>
 
@@ -268,7 +274,7 @@ export default function ProfileScreen() {
           onPress={handleSignOut}
           variant="secondary"
           loading={isSigningOut}
-          icon={<Ionicons name="log-out-outline" size={20} color={Colors.text} />}
+          icon={<Ionicons name="log-out" size={20} color={Colors.primary} />}
         />
       </View>
     </ScrollView>
@@ -277,17 +283,26 @@ export default function ProfileScreen() {
     <Modal
       visible={isPasswordModalVisible}
       transparent={true}
-      animationType="fade"
+      animationType="slide"
       onRequestClose={() => setIsPasswordModalVisible(false)}
     >
       <View style={styles.modalOverlay}>
         <View style={styles.modalContent}>
+          <View style={styles.dragHandleContainer}>
+            <View style={styles.dragHandle} />
+          </View>
+          
           <Text style={styles.modalTitle}>Update Password</Text>
           <Text style={styles.modalSubtitle}>Enter your new password below.</Text>
           
-          <View style={styles.inputContainer}>
+          <TouchableOpacity 
+            style={styles.inputContainer} 
+            activeOpacity={0.8}
+            onPress={() => passwordInputRef.current?.focus()}
+          >
             <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
             <TextInput
+              ref={passwordInputRef}
               style={styles.input}
               placeholder="New Password (min 6 chars)"
               secureTextEntry
@@ -295,30 +310,26 @@ export default function ProfileScreen() {
               onChangeText={setNewPassword}
               placeholderTextColor={Colors.textTertiary}
             />
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.modalActions}>
-            <TouchableOpacity 
-              style={styles.modalCancelButton}
+            <Button 
+              title="Cancel"
+              variant="ghost" 
+              fullWidth={false}
               onPress={() => {
                 setIsPasswordModalVisible(false);
                 setNewPassword('');
               }}
               disabled={isUpdatingPassword}
-            >
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.modalSubmitButton}
+            />
+            <Button 
+              title="Update"
+              fullWidth={false}
               onPress={handleUpdatePassword}
-              disabled={isUpdatingPassword}
-            >
-              {isUpdatingPassword ? (
-                <ActivityIndicator color={Colors.textInverse} size="small" />
-              ) : (
-                <Text style={styles.modalSubmitText}>Update</Text>
-              )}
-            </TouchableOpacity>
+              loading={isUpdatingPassword}
+              disabled={newPassword.length < 6}
+            />
           </View>
         </View>
       </View>
@@ -337,8 +348,10 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoRowLeft}>
-        <Ionicons name={icon} size={20} color={Colors.textSecondary} />
-        <Text style={styles.infoLabel}>{label}{' '}</Text>
+        <View style={styles.infoIconBg}>
+          <Ionicons name={icon} size={18} color={Colors.primary} />
+        </View>
+        <Text style={styles.infoLabel}>{label}</Text>
       </View>
       <Text style={styles.infoValue}>{value}</Text>
     </View>
@@ -353,87 +366,99 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.base,
     paddingBottom: Spacing['3xl'],
+    paddingTop: Spacing.md,
   },
   profileCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius['2xl'],
     padding: Spacing.xl,
+    paddingTop: Spacing['3xl'],
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.xl,
+    borderWidth: 0,
+    marginBottom: Spacing['2xl'],
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  profileHeaderBg: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    backgroundColor: Colors.primaryFaded,
   },
   avatarLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryFaded,
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: Colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.base,
     position: 'relative',
+    borderWidth: 4,
+    borderColor: Colors.surface,
+    ...Shadows.md,
   },
   avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.full,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   editBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     backgroundColor: Colors.primary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.surface,
   },
   profileName: {
-    fontSize: Typography.xl,
+    fontSize: Typography['2xl'],
     fontWeight: Typography.bold,
     color: Colors.text,
   },
   profileEmail: {
-    fontSize: Typography.sm,
+    fontSize: Typography.base,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    alignItems:'center',
-    justifyContent:'center',
-    textAlign:'center',
-    alignSelf:'center'
+    marginTop: 4,
+    textAlign: 'center',
   },
   roleBadge: {
-    backgroundColor: Colors.primaryFaded,
+    backgroundColor: Colors.primary,
     borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    marginTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: 6,
+    marginTop: Spacing.lg,
   },
   roleBadgeText: {
     fontSize: Typography.xs,
-    fontWeight: Typography.medium,
-    color: Colors.primary,
+    fontWeight: Typography.bold,
+    color: Colors.textInverse,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   section: {
     marginBottom: Spacing.xl,
   },
   sectionTitle: {
     fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
+    fontWeight: Typography.bold,
     color: Colors.textSecondary,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1,
     marginBottom: Spacing.sm,
     marginLeft: Spacing.xs,
   },
   infoCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    borderWidth: 0,
     overflow: 'hidden',
   },
   infoRow: {
@@ -447,15 +472,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
   },
+  infoIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   infoLabel: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
+    fontSize: Typography.base,
+    color: Colors.text,
+    fontWeight: Typography.medium,
   },
   infoValue: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.medium,
-    color: Colors.text,
-    maxWidth: '65%',
+    fontSize: Typography.base,
+    fontWeight: Typography.bold,
+    color: Colors.textSecondary,
+    maxWidth: '50%',
     textAlign: 'right',
   },
   divider: {
@@ -468,24 +502,30 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing.xl,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    borderTopLeftRadius: BorderRadius['2xl'],
+    borderTopRightRadius: BorderRadius['2xl'],
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Platform.OS === 'ios' ? Spacing['4xl'] : Spacing.xl,
+    paddingTop: Spacing.md,
+    ...Shadows.xl,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.disabled,
   },
   modalTitle: {
-    fontSize: Typography.lg,
+    fontSize: Typography.xl,
     fontWeight: Typography.bold,
     color: Colors.text,
     marginBottom: Spacing.xs,
@@ -493,55 +533,30 @@ const styles = StyleSheet.create({
   modalSubtitle: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.xl,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
+    borderColor: Colors.borderLight,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
     marginBottom: Spacing.xl,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.surfaceSecondary,
   },
   inputIcon: {
     marginRight: Spacing.sm,
   },
   input: {
     flex: 1,
-    height: 48,
+    height: 52,
     color: Colors.text,
     fontSize: Typography.base,
   },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: Spacing.md,
-  },
-  modalCancelButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-  },
-  modalCancelText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
-  },
-  modalSubmitButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  modalSubmitText: {
-    color: Colors.textInverse,
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    gap: Spacing.sm,
   },
 });

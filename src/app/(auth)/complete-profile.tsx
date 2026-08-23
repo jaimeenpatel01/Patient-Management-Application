@@ -12,6 +12,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useAlert } from '@/contexts/AlertContext';
 import { updateProfile, uploadAvatar } from '@/services/profileService';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -19,6 +20,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 
 export default function CompleteProfileScreen() {
   const { user, profile, setIsFirstTimeGoogleSignIn, refreshProfile } = useAuth();
+  const { showAlert } = useAlert();
   
   const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
@@ -52,7 +54,7 @@ export default function CompleteProfileScreen() {
       const base64Data = result.assets[0].base64;
 
       if (!base64Data) {
-        Alert.alert('Error', 'Could not read image data.');
+        showAlert('Error', 'Could not read image data.');
         return;
       }
 

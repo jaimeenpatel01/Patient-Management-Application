@@ -43,4 +43,4 @@ export const DOCUMENT_CATEGORIES: { label: string; value: DocumentCategory }[] =
   { label: 'Other', value: 'other' },
 ];
 
-export const APP_VERSION = '1.4.2';
+export const APP_VERSION = '2.0.0';

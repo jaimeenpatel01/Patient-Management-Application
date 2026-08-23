@@ -9,11 +9,13 @@ export const Colors = {
   primaryLight: '#14B8A6',
   primaryDark: '#0F766E',
   primaryFaded: 'rgba(13, 148, 136, 0.1)',
+  primaryGradientEnd: '#06B6D4',
 
   // Background
   background: '#F8FAFC',
   surface: '#FFFFFF',
   surfaceSecondary: '#F1F5F9',
+  surfaceElevated: '#FFFFFF',
 
   // Text
   text: '#0F172A',
@@ -46,7 +48,8 @@ export const Colors = {
 
   // Misc
   overlay: 'rgba(0, 0, 0, 0.5)',
-  shadow: 'rgba(0, 0, 0, 0.08)',
+  shadow: 'rgba(13, 148, 136, 0.10)',
+  shadowDark: 'rgba(15, 23, 42, 0.08)',
   disabled: '#CBD5E1',
   tabInactive: '#94A3B8',
 } as const;
@@ -88,34 +91,42 @@ export const Spacing = {
 } as const;
 
 export const BorderRadius = {
-  sm: 6,
-  md: 8,
-  lg: 12,
-  xl: 16,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  '2xl': 24,
   full: 9999,
 } as const;
 
 export const Shadows = {
   sm: {
     shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowRadius: 8,
+    elevation: 2,
   },
   md: {
     shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 12,
+    elevation: 4,
   },
   lg: {
     shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 16,
+    elevation: 6,
+  },
+  xl: {
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 1,
+    shadowRadius: 24,
+    elevation: 8,
   },
 } as const;
 

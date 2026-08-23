@@ -9,6 +9,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import type { Document } from '@/types';
+import { useAlert } from '@/contexts/AlertContext';
 
 const CATEGORY_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   xray: 'body-outline',
@@ -32,6 +33,7 @@ function formatBytes(bytes: number | null): string {
 export default function PatientDocumentsScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -58,17 +60,17 @@ export default function PatientDocumentsScreen() {
   const handleOpenDocument = async (doc: Document) => {
     const { url, error } = await getDocumentUrl(doc.storage_path);
     if (error || !url) {
-      Alert.alert('Error', 'Could not retrieve document link. Make sure your Supabase Storage bucket is public or properly configured.');
+      showAlert('Error', 'Could not retrieve document link. Make sure your Supabase Storage bucket is public or properly configured.');
       return;
     }
     // Open in browser/viewer
     Linking.openURL(url).catch((err) => {
-      Alert.alert('Error', 'Could not open the file.');
+      showAlert('Error', 'Could not open the file.');
     });
   };
 
   const handleDelete = (doc: Document) => {
-    Alert.alert('Delete Document', `Are you sure you want to delete ${doc.file_name}?`, [
+    showAlert('Delete Document', `Are you sure you want to delete ${doc.file_name}?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -76,7 +78,7 @@ export default function PatientDocumentsScreen() {
         onPress: async () => {
           const { error } = await deleteDocument(doc.id, doc.storage_path);
           if (error) {
-            Alert.alert('Error', error);
+            showAlert('Error', error);
           } else {
             setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
           }

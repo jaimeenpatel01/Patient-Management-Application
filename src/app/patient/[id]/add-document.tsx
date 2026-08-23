@@ -10,15 +10,19 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
+import { SuccessModal } from '@/components/ui/SuccessModal';
 import { DOCUMENT_CATEGORIES } from '@/constants/options';
 import type { DocumentCategory } from '@/types';
+import { useAlert } from '@/contexts/AlertContext';
 
 
 export default function AddDocumentScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [category, setCategory] = useState<DocumentCategory>('other');
   const [notes, setNotes] = useState('');
@@ -77,7 +81,7 @@ export default function AddDocumentScreen() {
         setErrors((prev) => ({ ...prev, file: '' }));
       }
     } catch (err: any) {
-      Alert.alert('Error', `Could not pick document: ${err.message || err}`);
+      showAlert('Error', `Could not pick document: ${err.message || err}`);
     }
   };
 
@@ -101,11 +105,13 @@ export default function AddDocumentScreen() {
     setIsSubmitting(false);
 
     if (error) {
-      Alert.alert('Upload Failed', error);
+      showAlert('Upload Failed', error);
     } else {
-      Alert.alert('Success', 'File uploaded successfully!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.back();
+      }, 2500);
     }
   };
 
@@ -186,6 +192,11 @@ export default function AddDocumentScreen() {
         </View>
 
       </ScrollView>
+
+      <SuccessModal 
+        visible={showSuccessModal} 
+        message="File uploaded successfully." 
+      />
     </>
   );
 }

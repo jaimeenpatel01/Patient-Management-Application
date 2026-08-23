@@ -3,25 +3,27 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
-  TouchableOpacity,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAlert } from '@/contexts/AlertContext';
 import { createPatient } from '@/services/patientService';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
+import { SuccessModal } from '@/components/ui/SuccessModal';
 import { GENDER_OPTIONS, VISIT_TYPE_OPTIONS } from '@/constants/options';
 import { validatePatientForm } from '@/lib/validators';
 import type { Gender, VisitType } from '@/types';
 
 export default function AddPatientScreen() {
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Form state
   const [fullName, setFullName] = useState('');
@@ -55,9 +57,13 @@ export default function AddPatientScreen() {
     setIsSubmitting(false);
 
     if (error) {
-      Alert.alert('Error', error);
+      showAlert('Error', error);
     } else {
-      router.back();
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.back();
+      }, 2500);
     }
   };
 
@@ -73,119 +79,148 @@ export default function AddPatientScreen() {
         extraScrollHeight={50}
         extraHeight={150}
       >
-          {/* Required section */}
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="person" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
+          </View>
 
           <Input
             label="Full Name *"
             placeholder="Enter patient full name"
-          leftIcon="person-outline"
-          value={fullName}
-          onChangeText={setFullName}
-          error={errors.fullName}
-          autoCapitalize="words"
-        />
+            leftIcon="person-outline"
+            value={fullName}
+            onChangeText={setFullName}
+            error={errors.fullName}
+            autoCapitalize="words"
+          />
 
-        <Input
-          label="Phone Number *"
-          placeholder="9876543210"
-          leftIcon="call-outline"
-          value={phone}
-          onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
-          error={errors.phone}
-          keyboardType="phone-pad"
-          maxLength={10}
-        />
+          <Input
+            label="Phone Number *"
+            placeholder="9876543210"
+            leftIcon="call-outline"
+            value={phone}
+            onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
+            error={errors.phone}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
 
-        <Input
-          label="Age *"
-          placeholder="e.g. 35"
-          leftIcon="calendar-outline"
-          value={age}
-          onChangeText={(text) => setAge(text.replace(/[^0-9]/g, '').slice(0, 3))}
-          error={errors.age}
-          keyboardType="number-pad"
-          maxLength={3}
-        />
+          <Input
+            label="Age *"
+            placeholder="e.g. 35"
+            leftIcon="calendar-outline"
+            value={age}
+            onChangeText={(text) => setAge(text.replace(/[^0-9]/g, '').slice(0, 3))}
+            error={errors.age}
+            keyboardType="number-pad"
+            maxLength={3}
+          />
 
-        {/* Gender selector */}
-        <Text style={styles.fieldLabel}>Gender *</Text>
-        <ChipSelector
-          options={GENDER_OPTIONS}
-          value={gender}
-          onChange={setGender}
-          allowDeselect
-        />
-        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+          <Text style={styles.fieldLabel}>Gender *</Text>
+          <ChipSelector
+            options={GENDER_OPTIONS}
+            value={gender}
+            onChange={setGender}
+            allowDeselect
+          />
+          {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
 
-        {/* Visit Type selector */}
-        <Text style={styles.fieldLabel}>Visit Type *</Text>
-        <ChipSelector
-          options={VISIT_TYPE_OPTIONS}
-          value={visitType}
-          onChange={setVisitType}
-          allowDeselect
-        />
-        {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
+          <Text style={styles.fieldLabel}>Visit Type *</Text>
+          <ChipSelector
+            options={VISIT_TYPE_OPTIONS}
+            value={visitType}
+            onChange={setVisitType}
+            allowDeselect
+          />
+          {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
+        </View>
 
-        {/* Additional info */}
-        <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="information-circle" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Additional Details</Text>
+          </View>
 
-        <Input
-          label="Full Address *"
-          placeholder="Enter patient's full address"
-          leftIcon="location-outline"
-          value={address}
-          onChangeText={setAddress}
-          error={errors.address}
-          multiline
-          numberOfLines={2}
-        />
+          <Input
+            label="Full Address *"
+            placeholder="Enter patient's full address"
+            leftIcon="location-outline"
+            value={address}
+            onChangeText={setAddress}
+            error={errors.address}
+            multiline
+            numberOfLines={2}
+          />
 
-        <Input
-          label="Notes"
-          placeholder="Any additional notes..."
-          leftIcon="document-text-outline"
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={3}
-        />
+          <Input
+            label="Notes (Optional)"
+            placeholder="Any additional notes..."
+            leftIcon="document-text-outline"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
 
-        {/* Submit */}
         <View style={styles.submitContainer}>
           <Button
             title="Add Patient"
             onPress={handleSubmit}
             loading={isSubmitting}
-            icon={<Ionicons name="checkmark-circle-outline" size={20} color={Colors.textInverse} />}
+            icon={<Ionicons name="checkmark-circle" size={20} color={Colors.textInverse} />}
           />
         </View>
       </KeyboardAwareScrollView>
+
+      <SuccessModal 
+        visible={showSuccessModal} 
+        message="Patient added successfully." 
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  container: { flex: 1, backgroundColor: Colors.background },
+  content: { padding: Spacing.base, paddingBottom: Spacing['4xl'] },
+  sectionCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 0,
   },
-  content: {
-    padding: Spacing.base,
-    paddingBottom: Spacing['4xl'],
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  sectionIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
   },
   sectionTitle: {
     fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
+    fontWeight: Typography.bold,
     color: Colors.text,
-    marginBottom: Spacing.base,
   },
   fieldLabel: {
     fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+    fontWeight: Typography.bold,
     color: Colors.text,
     marginBottom: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   errorText: {
     color: Colors.error,
@@ -195,6 +230,6 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.xs,
   },
   submitContainer: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.sm,
   },
 });

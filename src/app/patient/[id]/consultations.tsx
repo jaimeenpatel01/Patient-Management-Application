@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useAlert } from '@/contexts/AlertContext';
 import { getConsultations, deleteConsultation } from '@/services/medicalService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -13,6 +14,7 @@ import type { Consultation } from '@/types';
 export default function PatientConsultationsScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -38,7 +40,7 @@ export default function PatientConsultationsScreen() {
   };
 
   const handleDelete = (id: string) => {
-    Alert.alert('Delete Consultation', 'Are you sure you want to delete this consultation?', [
+    showAlert('Delete Consultation', 'Are you sure you want to delete this consultation?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',

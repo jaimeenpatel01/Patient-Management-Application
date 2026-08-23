@@ -11,6 +11,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AlertProvider } from '@/contexts/AlertContext';
+import { CustomAlert } from '@/components/ui/CustomAlert';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Colors } from '@/constants/theme';
@@ -80,9 +82,12 @@ export default function RootLayout() {
         style={{ flex: 1, backgroundColor: Colors.background }}
         edges={['bottom', 'left', 'right']}
       >
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
+        <AlertProvider>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+          <CustomAlert />
+        </AlertProvider>
 
         {/* Animated JS splash rendered on top of everything */}
         {showSplash && (

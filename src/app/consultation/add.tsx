@@ -8,14 +8,18 @@ import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
+import { SuccessModal } from '@/components/ui/SuccessModal';
 import { supabase } from '@/lib/supabase';
+import { useAlert } from '@/contexts/AlertContext';
 
 export default function AddConsultationScreen() {
   const { patientId, id } = useLocalSearchParams<{ patientId: string; id?: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [symptoms, setSymptoms] = useState('');
@@ -42,7 +46,7 @@ export default function AddConsultationScreen() {
 
   const handleSubmit = async () => {
     if (!patientId) {
-      Alert.alert('Error', 'Missing patient ID');
+      showAlert('Error', 'Missing patient ID');
       return;
     }
     if (!date) {
@@ -78,8 +82,15 @@ export default function AddConsultationScreen() {
     
     setIsSubmitting(false);
 
-    if (error) Alert.alert('Error', error);
-    else router.back();
+    if (error) {
+      showAlert('Error', error);
+    } else {
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.back();
+      }, 2500);
+    }
   };
 
   if (isFetchingRecord) {
@@ -118,6 +129,10 @@ export default function AddConsultationScreen() {
         </View>
       </KeyboardAwareScrollView>
 
+      <SuccessModal 
+        visible={showSuccessModal} 
+        message={id ? "Consultation updated successfully." : "Consultation saved successfully."} 
+      />
     </>
   );
 }
