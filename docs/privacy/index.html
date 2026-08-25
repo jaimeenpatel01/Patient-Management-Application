@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — PhysioDesk</title>
+  <meta name="description" content="Privacy Policy for PhysioDesk — a physiotherapy clinic management application by Jaimeen Patel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #0D9488;
+      --primary-dark: #0F766E;
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --text: #0F172A;
+      --text-secondary: #475569;
+      --border: #E2E8F0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--primary) 0%, #06B6D4 100%);
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+      color: #fff;
+    }
+    .header .logo {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+    .header .logo span { opacity: 0.85; font-weight: 400; }
+    .header h1 { font-size: 2rem; font-weight: 700; margin-top: 1rem; }
+    .header .updated {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      opacity: 0.85;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: -1.5rem auto 3rem;
+      padding: 0 1.25rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 4px 24px rgba(15,23,42,0.06);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin: 2rem 0 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--border);
+    }
+    h2:first-of-type { margin-top: 0; }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin: 1.25rem 0 0.5rem;
+      color: var(--text);
+    }
+
+    p { margin: 0.6rem 0; color: var(--text-secondary); }
+    ul { margin: 0.5rem 0 0.75rem 1.5rem; color: var(--text-secondary); }
+    li { margin-bottom: 0.35rem; }
+    strong { color: var(--text); }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .highlight-box {
+      background: rgba(13,148,136,0.06);
+      border-left: 4px solid var(--primary);
+      padding: 1rem 1.25rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    .footer a { color: var(--primary); font-weight: 500; }
+
+    .nav-links {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    .nav-links a {
+      display: inline-block;
+      padding: 0.6rem 1.5rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover {
+      border-color: var(--primary);
+      background: rgba(13,148,136,0.04);
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .header h1 { font-size: 1.5rem; }
+      .card { padding: 1.5rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="logo">Pd<span> — PhysioDesk</span></div>
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last Updated: 25 August 2026</p>
+  </div>
+
+  <div class="container">
+    <div class="card">
+
+      <h2>1. Introduction</h2>
+      <p>PhysioDesk ("PhysioDesk", "we", "us", or "our") is a physiotherapy clinic management application developed and operated by Jaimeen Patel.</p>
+      <p>This Privacy Policy explains how PhysioDesk collects, uses, stores, protects, and deletes information when you use the PhysioDesk mobile application and related services.</p>
+      <p>PhysioDesk is intended for use in India.</p>
+      <p>By creating an account or using PhysioDesk, you acknowledge that you have read and understood this Privacy Policy.</p>
+
+      <h2>2. Information We Collect</h2>
+      <p>Depending on how you use PhysioDesk, we may collect and process the following information.</p>
+
+      <h3>2.1 Account Information</h3>
+      <p>When you create an account, we may collect:</p>
+      <ul>
+        <li>Name</li>
+        <li>Email address</li>
+        <li>Authentication information</li>
+        <li>Profile information</li>
+        <li>Account creation date and account-related information required to provide authentication and account management</li>
+      </ul>
+      <p>Passwords are handled through Supabase Authentication and are not stored by PhysioDesk as plain-text passwords.</p>
+
+      <h3>2.2 Patient Information</h3>
+      <p>PhysioDesk allows doctors and other authorized users to create and manage patient records.</p>
+      <p>Patient information entered into the application may include:</p>
+      <ul>
+        <li>Patient name</li>
+        <li>Date of birth or age</li>
+        <li>Gender</li>
+        <li>Phone number</li>
+        <li>Email address</li>
+        <li>Address</li>
+        <li>Medical history</li>
+        <li>Symptoms</li>
+        <li>Diagnosis</li>
+        <li>Treatment information</li>
+        <li>Exercise or therapy information</li>
+        <li>Consultation notes</li>
+        <li>Attendance information</li>
+        <li>Other information entered by the doctor for healthcare and clinic-management purposes</li>
+      </ul>
+      <p>Some of this information may constitute health or sensitive personal information. PhysioDesk does not independently collect this information from patients. It is entered by the user as part of clinic-management functionality.</p>
+
+      <h3>2.3 Documents and Media</h3>
+      <p>PhysioDesk allows users to upload and manage patient-related documents and media, including:</p>
+      <ul>
+        <li>X-rays</li>
+        <li>MRI reports</li>
+        <li>Prescriptions</li>
+        <li>Medical reports</li>
+        <li>Images</li>
+        <li>Other supported patient-related files</li>
+      </ul>
+      <p>Uploaded files are stored using Supabase Storage.</p>
+      <p>Users are responsible for ensuring that they have the appropriate authorization and lawful basis to upload and manage patient information and medical documents.</p>
+
+      <h3>2.4 Payment Information</h3>
+      <p>PhysioDesk provides payment record-keeping functionality.</p>
+      <p>Users may record:</p>
+      <ul>
+        <li>Patient associated with a payment</li>
+        <li>Amount</li>
+        <li>Payment date</li>
+        <li>Payment status</li>
+        <li>Payment method</li>
+        <li>Payment notes</li>
+      </ul>
+      <p>PhysioDesk does not currently process online payments.</p>
+      <p>The payment-management functionality does not require users to provide: Credit/debit card numbers, CVV numbers, UPI PINs, Online banking passwords, or Payment gateway credentials.</p>
+
+      <h2>3. How We Use Information</h2>
+      <p>We use information to provide and operate PhysioDesk, including to:</p>
+      <ul>
+        <li>Create and authenticate user accounts</li>
+        <li>Provide password-reset functionality</li>
+        <li>Manage patient records</li>
+        <li>Manage consultation records</li>
+        <li>Manage diagnosis and treatment records</li>
+        <li>Manage attendance</li>
+        <li>Manage payment records</li>
+        <li>Store and retrieve documents and media</li>
+        <li>Provide account-management functionality</li>
+        <li>Maintain and secure the Service</li>
+        <li>Respond to support requests</li>
+        <li>Diagnose technical problems</li>
+        <li>Prevent unauthorized access and misuse</li>
+        <li>Maintain the reliability and functionality of the application</li>
+      </ul>
+      <p>We do not use patient information for advertising or targeted advertising.</p>
+
+      <h2>4. Third-Party Service Provider</h2>
+      <p>PhysioDesk uses Supabase as its backend service provider.</p>
+      <p>Supabase may process information on our behalf for purposes including:</p>
+      <ul>
+        <li>User authentication</li>
+        <li>Database storage</li>
+        <li>File/media storage</li>
+        <li>Backend services</li>
+        <li>Secure communication between the application and backend</li>
+      </ul>
+      <p>Supabase is currently the only third-party service provider used by PhysioDesk for the backend processing described in this Privacy Policy.</p>
+      <p>We do not sell patient information or user information to third parties.</p>
+      <p>We do not share patient information with advertisers or data brokers.</p>
+      <p>Information may be disclosed where required by applicable law, legal process, court order, or valid governmental request.</p>
+
+      <h2>5. Security</h2>
+      <p>PhysioDesk uses security mechanisms including:</p>
+      <ul>
+        <li>Authentication</li>
+        <li>Row Level Security (RLS)</li>
+        <li>Database access policies</li>
+        <li>Storage access policies</li>
+        <li>Encrypted network communication</li>
+      </ul>
+      <p>We take reasonable measures to protect information from unauthorized access, alteration, disclosure, or destruction.</p>
+      <p>However, no internet-based service can guarantee absolute security.</p>
+      <p>Users are responsible for maintaining the confidentiality of their account credentials and device.</p>
+
+      <h2>6. Data Minimization</h2>
+      <p>PhysioDesk is designed to collect information necessary for its intended clinic-management functionality.</p>
+      <p>We do not intentionally collect unrelated information such as:</p>
+      <ul>
+        <li>Contacts</li>
+        <li>SMS messages</li>
+        <li>Call history</li>
+        <li>Location</li>
+        <li>Health data from device health platforms</li>
+        <li>Advertising identifiers for targeted advertising</li>
+      </ul>
+      <p>— unless a future feature requires such information and this Privacy Policy is updated accordingly.</p>
+
+      <h2>7. Camera, Photos, Files, and Media Permissions</h2>
+      <p>If the application requests access to the camera, photos, files, or device media, that access is used to support functionality such as uploading profile images or patient documents/media.</p>
+      <p>We do not use camera or file access for advertising or unrelated purposes.</p>
+      <p>Users can control these permissions through their device settings.</p>
+
+      <h2>8. Data Sharing</h2>
+      <p>We do not sell, rent, or trade personal information.</p>
+      <p>We do not share patient information with:</p>
+      <ul>
+        <li>Advertisers</li>
+        <li>Marketing companies</li>
+        <li>Data brokers</li>
+        <li>Social media companies for advertising or marketing purposes</li>
+      </ul>
+      <p>Supabase is used as the backend service provider necessary to operate the Service.</p>
+      <p>Information may also be disclosed where required by applicable law or valid legal process.</p>
+
+      <h2>9. Data Retention</h2>
+      <p>PhysioDesk does not currently apply an automatic inactivity-based deletion period.</p>
+      <p>Data is generally retained until the doctor deletes the relevant information or the account is deleted.</p>
+      <p>This may include:</p>
+      <ul>
+        <li>Account information</li>
+        <li>Patient records</li>
+        <li>Consultation records</li>
+        <li>Diagnosis information</li>
+        <li>Treatment records</li>
+        <li>Attendance records</li>
+        <li>Payment records</li>
+        <li>Uploaded documents/media</li>
+      </ul>
+      <p>Information may be retained where necessary to comply with applicable legal obligations.</p>
+      <p>Doctors are responsible for determining how long they are legally required to retain patient records under applicable professional, healthcare, tax, or other obligations.</p>
+
+      <h2>10. Account Deletion</h2>
+      <p>PhysioDesk provides an account deletion option within the application.</p>
+      <p>When a doctor requests account deletion, the account and associated data are intended to be deleted, including associated:</p>
+      <ul>
+        <li>Patient records</li>
+        <li>Consultation records</li>
+        <li>Diagnosis and treatment information</li>
+        <li>Attendance records</li>
+        <li>Payment records</li>
+        <li>Uploaded documents/media</li>
+      </ul>
+      <p>This is subject to applicable legal retention requirements.</p>
+      <p>Account deletion may be permanent and irreversible.</p>
+      <p>Users should retain any information they are legally required to maintain before deleting their account.</p>
+
+      <h2>11. Privacy Rights and Requests</h2>
+      <p>Depending on applicable Indian law, users may have rights relating to:</p>
+      <ul>
+        <li>Access to personal information</li>
+        <li>Correction of inaccurate information</li>
+        <li>Erasure/deletion where applicable</li>
+        <li>Withdrawal of consent where applicable</li>
+        <li>Grievance handling</li>
+      </ul>
+      <p>To make a privacy-related request, contact:</p>
+      <p><strong>Jaimeen Patel</strong><br />Email: <a href="mailto:jaimeenpatel2017@gmail.com">jaimeenpatel2017@gmail.com</a></p>
+      <p>We may need to verify your identity before processing certain requests.</p>
+
+      <h2>12. Children's Privacy</h2>
+      <p>PhysioDesk is designed as a professional clinic-management application for doctors and healthcare professionals.</p>
+      <p>The application is not intended for children to create their own accounts.</p>
+      <p>Doctors may enter information about pediatric patients where necessary for legitimate healthcare and clinic-management purposes and where the doctor has appropriate authority to do so.</p>
+
+      <h2>13. International Data Processing</h2>
+      <p>PhysioDesk is intended for users in India.</p>
+      <p>Because PhysioDesk uses Supabase infrastructure, information may be processed or stored using infrastructure located outside India depending on the configuration and services used by the Supabase project.</p>
+      <p>Users should not assume that all information is physically stored within India unless the applicable infrastructure configuration specifically provides this.</p>
+
+      <h2>14. Changes to This Privacy Policy</h2>
+      <p>We may update this Privacy Policy when:</p>
+      <ul>
+        <li>New features are introduced</li>
+        <li>Data practices change</li>
+        <li>Security practices change</li>
+        <li>Legal requirements change</li>
+        <li>Third-party services change</li>
+      </ul>
+      <p>When material changes are made, we may provide appropriate notice through the application or other reasonable means.</p>
+      <p>The "Last Updated" date at the beginning of this policy will indicate when the policy was most recently revised.</p>
+
+      <h2>15. Medical Disclaimer</h2>
+      <p>PhysioDesk is a clinic-management and record-keeping application.</p>
+      <p>PhysioDesk does not independently diagnose medical conditions, prescribe treatment, or replace the professional judgment of a qualified healthcare professional.</p>
+      <p>Information stored within PhysioDesk should be reviewed and interpreted by the responsible healthcare professional.</p>
+      <p>PhysioDesk should not be relied upon as a substitute for professional medical advice, diagnosis, or treatment.</p>
+
+      <h2>16. Contact Us</h2>
+      <p>If you have questions, concerns, or requests relating to privacy or your information, contact:</p>
+      <p><strong>Developer / Data Controller:</strong> Jaimeen Patel</p>
+      <p><strong>Email:</strong> <a href="mailto:jaimeenpatel2017@gmail.com">jaimeenpatel2017@gmail.com</a></p>
+      <p><strong>Country:</strong> India</p>
+
+      <div class="nav-links">
+        <a href="../terms/">View Terms &amp; Conditions →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>© 2026 PhysioDesk. All rights reserved.</p>
+    <p><a href="../privacy/">Privacy Policy</a> · <a href="../terms/">Terms &amp; Conditions</a></p>
+  </div>
+
+</body>
+</html>
