@@ -89,7 +89,7 @@ export default function PatientsScreen() {
           patients={patients}
           loading={isLoading}
           value={null}
-          placeholder="Search for a patient..."
+          placeholder="Search for a patient"
           onSelect={(patient) => router.push(`/patient/${patient.id}` as any)}
           style={{ backgroundColor: Colors.surface, borderWidth: 0 }}
         />

@@ -27,7 +27,7 @@ interface SplashScreenProps {
 
 export default function SplashScreen({
   onFinished,
-  holdDuration = 800,
+  holdDuration = 500,
 }: SplashScreenProps) {
   // ── Animations ──────────────────────────────────────────────────────────────
   const containerOpacity = useRef(new Animated.Value(1)).current;

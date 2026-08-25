@@ -34,7 +34,7 @@ export const Colors = {
   warning: '#D97706',
   warningLight: 'rgba(217, 119, 6, 0.1)',
   error: '#DC2626',
-  errorLight: 'rgba(220, 38, 38, 0.1)',
+  errorLight: 'rgba(240, 50, 50, 0.17)',
   info: '#2563EB',
   infoLight: 'rgba(37, 99, 235, 0.1)',
 
@@ -51,7 +51,7 @@ export const Colors = {
   shadow: 'rgba(13, 148, 136, 0.10)',
   shadowDark: 'rgba(15, 23, 42, 0.08)',
   disabled: '#CBD5E1',
-  tabInactive: '#94A3B8',
+  tabInactive: '#6d85a5ff',
 } as const;
 
 export const Typography = {

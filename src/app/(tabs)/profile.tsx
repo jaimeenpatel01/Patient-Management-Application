@@ -215,12 +215,13 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.base,
     paddingBottom: Spacing['3xl'],
-    paddingTop: Spacing.lg,
+    paddingTop: Spacing.md,
   },
   // Profile Header
   profileHeader: {
     alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xl,
     marginBottom: Spacing.sm,
   },
   avatarContainer: {

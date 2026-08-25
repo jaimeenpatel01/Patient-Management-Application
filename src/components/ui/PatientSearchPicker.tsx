@@ -53,7 +53,7 @@ export function PatientSearchPicker({
   onClear,
   error,
   style,
-  placeholder = 'Select a patient...',
+  placeholder = 'Select a patient',
 }: PatientSearchPickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,7 +155,7 @@ export function PatientSearchPicker({
             {/* Search box */}
             <View style={styles.searchWrapper}>
               <SearchFilter
-                placeholder="Search patient name..."
+                placeholder="Search patient name"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />

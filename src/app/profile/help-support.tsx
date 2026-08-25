@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { SUPPORT_EMAIL } from '@/constants/options';
 
 // ─── FAQ Data ─────────────────────────────────────────────────────────────────
 
@@ -74,8 +75,6 @@ const FAQ_ITEMS = [
       'Go to Profile → About PhysioDesk to view the currently installed app version.',
   },
 ];
-
-const SUPPORT_EMAIL = 'doctor.app.devv@gmail.com';
 
 export default function HelpSupportScreen() {
   return (

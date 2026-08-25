@@ -141,7 +141,7 @@ export default function MarkAttendanceScreen() {
             onSelect={(patient) => setSelectedPatientId(patient.id)}
             onClear={() => setSelectedPatientId(null)}
             error={errors.patient}
-            placeholder="Select patient for attendance..."
+            placeholder="Select patient for attendance"
           />
         </View>
 

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -25,9 +26,11 @@ export default function AboutScreen() {
         {/* App Branding */}
         <View style={styles.brandingSection}>
           <View style={styles.appIconContainer}>
-            <View style={styles.appIcon}>
-              <Ionicons name="fitness" size={40} color={Colors.textInverse} />
-            </View>
+            <Image 
+              source={require('@/assets/images/icon.png')} 
+              style={styles.appIcon} 
+              resizeMode="cover"
+            />
           </View>
           <Text style={styles.appName}>PhysioDesk</Text>
           <Text style={styles.appTagline}>Physio Clinic Management</Text>

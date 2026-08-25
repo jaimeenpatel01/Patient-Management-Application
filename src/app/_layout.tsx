@@ -23,7 +23,7 @@ SplashScreen.preventAutoHideAsync();
 
 // ─── Root navigator ───────────────────────────────────────────────────────────
 function RootNavigator() {
-  const { session, isLoading, isFirstTimeGoogleSignIn } = useAuth();
+  const { session, profile, isLoading, isFirstTimeGoogleSignIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -37,16 +37,19 @@ function RootNavigator() {
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (session && inAuthGroup && !isResetPasswordFlow) {
-      if (isFirstTimeGoogleSignIn) {
+    } else if (session) {
+      const isGoogleUser = session.user.app_metadata?.provider === 'google';
+      const isProfileComplete = profile && profile.phone;
+
+      if (isGoogleUser && !isProfileComplete) {
         if (segments[1] !== 'complete-profile') {
           router.replace('/(auth)/complete-profile');
         }
-      } else {
+      } else if (inAuthGroup && !isResetPasswordFlow) {
         router.replace('/(tabs)');
       }
     }
-  }, [session, isLoading, segments, isFirstTimeGoogleSignIn]);
+  }, [session, profile, isLoading, segments]);
 
   if (isLoading) {
     return <LoadingScreen message="Loading..." />;

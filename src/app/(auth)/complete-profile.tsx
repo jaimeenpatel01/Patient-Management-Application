@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   Image,
-  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import * as ImagePicker from 'expo-image-picker';
-import { Ionicons } from '@expo/vector-icons';
 
-import { useAuth } from '@/hooks/useAuth';
-import { useAlert } from '@/contexts/AlertContext';
-import { updateProfile, uploadAvatar } from '@/services/profileService';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
+import { BorderRadius, Colors, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/hooks/useAuth';
+import { updateProfile, uploadAvatar } from '@/services/profileService';
 
 export default function CompleteProfileScreen() {
   const { user, profile, setIsFirstTimeGoogleSignIn, refreshProfile } = useAuth();
   const { showAlert } = useAlert();
-  
+
   const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
+  const [phone, setPhone] = useState(profile?.phone || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(profile?.avatar_url || user?.user_metadata?.avatar_url || null);
   const [avatarBase64, setAvatarBase64] = useState<string | null>(null);
-  
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -35,10 +35,13 @@ export default function CompleteProfileScreen() {
     if (profile?.full_name && !fullName) {
       setFullName(profile.full_name);
     }
+    if (profile?.phone && !phone) {
+      setPhone(profile.phone);
+    }
     if (profile?.avatar_url && !avatarUri && !avatarBase64) {
       setAvatarUri(profile.avatar_url);
     }
-  }, [profile, avatarBase64, avatarUri, fullName]);
+  }, [profile, avatarBase64, avatarUri, fullName, phone]);
 
   const handleAvatarUpload = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -71,6 +74,11 @@ export default function CompleteProfileScreen() {
       return;
     }
 
+    if (!phone.trim()) {
+      setError('Please enter your phone number.');
+      return;
+    }
+
     if (!user) {
       setError('User not found.');
       return;
@@ -86,7 +94,7 @@ export default function CompleteProfileScreen() {
         setIsUploadingImage(true);
         const { publicUrl: newUrl, error: uploadError } = await uploadAvatar(user.id, avatarUri, avatarBase64);
         setIsUploadingImage(false);
-        
+
         if (uploadError || !newUrl) {
           setError(uploadError || 'Could not upload image');
           setIsLoading(false);
@@ -95,9 +103,10 @@ export default function CompleteProfileScreen() {
         publicUrl = newUrl;
       }
 
-      // Update the profile with new name and avatar
+      // Update the profile with new name, phone, and avatar
       const { error: updateError } = await updateProfile(user.id, {
         full_name: fullName.trim(),
+        phone: phone.trim() || null,
         avatar_url: publicUrl,
       });
 
@@ -109,7 +118,7 @@ export default function CompleteProfileScreen() {
 
       // Refresh profile context
       await refreshProfile();
-      
+
       // Clear flag to allow navigation to tabs
       setIsFirstTimeGoogleSignIn(false);
     } catch (err: any) {
@@ -144,8 +153,8 @@ export default function CompleteProfileScreen() {
 
           {/* Avatar Upload Section */}
           <View style={styles.avatarSection}>
-            <TouchableOpacity 
-              style={[styles.avatarContainer, Shadows.sm]} 
+            <TouchableOpacity
+              style={[styles.avatarContainer, Shadows.sm]}
               onPress={handleAvatarUpload}
               activeOpacity={0.8}
             >
@@ -169,6 +178,19 @@ export default function CompleteProfileScreen() {
             value={fullName}
             onChangeText={(text) => {
               setFullName(text);
+              if (error) setError('');
+            }}
+          />
+
+          <Input
+            label="Phone Number"
+            placeholder="9876543210"
+            leftIcon="call-outline"
+            keyboardType="phone-pad"
+            maxLength={10}
+            value={phone}
+            onChangeText={(text) => {
+              setPhone(text.replace(/[^0-9]/g, '').slice(0, 10));
               if (error) setError('');
             }}
           />
