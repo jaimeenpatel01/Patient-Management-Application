@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
@@ -176,11 +177,11 @@ export default function RegisterScreen() {
           <View style={styles.legalContainer}>
             <Text style={styles.legalText}>
               By continuing, you agree to our{' '}
-              <Text style={styles.legalLink} onPress={() => router.push('/legal/terms')}>
+              <Text style={styles.legalLink} onPress={() => Linking.openURL('https://jaimeenpatel01.github.io/Patient-Management-Application/terms/')}>
                 Terms of Service
               </Text>
               {' '}and{' '}
-              <Text style={styles.legalLink} onPress={() => router.push('/legal/privacy')}>
+              <Text style={styles.legalLink} onPress={() => Linking.openURL('https://jaimeenpatel01.github.io/Patient-Management-Application/privacy/')}>
                 Privacy Policy
               </Text>
             </Text>
