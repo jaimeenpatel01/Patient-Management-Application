@@ -9,9 +9,11 @@ import type { Patient, Attendance, Payment } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { useAlert } from '@/contexts/AlertContext';
 
 export default function PatientSummaryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { showAlert } = useAlert();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -124,7 +126,7 @@ export default function PatientSummaryScreen() {
         dialogTitle: `${patient.full_name} Summary`,
       });
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      showAlert('Error', error.message);
     }
   };
 

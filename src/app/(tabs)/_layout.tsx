@@ -2,7 +2,7 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Colors, Typography } from '@/constants/theme';
+import { Colors, Typography, Shadows } from '@/constants/theme';
 
 export default function TabLayout() {
   return (
@@ -22,14 +22,17 @@ export default function TabLayout() {
         tabBarInactiveTintColor: Colors.tabInactive,
         tabBarStyle: {
           backgroundColor: Colors.surface,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          paddingBottom: 4,
-          height: 60,
+          borderTopWidth: 0,
+          ...Shadows.lg,
+          shadowOffset: { width: 0, height: -4 },
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 64,
         },
         tabBarLabelStyle: {
           fontSize: Typography.xs,
           fontWeight: Typography.medium,
+          marginTop: 4,
         },
       }}
     >
@@ -37,8 +40,8 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "grid" : "grid-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -46,8 +49,8 @@ export default function TabLayout() {
         name="patients"
         options={{
           title: 'Patients',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "people" : "people-outline"} size={26} color={color} />
           ),
         }}
       />
@@ -58,7 +61,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'checkmark-circle' : 'checkmark-circle-outline'}
-              size={24}
+              size={26}
               color={color}
             />
           ),
@@ -68,8 +71,8 @@ export default function TabLayout() {
         name="payments"
         options={{
           title: 'Payments',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="wallet-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "wallet" : "wallet-outline"} size={24} color={color} />
           ),
         }}
       />
@@ -77,8 +80,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} size={24} color={color} />
           ),
         }}
       />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { Button } from './Button';
 
 interface EmptyStateProps {
@@ -21,7 +21,9 @@ export const EmptyState = React.memo(function EmptyState({
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Ionicons name={icon} size={64} color={Colors.textTertiary} />
+      <View style={styles.iconCircle}>
+        <Ionicons name={icon} size={40} color={Colors.primary} />
+      </View>
       <Text style={styles.title}>{title}</Text>
       {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
       {actionLabel && onAction && (
@@ -47,11 +49,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['2xl'],
     paddingVertical: Spacing['4xl'],
   },
+  iconCircle: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
   title: {
     fontSize: Typography.lg,
     fontWeight: Typography.semibold,
     color: Colors.text,
-    marginTop: Spacing.base,
     textAlign: 'center',
   },
   subtitle: {
@@ -60,8 +70,9 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     textAlign: 'center',
     lineHeight: Typography.sm * Typography.normal,
+    letterSpacing: 0.2,
   },
   actionContainer: {
-    marginTop: Spacing.lg,
+    marginTop: Spacing.xl,
   },
 });

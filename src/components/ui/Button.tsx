@@ -7,7 +7,7 @@ import {
   type ViewStyle,
   type TextStyle,
 } from 'react-native';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -45,6 +45,7 @@ export const Button = React.memo(function Button({
         styles.base,
         sizeStyles[size],
         variantStyles[variant],
+        variantShadows[variant],
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         style,
@@ -84,7 +85,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: BorderRadius.lg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   fullWidth: {
@@ -102,17 +103,17 @@ const sizeStyles: Record<ButtonSize, ViewStyle> = {
   sm: {
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.base,
-    minHeight: 36,
+    minHeight: 38,
   },
   md: {
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
-    minHeight: 48,
+    minHeight: 52,
   },
   lg: {
     paddingVertical: Spacing.base,
     paddingHorizontal: Spacing.xl,
-    minHeight: 56,
+    minHeight: 60,
   },
 };
 
@@ -133,7 +134,7 @@ const variantStyles: Record<ButtonVariant, ViewStyle> = {
   },
   outline: {
     backgroundColor: 'transparent',
-    borderColor: Colors.border,
+    borderColor: Colors.primaryLight,
   },
   danger: {
     backgroundColor: Colors.error,
@@ -145,10 +146,30 @@ const variantStyles: Record<ButtonVariant, ViewStyle> = {
   },
 };
 
+const variantShadows: Record<ButtonVariant, ViewStyle> = {
+  primary: {
+    shadowColor: 'rgba(13, 148, 136, 0.35)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  secondary: {},
+  outline: {},
+  danger: {
+    shadowColor: 'rgba(220, 38, 38, 0.25)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  ghost: {},
+};
+
 const variantTextStyles: Record<ButtonVariant, TextStyle> = {
   primary: { color: Colors.textInverse },
   secondary: { color: Colors.primary },
-  outline: { color: Colors.text },
+  outline: { color: Colors.primary },
   danger: { color: Colors.textInverse },
   ghost: { color: Colors.primary },
 };

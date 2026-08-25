@@ -3,28 +3,30 @@ import { View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
+import { SuccessModal } from '@/components/ui/SuccessModal';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { PAYMENT_TYPES, PAYMENT_METHODS, PAYMENT_STATUSES } from '@/constants/options';
 import { getPatients } from '@/services/patientService';
 import { createPayment, updatePayment } from '@/services/paymentService';
 import type { Patient, PaymentType, PaymentMethod, PaymentStatus } from '@/types';
 import { supabase } from '@/lib/supabase';
-
+import { useAlert } from '@/contexts/AlertContext';
 
 export default function AddPaymentScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
+  const { showAlert } = useAlert();
 
-  
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loadingPatients, setLoadingPatients] = useState(true);
   const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Form state
   const [patientId, setPatientId] = useState<string>('');
@@ -42,7 +44,7 @@ export default function AddPaymentScreen() {
     setLoadingPatients(true);
     const { data, error } = await getPatients();
     if (error) {
-      Alert.alert('Error', 'Failed to load patients.');
+      showAlert('Error', 'Failed to load patients.');
     } else {
       setPatients(data);
     }
@@ -108,14 +110,15 @@ export default function AddPaymentScreen() {
     setIsSubmitting(false);
 
     if (error) {
-      Alert.alert('Error', error);
+      showAlert('Error', error);
     } else {
-      Alert.alert('Success', id ? 'Payment updated successfully' : 'Payment recorded successfully', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
+      setShowSuccessModal(true);
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        router.back();
+      }, 2500);
     }
   };
-
 
   if (isFetchingRecord) {
     return (
@@ -128,16 +131,20 @@ export default function AddPaymentScreen() {
   return (
     <>
       <Stack.Screen options={{ title: id ? 'Edit Payment' : 'Record Payment' }} />
-
-        <KeyboardAwareScrollView 
-          style={styles.container} 
-          contentContainerStyle={[styles.content, { paddingBottom: 48 }]} 
-          keyboardShouldPersistTaps="handled"
-          enableOnAndroid={true}
-          extraScrollHeight={50}
-        >
-          
-          <Text style={styles.sectionTitle}>Patient</Text>
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={50}
+      >
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="person" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Patient</Text>
+          </View>
           <PatientSearchPicker
             patients={patients}
             loading={loadingPatients}
@@ -149,8 +156,15 @@ export default function AddPaymentScreen() {
             onClear={() => setPatientId('')}
             error={errors.patientId}
           />
+        </View>
 
-          <View style={styles.spacer} />
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="cash" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Payment Details</Text>
+          </View>
 
           <Input
             label="Amount (₹)"
@@ -178,29 +192,39 @@ export default function AddPaymentScreen() {
 
           <Text style={styles.fieldLabel}>Status</Text>
           <ChipSelector options={PAYMENT_STATUSES} value={status} onChange={setStatus} />
+        </View>
 
-          <View style={styles.spacer} />
-
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="document-text" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Notes</Text>
+          </View>
           <Input
-            label="Notes (Optional)"
             placeholder="Add any extra details..."
             value={notes}
             onChangeText={setNotes}
             multiline
             numberOfLines={3}
+            containerStyle={{ marginBottom: 0 }}
           />
+        </View>
 
-          <View style={styles.submitContainer}>
-            <Button
-              title={id ? 'Save Changes' : 'Record Payment'}
-              onPress={handleSubmit}
-              loading={isSubmitting}
-              icon={<Ionicons name={id ? 'save-outline' : 'checkmark-circle-outline'} size={20} color={Colors.textInverse} />}
-            />
-          </View>
+        <View style={styles.submitContainer}>
+          <Button
+            title={id ? 'Save Changes' : 'Record Payment'}
+            onPress={handleSubmit}
+            loading={isSubmitting}
+            icon={<Ionicons name={id ? 'save' : 'checkmark-circle'} size={20} color={Colors.textInverse} />}
+          />
+        </View>
+      </KeyboardAwareScrollView>
 
-        </KeyboardAwareScrollView>
-
+      <SuccessModal 
+        visible={showSuccessModal} 
+        message={id ? "Payment updated successfully." : "Payment recorded successfully."} 
+      />
     </>
   );
 }
@@ -208,8 +232,38 @@ export default function AddPaymentScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   content: { padding: Spacing.base, paddingBottom: Spacing['4xl'] },
-  sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.semibold, color: Colors.text, marginBottom: Spacing.base },
-  fieldLabel: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.text, marginBottom: Spacing.sm },
-  spacer: { height: Spacing.lg },
-  submitContainer: { marginTop: Spacing.xl },
+  sectionCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 0,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  sectionIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  sectionTitle: {
+    fontSize: Typography.lg,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+  },
+  fieldLabel: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
+    color: Colors.text,
+    marginBottom: Spacing.sm,
+  },
+  spacer: { height: Spacing.base },
+  submitContainer: { marginTop: Spacing.xs },
 });

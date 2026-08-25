@@ -108,7 +108,7 @@ export default function LoginScreen() {
         {/* Branding */}
         <View style={styles.branding}>
           <Image
-            source={require('@/assets/images/physiodesk-icon-240x240.png')}
+            source={require('@/assets/images/icon.png')}
             style={styles.appIcon}
           />
           <Text style={styles.appName}>PhysioDesk</Text>

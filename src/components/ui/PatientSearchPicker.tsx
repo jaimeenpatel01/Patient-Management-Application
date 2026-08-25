@@ -8,11 +8,15 @@ import {
   FlatList,
   StyleProp,
   ViewStyle,
+  TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { SearchFilter } from '@/components/ui/SearchFilter';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { getInitials } from '@/lib/formatters';
 
 import type { Patient } from '@/types';
 
@@ -38,9 +42,8 @@ interface PatientSearchPickerProps {
 /**
  * A reusable patient search picker.
  *
- * Renders a tappable trigger that opens a modal where the user can
- * search for and select a patient. Once selected, the trigger shows
- * the patient's name and a clear button.
+ * Renders a tappable trigger that opens a rich bottom-sheet style modal 
+ * where the user can search for and select a patient.
  */
 export function PatientSearchPicker({
   patients,
@@ -50,7 +53,7 @@ export function PatientSearchPicker({
   onClear,
   error,
   style,
-  placeholder = 'Select a patient...',
+  placeholder = 'Select a patient',
 }: PatientSearchPickerProps) {
   const [modalVisible, setModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,10 +79,19 @@ export function PatientSearchPicker({
       {/* Trigger */}
       {selectedPatient ? (
         <View style={[styles.selectedRow, style]}>
-          <Ionicons name="person-circle-outline" size={22} color={Colors.primary} />
-          <Text style={styles.selectedName}>{selectedPatient.full_name}</Text>
-          <TouchableOpacity onPress={handleClear} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Ionicons name="close-circle" size={22} color={Colors.textTertiary} />
+          <View style={styles.selectedAvatar}>
+            <Text style={styles.selectedAvatarText}>{getInitials(selectedPatient.full_name)}</Text>
+          </View>
+          <View style={styles.selectedInfo}>
+            <Text style={styles.selectedName}>{selectedPatient.full_name}</Text>
+            {selectedPatient.phone && (
+              <Text style={styles.selectedPhone}>{selectedPatient.phone}</Text>
+            )}
+          </View>
+          <TouchableOpacity onPress={handleClear} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+            <View style={styles.clearButtonBg}>
+              <Ionicons name="close" size={16} color={Colors.textTertiary} />
+            </View>
           </TouchableOpacity>
         </View>
       ) : (
@@ -88,88 +100,127 @@ export function PatientSearchPicker({
           onPress={() => setModalVisible(true)}
           activeOpacity={0.75}
         >
+          <View style={styles.triggerIconBg}>
+            <Ionicons name="person-outline" size={18} color={Colors.primary} />
+          </View>
           <Text style={styles.triggerPlaceholder}>{placeholder}</Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+          <Ionicons name="chevron-down" size={20} color={Colors.textTertiary} />
         </TouchableOpacity>
       )}
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      {/* Search Modal */}
+      {/* Rich Popup Modal */}
       <Modal
         visible={modalVisible}
         animationType="slide"
-        presentationStyle="pageSheet"
+        transparent={true}
         onRequestClose={() => {
           setModalVisible(false);
           setSearchQuery('');
         }}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Patient</Text>
-            <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-                setSearchQuery('');
-              }}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.modalOverlay}
+        >
+          <TouchableWithoutFeedback onPress={() => {
+            setModalVisible(false);
+            setSearchQuery('');
+          }}>
+            <View style={StyleSheet.absoluteFill} />
+          </TouchableWithoutFeedback>
+          
+          <SafeAreaView edges={['bottom']} style={styles.modalContainer}>
+            {/* Drag Handle */}
+            <View style={styles.dragHandleContainer}>
+              <View style={styles.dragHandle} />
+            </View>
 
-          {/* Search box */}
-          <View style={styles.searchWrapper}>
-            <SearchFilter
-              placeholder="Search patient"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              containerStyle={{ borderWidth: 0, paddingHorizontal: 0, height: 40, backgroundColor: 'transparent' }}
-            />
-          </View>
+            {/* Header */}
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Patient</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setModalVisible(false);
+                  setSearchQuery('');
+                }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
 
-          {/* Results */}
-          {loading ? (
-            <Text style={styles.stateText}>Loading patients...</Text>
-          ) : (
-            <FlatList
-              data={filtered}
-              keyExtractor={(p) => p.id}
-              contentContainerStyle={styles.listContent}
-              keyboardShouldPersistTaps="handled"
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={[styles.listItem, value === item.id && styles.listItemActive]}
-                  onPress={() => handleSelect(item)}
-                >
-                  <Ionicons
-                    name="person-circle-outline"
-                    size={24}
-                    color={value === item.id ? Colors.primary : Colors.textSecondary}
-                  />
-                  <View style={styles.listItemInfo}>
-                    <Text style={[styles.listItemName, value === item.id && styles.listItemNameActive]}>
-                      {item.full_name}
+            {/* Search box */}
+            <View style={styles.searchWrapper}>
+              <SearchFilter
+                placeholder="Search patient name"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+            </View>
+
+            {/* Results */}
+            {loading ? (
+              <View style={styles.stateContainer}>
+                 <Text style={styles.stateText}>Loading patients...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filtered}
+                keyExtractor={(p) => p.id}
+                contentContainerStyle={styles.listContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item }) => {
+                  const isSelected = value === item.id;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.listItem, isSelected && styles.listItemActive]}
+                      onPress={() => handleSelect(item)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[styles.avatar, isSelected && styles.avatarActive]}>
+                        <Text style={[styles.avatarText, isSelected && styles.avatarTextActive]}>
+                          {getInitials(item.full_name)}
+                        </Text>
+                      </View>
+                      
+                      <View style={styles.listItemInfo}>
+                        <Text style={[styles.listItemName, isSelected && styles.listItemNameActive]}>
+                          {item.full_name}
+                        </Text>
+                        {item.phone ? (
+                          <Text style={[styles.listItemSub, isSelected && styles.listItemSubActive]}>{item.phone}</Text>
+                        ) : null}
+                      </View>
+                      
+                      {isSelected ? (
+                        <View style={styles.checkIconBg}>
+                          <Ionicons name="checkmark" size={16} color={Colors.textInverse} />
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={styles.stateContainer}>
+                    <View style={styles.emptyIconBg}>
+                      <Ionicons name="search-outline" size={32} color={Colors.primary} />
+                    </View>
+                    <Text style={styles.emptyTitle}>No patients found</Text>
+                    <Text style={styles.emptySubtitle}>
+                      {searchQuery.trim().length > 0 
+                        ? 'Try a different search term.' 
+                        : 'You haven\'t added any patients yet.'}
                     </Text>
-                    {item.phone ? (
-                      <Text style={styles.listItemSub}>{item.phone}</Text>
-                    ) : null}
                   </View>
-                  {value === item.id ? (
-                    <Ionicons name="checkmark" size={20} color={Colors.primary} style={{ marginLeft: 'auto' }} />
-                  ) : null}
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.stateText}>
-                  {searchQuery.trim().length > 0 ? 'No patients found.' : 'Start typing to search...'}
-                </Text>
-              }
-            />
-          )}
-        </SafeAreaView>
+                }
+              />
+            )}
+          </SafeAreaView>
+        </KeyboardAvoidingView>
       </Modal>
     </>
   );
@@ -181,17 +232,27 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.surfaceSecondary,
+    borderWidth: 1.5,
+    borderColor: Colors.borderLight,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
+    height: 52,
+  },
+  triggerIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   triggerError: {
     borderColor: Colors.error,
   },
   triggerPlaceholder: {
+    flex: 1,
+    marginLeft: Spacing.md,
     fontSize: Typography.base,
     color: Colors.textTertiary,
   },
@@ -200,19 +261,49 @@ const styles = StyleSheet.create({
   selectedRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.primaryFaded,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1.5,
     borderColor: Colors.primary,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.md,
+    ...Shadows.sm,
+    shadowColor: Colors.primary,
+  },
+  selectedAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  selectedAvatarText: {
+    color: Colors.primary,
+    fontWeight: Typography.bold,
+    fontSize: Typography.base,
+  },
+  selectedInfo: {
+    flex: 1,
   },
   selectedName: {
-    flex: 1,
     fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontWeight: Typography.bold,
+    color: Colors.primaryDark,
+  },
+  selectedPhone: {
+    fontSize: Typography.xs,
     color: Colors.primary,
+    marginTop: 2,
+  },
+  clearButtonBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   errorText: {
@@ -222,46 +313,90 @@ const styles = StyleSheet.create({
   },
 
   // Modal
-  modalContainer: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: Colors.background,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+  },
+  modalContainer: {
+    backgroundColor: Colors.surface,
+    borderTopLeftRadius: BorderRadius['2xl'],
+    borderTopRightRadius: BorderRadius['2xl'],
+    maxHeight: '85%',
+    ...Shadows.xl,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xs,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.disabled,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.surface,
   },
   modalTitle: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
     color: Colors.text,
   },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.surfaceSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   searchWrapper: {
-    backgroundColor: Colors.surface,
-    marginHorizontal: Spacing.base,
-    marginVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    padding: Spacing.base,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
   },
   listContent: {
     paddingBottom: Spacing['4xl'],
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.sm,
   },
   listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.surface,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.xs,
   },
   listItemActive: {
     backgroundColor: Colors.primaryFaded,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Colors.surfaceSecondary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarActive: {
+    backgroundColor: Colors.surface,
+  },
+  avatarText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.bold,
+    color: Colors.textSecondary,
+  },
+  avatarTextActive: {
+    color: Colors.primary,
   },
   listItemInfo: {
     flex: 1,
@@ -269,22 +404,56 @@ const styles = StyleSheet.create({
   },
   listItemName: {
     fontSize: Typography.base,
+    fontWeight: Typography.semibold,
     color: Colors.text,
+    marginBottom: 2,
   },
   listItemNameActive: {
-    color: Colors.primary,
-    fontWeight: Typography.semibold,
+    color: Colors.primaryDark,
   },
   listItemSub: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    marginTop: 2,
+  },
+  listItemSubActive: {
+    color: Colors.primary,
+  },
+  checkIconBg: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: Spacing.sm,
+  },
+  stateContainer: {
+    paddingVertical: Spacing['4xl'],
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   stateText: {
     fontSize: Typography.sm,
     color: Colors.textTertiary,
-    fontStyle: 'italic',
+  },
+  emptyIconBg: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+  },
+  emptySubtitle: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
     textAlign: 'center',
-    paddingVertical: Spacing.xl,
   },
 });

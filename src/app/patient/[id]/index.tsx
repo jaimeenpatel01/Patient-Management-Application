@@ -16,6 +16,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { Button } from '@/components/ui/Button';
 import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
+import { useAlert } from '@/contexts/AlertContext';
 
 
 
@@ -32,10 +33,11 @@ function getGenderDisplay(gender: string | null): string {
 
 
 function InfoRow({ icon, label, value, copyable }: { icon: keyof typeof Ionicons.glyphMap; label: string; value: string | null, copyable?: boolean }) {
+  const { showAlert } = useAlert();
   const handleCopy = async () => {
     if (value) {
       await Clipboard.setStringAsync(value);
-      Alert.alert('Copied', `${label} copied to clipboard.`, [{ text: 'OK', style: 'cancel' }]);
+      showAlert('Copied', `${label} copied to clipboard.`, [{ text: 'OK', style: 'cancel' }]);
     }
   };
 
@@ -63,6 +65,7 @@ function InfoRow({ icon, label, value, copyable }: { icon: keyof typeof Ionicons
 export default function PatientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const { showAlert } = useAlert();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,7 +85,7 @@ export default function PatientDetailScreen() {
   );
 
   const handleDelete = () => {
-    Alert.alert(
+    showAlert(
       'Delete Patient',
       `Are you sure you want to delete ${patient?.full_name}? This action cannot be undone.`,
       [
@@ -94,7 +97,7 @@ export default function PatientDetailScreen() {
             if (!id) return;
             const { error: delError } = await deletePatient(id);
             if (delError) {
-              Alert.alert('Error', delError);
+              showAlert('Error', delError);
             } else {
               router.back();
             }

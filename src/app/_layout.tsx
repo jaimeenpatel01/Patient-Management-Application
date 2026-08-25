@@ -11,6 +11,8 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { AuthProvider } from '@/contexts/AuthContext';
+import { AlertProvider } from '@/contexts/AlertContext';
+import { CustomAlert } from '@/components/ui/CustomAlert';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Colors } from '@/constants/theme';
@@ -21,7 +23,7 @@ SplashScreen.preventAutoHideAsync();
 
 // ─── Root navigator ───────────────────────────────────────────────────────────
 function RootNavigator() {
-  const { session, isLoading, isFirstTimeGoogleSignIn } = useAuth();
+  const { session, profile, isLoading, isFirstTimeGoogleSignIn } = useAuth();
   const segments = useSegments();
   const router = useRouter();
 
@@ -35,16 +37,19 @@ function RootNavigator() {
 
     if (!session && !inAuthGroup) {
       router.replace('/(auth)/login');
-    } else if (session && inAuthGroup && !isResetPasswordFlow) {
-      if (isFirstTimeGoogleSignIn) {
+    } else if (session) {
+      const isGoogleUser = session.user.app_metadata?.provider === 'google';
+      const isProfileComplete = profile && profile.phone;
+
+      if (isGoogleUser && !isProfileComplete) {
         if (segments[1] !== 'complete-profile') {
           router.replace('/(auth)/complete-profile');
         }
-      } else {
+      } else if (inAuthGroup && !isResetPasswordFlow) {
         router.replace('/(tabs)');
       }
     }
-  }, [session, isLoading, segments, isFirstTimeGoogleSignIn]);
+  }, [session, profile, isLoading, segments]);
 
   if (isLoading) {
     return <LoadingScreen message="Loading..." />;
@@ -60,6 +65,7 @@ function RootNavigator() {
         <Stack.Screen name="consultation" />
         <Stack.Screen name="attendance" />
         <Stack.Screen name="payment" />
+        <Stack.Screen name="profile" />
       </Stack>
     </>
   );
@@ -80,9 +86,12 @@ export default function RootLayout() {
         style={{ flex: 1, backgroundColor: Colors.background }}
         edges={['bottom', 'left', 'right']}
       >
-        <AuthProvider>
-          <RootNavigator />
-        </AuthProvider>
+        <AlertProvider>
+          <AuthProvider>
+            <RootNavigator />
+          </AuthProvider>
+          <CustomAlert />
+        </AlertProvider>
 
         {/* Animated JS splash rendered on top of everything */}
         {showSplash && (

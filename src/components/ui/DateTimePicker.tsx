@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { formatTime12Hour } from '@/lib/formatters';
 
 interface CustomDateTimePickerProps {
@@ -68,8 +68,11 @@ export function AppDateTimePicker({ label, value, onChange, mode = 'date', error
         onPress={() => setShow(true)}
         activeOpacity={0.7}
       >
-        <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={20} color={Colors.textTertiary} />
+        <View style={styles.iconBg}>
+          <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={18} color={Colors.primary} />
+        </View>
         <Text style={[styles.valueText, !value && styles.placeholderText]}>{displayValue}</Text>
+        <Ionicons name="chevron-down" size={18} color={Colors.textTertiary} />
       </TouchableOpacity>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -88,7 +91,15 @@ export function AppDateTimePicker({ label, value, onChange, mode = 'date', error
         <Modal visible={show} animationType="slide" transparent={true}>
           <View style={styles.modalOverlay}>
             <View style={styles.pickerContainer}>
+              {/* Drag handle */}
+              <View style={styles.dragHandleContainer}>
+                <View style={styles.dragHandle} />
+              </View>
+
               <View style={styles.pickerHeader}>
+                <Text style={styles.pickerTitle}>
+                  {mode === 'date' ? 'Select Date' : 'Select Time'}
+                </Text>
                 <TouchableOpacity onPress={() => setShow(false)} style={styles.doneButton}>
                   <Text style={styles.doneText}>Done</Text>
                 </TouchableOpacity>
@@ -118,24 +129,32 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     fontWeight: Typography.medium,
     color: Colors.text,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   trigger: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
+    backgroundColor: Colors.surfaceSecondary,
+    borderWidth: 1.5,
+    borderColor: Colors.borderLight,
+    borderRadius: BorderRadius.lg,
     paddingHorizontal: Spacing.md,
-    height: 44,
+    height: 52,
   },
   triggerError: {
     borderColor: Colors.error,
   },
+  iconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: BorderRadius.sm,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   valueText: {
     flex: 1,
-    marginLeft: Spacing.sm,
+    marginLeft: Spacing.md,
     fontSize: Typography.base,
     color: Colors.text,
   },
@@ -150,22 +169,42 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
   },
   pickerContainer: {
     backgroundColor: Colors.surface,
     paddingBottom: Spacing.xl,
+    borderTopLeftRadius: BorderRadius['2xl'],
+    borderTopRightRadius: BorderRadius['2xl'],
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xs,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.disabled,
   },
   pickerHeader: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    padding: Spacing.md,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
-    backgroundColor: Colors.surfaceSecondary,
+  },
+  pickerTitle: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.text,
   },
   doneButton: {
     paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
   },
   doneText: {
     color: Colors.primary,

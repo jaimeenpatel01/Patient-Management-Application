@@ -52,21 +52,24 @@ export default function PatientsScreen() {
 
   const renderPatientCard = useCallback(({ item }: { item: Patient }) => (
     <TouchableOpacity
-      style={styles.patientCard}
+      style={[styles.patientCard, Shadows.md]}
       onPress={() => router.push(`/patient/${item.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={styles.avatarContainer}>
-        <Text style={styles.avatarText}>{getInitials(item.full_name)}</Text>
-      </View>
-      <View style={styles.patientInfo}>
-        <Text style={styles.patientName} numberOfLines={1}>{item.full_name}</Text>
-        <View style={styles.patientMeta}>
-          <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
-          <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
+      <View style={styles.cardAccent} />
+      <View style={styles.cardContent}>
+        <View style={styles.avatarContainer}>
+          <Text style={styles.avatarText}>{getInitials(item.full_name)}</Text>
         </View>
+        <View style={styles.patientInfo}>
+          <Text style={styles.patientName} numberOfLines={1}>{item.full_name}</Text>
+          <View style={styles.patientMeta}>
+            <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
+            <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
     </TouchableOpacity>
   ), [router]);
 
@@ -86,9 +89,9 @@ export default function PatientsScreen() {
           patients={patients}
           loading={isLoading}
           value={null}
-          placeholder="Search for a patient..."
+          placeholder="Search for a patient"
           onSelect={(patient) => router.push(`/patient/${patient.id}` as any)}
-          style={{ backgroundColor: Colors.surfaceSecondary, borderWidth: 0 }}
+          style={{ backgroundColor: Colors.surface, borderWidth: 0 }}
         />
       </View>
 
@@ -164,7 +167,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.sm,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Colors.borderLight,
   },
 
   errorBanner: {
@@ -194,22 +197,33 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   patientCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    marginBottom: Spacing.md,
+    flexDirection: 'row',
+    overflow: 'hidden',
+    borderWidth: 0,
+  },
+  cardAccent: {
+    width: 6,
+    backgroundColor: Colors.primaryLight,
+  },
+  cardContent: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
     padding: Spacing.base,
-    marginBottom: Spacing.sm,
-    ...Shadows.sm,
   },
   avatarContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: Colors.primaryFaded,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(13, 148, 136, 0.1)',
   },
   avatarText: {
     fontSize: Typography.lg,
@@ -222,15 +236,14 @@ const styles = StyleSheet.create({
   },
   patientName: {
     fontSize: Typography.base,
-    fontWeight: Typography.semibold,
+    fontWeight: Typography.bold,
     color: Colors.text,
-    marginBottom: 2,
+    marginBottom: 4,
   },
   patientMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.xs,
-    marginTop: 2,
   },
   patientMetaText: {
     fontSize: Typography.sm,
@@ -240,12 +253,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacing.lg,
     bottom: Spacing.lg,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    ...Shadows.lg,
+    ...Shadows.xl,
   },
 });

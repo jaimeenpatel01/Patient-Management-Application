@@ -25,26 +25,42 @@ export const ActionMenu = React.memo(function ActionMenu({ visible, onClose, opt
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.overlay}>
           <TouchableWithoutFeedback>
-            <SafeAreaView edges={['bottom']} style={[styles.menuContainer, { paddingBottom: Spacing.lg }]}>
+            <SafeAreaView edges={['bottom']} style={[styles.menuContainer, { paddingBottom: Spacing.xl }]}>
+              {/* Drag handle pill */}
+              <View style={styles.dragHandleContainer}>
+                <View style={styles.dragHandle} />
+              </View>
+
               {title && (
                 <View style={styles.header}>
                   <Text style={styles.title}>{title}</Text>
                 </View>
               )}
-              {options.map((option, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[styles.optionRow, index === options.length - 1 && styles.lastOptionRow]}
-                  activeOpacity={0.7}
-                  onPress={option.onPress}
-                >
-                  <Ionicons name={option.icon} size={22} color={option.color || Colors.text} />
-                  <Text style={[styles.optionLabel, { color: option.color || Colors.text }]}>
-                    {option.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-              <TouchableOpacity style={styles.cancelButton} activeOpacity={0.7} onPress={onClose}>
+              {options.map((option, index) => {
+                const iconBg = option.color
+                  ? `${option.color}15`
+                  : Colors.primaryFaded;
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.optionRow, index === options.length - 1 && styles.lastOptionRow]}
+                    activeOpacity={0.6}
+                    onPress={option.onPress}
+                  >
+                    <View style={[styles.optionIconBg, { backgroundColor: iconBg }]}>
+                      <Ionicons name={option.icon} size={20} color={option.color || Colors.primary} />
+                    </View>
+                    <Text style={[styles.optionLabel, { color: option.color || Colors.text }]}>
+                      {option.label}
+                    </Text>
+                    <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+                  </TouchableOpacity>
+                );
+              })}
+
+              <View style={styles.cancelSeparator} />
+
+              <TouchableOpacity style={styles.cancelButton} activeOpacity={0.6} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
             </SafeAreaView>
@@ -58,16 +74,26 @@ export const ActionMenu = React.memo(function ActionMenu({ visible, onClose, opt
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
     justifyContent: 'flex-end',
   },
   menuContainer: {
     backgroundColor: Colors.surface,
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
+    borderTopLeftRadius: BorderRadius['2xl'],
+    borderTopRightRadius: BorderRadius['2xl'],
     paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.lg,
-    ...Shadows.lg,
+    paddingTop: Spacing.sm,
+    ...Shadows.xl,
+  },
+  dragHandleContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  dragHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Colors.disabled,
   },
   header: {
     paddingBottom: Spacing.md,
@@ -84,28 +110,41 @@ const styles = StyleSheet.create({
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.base,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
   },
   lastOptionRow: {
     borderBottomWidth: 0,
   },
+  optionIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   optionLabel: {
+    flex: 1,
     fontSize: Typography.base,
     fontWeight: Typography.medium,
     marginLeft: Spacing.md,
   },
+  cancelSeparator: {
+    height: 1,
+    backgroundColor: Colors.borderLight,
+    marginTop: Spacing.sm,
+  },
   cancelButton: {
     marginTop: Spacing.md,
     backgroundColor: Colors.surfaceSecondary,
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.base,
     borderRadius: BorderRadius.lg,
     alignItems: 'center',
   },
   cancelText: {
     fontSize: Typography.base,
     fontWeight: Typography.bold,
-    color: Colors.text,
+    color: Colors.textSecondary,
   },
 });

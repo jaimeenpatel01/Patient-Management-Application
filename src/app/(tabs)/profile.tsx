@@ -4,109 +4,28 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Alert,
   TouchableOpacity,
   ActivityIndicator,
   Image,
-  Modal,
-  TextInput,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '@/lib/supabase';
-import { uploadAvatar, updateProfile, removeAvatar } from '@/services/profileService';
-import { getDoctorDisplayName } from '@/lib/formatters';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/Button';
+import { useAlert } from '@/contexts/AlertContext';
+import { getDoctorDisplayName } from '@/lib/formatters';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { APP_VERSION } from '@/constants/options';
 
 export default function ProfileScreen() {
-  const { user, profile, signOut, refreshProfile, updatePassword } = useAuth();
+  const { user, profile, signOut } = useAuth();
+  const { showAlert } = useAlert();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
-
-  const handleAvatarUpload = async () => {
-    if (!user) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-      base64: true,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      setIsUploading(true);
-      const uri = result.assets[0].uri;
-      const base64Data = result.assets[0].base64;
-
-      if (!base64Data) {
-        Alert.alert('Error', 'Could not read image data.');
-        setIsUploading(false);
-        return;
-      }
-      
-      const oldAvatarUrl = profile?.avatar_url;
-
-      const { publicUrl, error: uploadError } = await uploadAvatar(user.id, uri, base64Data);
-      
-      if (uploadError || !publicUrl) {
-        Alert.alert('Upload Failed', uploadError || 'Could not upload image');
-        setIsUploading(false);
-        return;
-      }
-
-      const { error: updateError } = await updateProfile(user.id, { avatar_url: publicUrl });
-      
-      if (updateError) {
-        Alert.alert('Update Failed', updateError);
-      } else {
-        await refreshProfile();
-      }
-      setIsUploading(false);
-    }
-  };
-
-  const handleAvatarRemove = async () => {
-    if (!user || !profile?.avatar_url) return;
-    
-    setIsUploading(true);
-    const { error } = await removeAvatar(user.id, profile.avatar_url);
-    if (error) {
-      Alert.alert('Remove Failed', error);
-    } else {
-      await refreshProfile();
-    }
-    setIsUploading(false);
-  };
-
-  const handleAvatarPress = () => {
-    if (!profile?.avatar_url) {
-      handleAvatarUpload();
-      return;
-    }
-
-    Alert.alert(
-      'Profile Photo',
-      'What would you like to do?',
-      [
-        { text: 'Upload New Photo', onPress: handleAvatarUpload },
-        { text: 'Remove Photo', style: 'destructive', onPress: handleAvatarRemove },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
-  };
+  const router = useRouter();
 
   const displayName = getDoctorDisplayName(profile?.full_name ?? null, user?.email);
 
   const handleSignOut = () => {
-    Alert.alert(
+    showAlert(
       'Sign Out',
       'Are you sure you want to sign out?',
       [
@@ -124,26 +43,9 @@ export default function ProfileScreen() {
     );
   };
 
-  const handleUpdatePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
-      return;
-    }
-    setIsUpdatingPassword(true);
-    const { error } = await updatePassword(newPassword);
-    setIsUpdatingPassword(false);
-    
-    if (error) {
-      Alert.alert('Update Failed', error);
-    } else {
-      Alert.alert('Success', 'Password updated successfully');
-      setIsPasswordModalVisible(false);
-      setNewPassword('');
-    }
-  };
-
   const handleDeleteAccount = () => {
-    Alert.alert(
+    const { supabase } = require('@/lib/supabase');
+    showAlert(
       'Delete Account',
       'Are you absolutely sure you want to delete your account? This action cannot be undone and will permanently delete all your data.',
       [
@@ -153,19 +55,50 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             setIsDeletingAccount(true);
-            const { error } = await supabase.rpc('delete_user');
+            const { error } = await supabase.functions.invoke('delete-account');
             if (error) {
-              Alert.alert('Error', error.message || 'Failed to delete account.');
+              showAlert('Error', error.message || 'Failed to delete account.');
               setIsDeletingAccount(false);
             } else {
               await signOut();
-              // No need to setIsDeletingAccount(false) as we are navigating away
             }
           },
         },
       ]
     );
   };
+
+  const isGoogleUser = user?.app_metadata?.provider === 'google';
+
+  const accountItems: MenuItemProps[] = [
+    {
+      icon: 'person-outline',
+      label: 'Personal Information',
+      onPress: () => router.push('/profile/personal-info' as any),
+    },
+    ...(!isGoogleUser
+      ? [
+          {
+            icon: 'lock-closed-outline' as keyof typeof Ionicons.glyphMap,
+            label: 'Change Password',
+            onPress: () => router.push('/profile/change-password' as any),
+          },
+        ]
+      : []),
+  ];
+
+  const supportItems: MenuItemProps[] = [
+    {
+      icon: 'help-circle-outline',
+      label: 'Help & Support',
+      onPress: () => router.push('/profile/help-support' as any),
+    },
+    {
+      icon: 'information-circle-outline',
+      label: 'About PhysioDesk',
+      onPress: () => router.push('/profile/about' as any),
+    },
+  ];
 
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -174,176 +107,105 @@ export default function ProfileScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-      {/* Profile Card */}
-      <View style={[styles.profileCard, Shadows.sm]}>
-        <TouchableOpacity style={styles.avatarLarge} onPress={handleAvatarPress} disabled={isUploading}>
-          {isUploading ? (
-            <ActivityIndicator color={Colors.primary} />
-          ) : profile?.avatar_url ? (
-            <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
-          ) : (
-            <Ionicons name="person" size={40} color={Colors.primary} />
-          )}
-          <View style={styles.editBadge}>
-            <Ionicons name="pencil" size={14} color={Colors.textInverse} />
+        {/* Profile Header */}
+        <View style={styles.profileHeader}>
+          <View style={styles.avatarContainer}>
+            {profile?.avatar_url ? (
+              <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarPlaceholder}>
+                <Ionicons name="person" size={40} color={Colors.primary} />
+              </View>
+            )}
           </View>
-        </TouchableOpacity>
-        <Text style={styles.profileName}>
-          {displayName}
-        </Text>
-        <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
-        <View style={styles.roleBadge}>
-          <Text style={styles.roleBadgeText}>Doctor</Text>
+          <Text style={styles.profileName}>{displayName}</Text>
+          <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
         </View>
-      </View>
 
-      {/* Account Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
-        <View style={[styles.infoCard, Shadows.sm]}>
-          <InfoRow
-            icon="mail-outline"
-            label="Email"
-            value={user?.email ?? 'N/A'}
-          />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="shield-checkmark-outline"
-            label="Role"
-            value="Doctor"
-          />
-          <View style={styles.divider} />
-          <InfoRow
-            icon="time-outline"
-            label="Member Since"
-            value={user?.created_at
-              ? new Date(user.created_at).toLocaleDateString('en-IN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })
-              : 'N/A'
-            }
-          />
+        {/* Account Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={[styles.menuCard, Shadows.sm]}>
+            {accountItems.map((item, index) => (
+              <React.Fragment key={item.label}>
+                {index > 0 && <View style={styles.divider} />}
+                <MenuItem {...item} />
+              </React.Fragment>
+            ))}
+          </View>
         </View>
-      </View>
 
-      {/* App Info */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App</Text>
-        <View style={[styles.infoCard, Shadows.sm]}>
-          <InfoRow
-            icon="information-circle-outline"
-            label="Version"
-            value={APP_VERSION}
-          />
+        {/* Support Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SUPPORT</Text>
+          <View style={[styles.menuCard, Shadows.sm]}>
+            {supportItems.map((item, index) => (
+              <React.Fragment key={item.label}>
+                {index > 0 && <View style={styles.divider} />}
+                <MenuItem {...item} />
+              </React.Fragment>
+            ))}
+          </View>
         </View>
-      </View>
 
-      {/* Account Actions */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account Actions</Text>
-        {user?.app_metadata?.provider !== 'google' && (
-          <Button
-            title="Update Password"
-            onPress={() => setIsPasswordModalVisible(true)}
-            variant="outline"
-            icon={<Ionicons name="lock-closed-outline" size={20} color={Colors.primary} />}
-            style={{ marginBottom: Spacing.base }}
-          />
-        )}
-        <Button
-          title="Delete Account"
-          onPress={handleDeleteAccount}
-          variant="danger"
-          loading={isDeletingAccount}
-          icon={<Ionicons name="trash-outline" size={20} color={Colors.textInverse} />}
-        />
-      </View>
-
-      {/* Sign Out */}
-      <View style={styles.signOutSection}>
-        <Button
-          title="Sign Out"
+        {/* Sign Out */}
+        <TouchableOpacity
+          style={styles.signOutButton}
           onPress={handleSignOut}
-          variant="secondary"
-          loading={isSigningOut}
-          icon={<Ionicons name="log-out-outline" size={20} color={Colors.text} />}
-        />
-      </View>
-    </ScrollView>
+          disabled={isSigningOut}
+          activeOpacity={0.7}
+        >
+          {isSigningOut ? (
+            <ActivityIndicator size="small" color={Colors.error} />
+          ) : (
+            <>
+              <Ionicons name="log-out-outline" size={20} color={Colors.error} />
+              <Text style={styles.signOutText}>Sign Out</Text>
+            </>
+          )}
+        </TouchableOpacity>
 
-    {/* Update Password Modal */}
-    <Modal
-      visible={isPasswordModalVisible}
-      transparent={true}
-      animationType="fade"
-      onRequestClose={() => setIsPasswordModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Update Password</Text>
-          <Text style={styles.modalSubtitle}>Enter your new password below.</Text>
-          
-          <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color={Colors.textSecondary} style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="New Password (min 6 chars)"
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
-              placeholderTextColor={Colors.textTertiary}
-            />
-          </View>
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity 
-              style={styles.modalCancelButton}
-              onPress={() => {
-                setIsPasswordModalVisible(false);
-                setNewPassword('');
-              }}
-              disabled={isUpdatingPassword}
-            >
-              <Text style={styles.modalCancelText}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.modalSubmitButton}
-              onPress={handleUpdatePassword}
-              disabled={isUpdatingPassword}
-            >
-              {isUpdatingPassword ? (
-                <ActivityIndicator color={Colors.textInverse} size="small" />
-              ) : (
-                <Text style={styles.modalSubmitText}>Update</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  </View>
-  );
-}
-
-interface InfoRowProps {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-}
-
-function InfoRow({ icon, label, value }: InfoRowProps) {
-  return (
-    <View style={styles.infoRow}>
-      <View style={styles.infoRowLeft}>
-        <Ionicons name={icon} size={20} color={Colors.textSecondary} />
-        <Text style={styles.infoLabel}>{label}{' '}</Text>
-      </View>
-      <Text style={styles.infoValue}>{value}</Text>
+        {/* Delete Account */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDeleteAccount}
+          disabled={isDeletingAccount}
+          activeOpacity={0.7}
+        >
+          {isDeletingAccount ? (
+            <ActivityIndicator size="small" color={Colors.textTertiary} />
+          ) : (
+            <Text style={styles.deleteText}>Delete Account</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 }
+
+// ─── Menu Item ────────────────────────────────────────────────────────────────
+
+interface MenuItemProps {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress: () => void;
+}
+
+function MenuItem({ icon, label, onPress }: MenuItemProps) {
+  return (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.6}>
+      <View style={styles.menuItemLeft}>
+        <View style={styles.menuIconBg}>
+          <Ionicons name={icon} size={20} color={Colors.primary} />
+        </View>
+        <Text style={styles.menuItemLabel}>{label}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+    </TouchableOpacity>
+  );
+}
+
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -353,195 +215,122 @@ const styles = StyleSheet.create({
   content: {
     padding: Spacing.base,
     paddingBottom: Spacing['3xl'],
+    paddingTop: Spacing.md,
   },
-  profileCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
+  // Profile Header
+  profileHeader: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.xl,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xl,
+    marginBottom: Spacing.sm,
   },
-  avatarLarge: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.full,
+  avatarContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    marginBottom: Spacing.base,
+    ...Shadows.md,
+  },
+  avatarImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    borderColor: Colors.surface,
+  },
+  avatarPlaceholder: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
     backgroundColor: Colors.primaryFaded,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.base,
-    position: 'relative',
-  },
-  avatarImage: {
-    width: 80,
-    height: 80,
-    borderRadius: BorderRadius.full,
-  },
-  editBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: Colors.primary,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: Colors.surface,
   },
   profileName: {
-    fontSize: Typography.xl,
+    fontSize: Typography['2xl'],
     fontWeight: Typography.bold,
     color: Colors.text,
+    marginBottom: 4,
   },
   profileEmail: {
     fontSize: Typography.sm,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    alignItems:'center',
-    justifyContent:'center',
-    textAlign:'center',
-    alignSelf:'center'
   },
-  roleBadge: {
-    backgroundColor: Colors.primaryFaded,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    marginTop: Spacing.md,
-  },
-  roleBadgeText: {
-    fontSize: Typography.xs,
-    fontWeight: Typography.medium,
-    color: Colors.primary,
-  },
+  // Sections
   section: {
     marginBottom: Spacing.xl,
   },
   sectionTitle: {
-    fontSize: Typography.sm,
-    fontWeight: Typography.semibold,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    fontSize: Typography.xs,
+    fontWeight: Typography.bold,
+    color: Colors.textTertiary,
+    letterSpacing: 1.2,
     marginBottom: Spacing.sm,
     marginLeft: Spacing.xs,
   },
-  infoCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1,
-    borderColor: Colors.border,
+  menuCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
-  infoRow: {
+  menuItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: Spacing.base,
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md + 2,
+    paddingHorizontal: Spacing.base,
   },
-  infoRowLeft: {
+  menuItemLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
   },
-  infoLabel: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
+  menuIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  infoValue: {
-    fontSize: Typography.sm,
+  menuItemLabel: {
+    fontSize: Typography.base,
     fontWeight: Typography.medium,
     color: Colors.text,
-    maxWidth: '65%',
-    textAlign: 'right',
   },
   divider: {
     height: 1,
     backgroundColor: Colors.borderLight,
-    marginHorizontal: Spacing.base,
+    marginLeft: Spacing.base + 36 + Spacing.md, // Align with text after icon
   },
-  signOutSection: {
-    marginTop: Spacing.sm,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
+  // Sign Out
+  signOutButton: {
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.xl,
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md + 2,
+    marginTop: Spacing.lg,
+    backgroundColor: Colors.errorLight,
+    borderRadius: BorderRadius.lg,
   },
-  modalContent: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.xl,
-    padding: Spacing.xl,
-    width: '100%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+  signOutText: {
+    fontSize: Typography.base,
+    fontWeight: Typography.semibold,
+    color: Colors.error,
   },
-  modalTitle: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.text,
-    marginBottom: Spacing.xs,
+  // Delete Account
+  deleteButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.base,
+    marginTop: Spacing.lg,
   },
-  modalSubtitle: {
+  deleteText: {
     fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.lg,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: BorderRadius.md,
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.xl,
-    backgroundColor: Colors.background,
-  },
-  inputIcon: {
-    marginRight: Spacing.sm,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    color: Colors.text,
-    fontSize: Typography.base,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: Spacing.md,
-  },
-  modalCancelButton: {
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-  },
-  modalCancelText: {
-    color: Colors.textSecondary,
-    fontSize: Typography.base,
     fontWeight: Typography.medium,
-  },
-  modalSubmitButton: {
-    backgroundColor: Colors.primary,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.md,
-    justifyContent: 'center',
-    minWidth: 100,
-    alignItems: 'center',
-  },
-  modalSubmitText: {
-    color: Colors.textInverse,
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
+    color: Colors.textTertiary,
+    textDecorationLine: 'underline',
   },
 });
