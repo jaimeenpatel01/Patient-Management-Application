@@ -55,7 +55,7 @@ export default function ProfileScreen() {
           style: 'destructive',
           onPress: async () => {
             setIsDeletingAccount(true);
-            const { error } = await supabase.rpc('delete_user');
+            const { error } = await supabase.functions.invoke('delete-account');
             if (error) {
               showAlert('Error', error.message || 'Failed to delete account.');
               setIsDeletingAccount(false);

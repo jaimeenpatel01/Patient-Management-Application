@@ -9,6 +9,7 @@ import {
   View
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useRouter } from 'expo-router';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -18,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { updateProfile, uploadAvatar } from '@/services/profileService';
 
 export default function CompleteProfileScreen() {
+  const router = useRouter();
   const { user, profile, setIsFirstTimeGoogleSignIn, refreshProfile } = useAuth();
   const { showAlert } = useAlert();
 
@@ -195,6 +197,19 @@ export default function CompleteProfileScreen() {
             }}
           />
 
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.legalLink} onPress={() => router.push('/legal/terms')}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.legalLink} onPress={() => router.push('/legal/privacy')}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
+
           <Button
             title="Continue"
             onPress={handleCompleteProfile}
@@ -293,6 +308,20 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   submitButton: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.xl,
+  },
+  legalContainer: {
+    marginTop: Spacing.xl,
+    paddingHorizontal: Spacing.sm,
+  },
+  legalText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: Colors.primary,
+    fontWeight: Typography.medium,
   },
 });

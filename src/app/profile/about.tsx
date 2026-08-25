@@ -9,6 +9,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { APP_VERSION } from '@/constants/options';
 
@@ -16,6 +17,8 @@ const PRIVACY_POLICY_URL = 'https://physiodesk.app/privacy';
 const TERMS_OF_SERVICE_URL = 'https://physiodesk.app/terms';
 
 export default function AboutScreen() {
+  const router = useRouter();
+  
   return (
     <View style={{ flex: 1, backgroundColor: Colors.background }}>
       <ScrollView
@@ -46,13 +49,13 @@ export default function AboutScreen() {
             <LinkItem
               icon="shield-checkmark-outline"
               label="Privacy Policy"
-              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+              onPress={() => router.push('/legal/privacy')}
             />
             <View style={styles.divider} />
             <LinkItem
               icon="document-text-outline"
               label="Terms of Service"
-              onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}
+              onPress={() => router.push('/legal/terms')}
             />
           </View>
         </View>

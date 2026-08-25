@@ -121,32 +121,6 @@ export default function RegisterScreen() {
             </View>
           ) : null}
 
-          {/* Google Sign-In Button (top of form for quick sign-up) */}
-          <TouchableOpacity
-            style={[styles.googleButton, isGoogleLoading && styles.googleButtonDisabled]}
-            onPress={handleGoogleSignIn}
-            disabled={isGoogleLoading || isLoading}
-            activeOpacity={0.7}
-          >
-            {isGoogleLoading ? (
-              <Text style={styles.googleButtonText}>Signing up...</Text>
-            ) : (
-              <>
-                <View style={styles.googleIconContainer}>
-                  <Text style={styles.googleIcon}>G</Text>
-                </View>
-                <Text style={styles.googleButtonText}>Sign up with Google</Text>
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or sign up with email</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
           <Input
             label="Full Name"
             placeholder="Dr. John Doe"
@@ -199,6 +173,18 @@ export default function RegisterScreen() {
             onSubmitEditing={handleRegister}
             returnKeyType="go"
           />
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              By continuing, you agree to our{' '}
+              <Text style={styles.legalLink} onPress={() => router.push('/legal/terms')}>
+                Terms of Service
+              </Text>
+              {' '}and{' '}
+              <Text style={styles.legalLink} onPress={() => router.push('/legal/privacy')}>
+                Privacy Policy
+              </Text>
+            </Text>
+          </View>
 
           <Button
             title="Sign Up"
@@ -318,7 +304,21 @@ const styles = StyleSheet.create({
     fontWeight: Typography.medium,
   },
   registerButton: {
-    marginTop: Spacing.md,
+    marginTop: Spacing.xl,
+  },
+  legalContainer: {
+    marginTop: Spacing.xl,
+    paddingHorizontal: Spacing.sm,
+  },
+  legalText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: Colors.primary,
+    fontWeight: Typography.medium,
   },
   loginContainer: {
     flexDirection: 'row',
