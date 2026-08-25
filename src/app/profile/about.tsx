@@ -13,8 +13,8 @@ import { useRouter } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { APP_VERSION } from '@/constants/options';
 
-const PRIVACY_POLICY_URL = 'https://physiodesk.app/privacy';
-const TERMS_OF_SERVICE_URL = 'https://physiodesk.app/terms';
+const PRIVACY_URL = 'https://jaimeenpatel01.github.io/Patient-Management-Application/privacy/';
+const TERMS_URL = 'https://jaimeenpatel01.github.io/Patient-Management-Application/terms/';
 
 export default function AboutScreen() {
   const router = useRouter();
@@ -49,13 +49,13 @@ export default function AboutScreen() {
             <LinkItem
               icon="shield-checkmark-outline"
               label="Privacy Policy"
-              onPress={() => router.push('/legal/privacy')}
+              onPress={() => Linking.openURL(PRIVACY_URL)}
             />
             <View style={styles.divider} />
             <LinkItem
               icon="document-text-outline"
-              label="Terms of Service"
-              onPress={() => router.push('/legal/terms')}
+              label="Terms & Conditions"
+              onPress={() => Linking.openURL(TERMS_URL)}
             />
           </View>
         </View>

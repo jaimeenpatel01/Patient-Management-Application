@@ -3,6 +3,7 @@ import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import {
   Image,
+  Linking,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -200,11 +201,11 @@ export default function CompleteProfileScreen() {
           <View style={styles.legalContainer}>
             <Text style={styles.legalText}>
               By continuing, you agree to our{' '}
-              <Text style={styles.legalLink} onPress={() => router.push('/legal/terms')}>
+              <Text style={styles.legalLink} onPress={() => Linking.openURL('https://jaimeenpatel01.github.io/Patient-Management-Application/terms/')}>
                 Terms of Service
               </Text>
               {' '}and{' '}
-              <Text style={styles.legalLink} onPress={() => router.push('/legal/privacy')}>
+              <Text style={styles.legalLink} onPress={() => Linking.openURL('https://jaimeenpatel01.github.io/Patient-Management-Application/privacy/')}>
                 Privacy Policy
               </Text>
             </Text>
