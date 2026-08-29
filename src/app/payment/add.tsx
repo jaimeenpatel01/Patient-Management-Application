@@ -116,7 +116,7 @@ export default function AddPaymentScreen() {
       setTimeout(() => {
         setShowSuccessModal(false);
         router.back();
-      }, 2500);
+      }, 1500);
     }
   };
 

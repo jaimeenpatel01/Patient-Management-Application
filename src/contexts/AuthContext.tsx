@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState, useCallback } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
+import { getReadableError } from '@/lib/errorMessages';
 import type { AuthContextType, Profile } from '@/types';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      return { error: error.message };
+      return { error: getReadableError(error.message) };
     }
     return { error: null };
   }, []);
@@ -71,7 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Lazily configure and load Google Sign-In (avoids crash in Expo Go)
       if (!ensureGoogleSigninConfigured()) {
         return {
-          error: 'Google Sign-In requires a development build. It is not available in Expo Go.',
+          error: getReadableError('Google Sign-In requires a development build'),
         };
       }
 
@@ -103,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
-        return { error: error.message };
+        return { error: getReadableError(error.message) };
       }
 
       // On first-time sign-in: set Google profile photo as avatar if profile has none.
@@ -140,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: null }; // User cancelled, not an error
       }
       console.error('Google Sign-In error:', err);
-      return { error: err.message || 'Google Sign-In failed. Please try again.' };
+      return { error: getReadableError(err.message) };
     }
   }, []);
 
@@ -155,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       },
     });
     if (error) {
-      return { error: error.message };
+      return { error: getReadableError(error.message) };
     }
     return { error: null };
   }, []);
@@ -178,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email);
     if (error) {
-      return { error: error.message };
+      return { error: getReadableError(error.message) };
     }
     return { error: null };
   }, []);
@@ -190,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       type: 'recovery',
     });
     if (error) {
-      return { error: error.message };
+      return { error: getReadableError(error.message) };
     }
     return { error: null };
   }, []);
@@ -198,7 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updatePassword = useCallback(async (newPassword: string) => {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      return { error: error.message };
+      return { error: getReadableError(error.message) };
     }
     return { error: null };
   }, []);

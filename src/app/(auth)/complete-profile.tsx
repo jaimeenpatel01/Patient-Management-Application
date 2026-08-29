@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useAlert } from '@/contexts/AlertContext';
+import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/hooks/useAuth';
 import { updateProfile, uploadAvatar } from '@/services/profileService';
 
@@ -23,6 +24,7 @@ export default function CompleteProfileScreen() {
   const router = useRouter();
   const { user, profile, setIsFirstTimeGoogleSignIn, refreshProfile } = useAuth();
   const { showAlert } = useAlert();
+  const { showToast } = useToast();
 
   const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
@@ -100,6 +102,7 @@ export default function CompleteProfileScreen() {
 
         if (uploadError || !newUrl) {
           setError(uploadError || 'Could not upload image');
+          showToast(uploadError || 'Could not upload image', 'error');
           setIsLoading(false);
           return;
         }
@@ -115,6 +118,7 @@ export default function CompleteProfileScreen() {
 
       if (updateError) {
         setError(updateError);
+        showToast(updateError, 'error');
         setIsLoading(false);
         return;
       }
@@ -126,6 +130,7 @@ export default function CompleteProfileScreen() {
       setIsFirstTimeGoogleSignIn(false);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
+      showToast(err.message || 'An unexpected error occurred.', 'error');
     } finally {
       setIsLoading(false);
     }

@@ -11,6 +11,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -29,6 +30,7 @@ function CrossMark({ style }: { style?: object }) {
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle } = useAuth();
+  const { showToast } = useToast();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,7 +70,7 @@ export default function LoginScreen() {
     setIsLoading(true);
     const result = await signIn(email.trim(), password);
     setIsLoading(false);
-    if (result.error) setError(result.error);
+    if (result.error) showToast(result.error, 'error');
   };
 
   const handleGoogleSignIn = async () => {
@@ -76,7 +78,7 @@ export default function LoginScreen() {
     setIsGoogleLoading(true);
     const result = await signInWithGoogle();
     setIsGoogleLoading(false);
-    if (result.error) setError(result.error);
+    if (result.error) showToast(result.error, 'error');
   };
 
   return (

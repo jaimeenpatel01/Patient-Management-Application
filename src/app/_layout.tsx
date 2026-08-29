@@ -12,7 +12,9 @@ import * as SplashScreen from 'expo-splash-screen';
 
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AlertProvider } from '@/contexts/AlertContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { CustomAlert } from '@/components/ui/CustomAlert';
+import { Toast } from '@/components/ui/Toast';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Colors } from '@/constants/theme';
@@ -87,9 +89,12 @@ export default function RootLayout() {
         edges={['bottom', 'left', 'right']}
       >
         <AlertProvider>
-          <AuthProvider>
-            <RootNavigator />
-          </AuthProvider>
+          <ToastProvider>
+            <AuthProvider>
+              <RootNavigator />
+            </AuthProvider>
+            <Toast />
+          </ToastProvider>
           <CustomAlert />
         </AlertProvider>
 

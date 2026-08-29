@@ -10,6 +10,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -19,6 +20,7 @@ const RESEND_COOLDOWN = 60; // seconds
 
 export default function ForgotPasswordScreen() {
   const { resetPassword, verifyRecoveryOtp } = useAuth();
+  const { showToast } = useToast();
 
   // Step 1: email entry, Step 2: OTP verification
   const [step, setStep] = useState<1 | 2>(1);
@@ -58,7 +60,7 @@ export default function ForgotPasswordScreen() {
     setIsLoading(false);
 
     if (result.error) {
-      setError(result.error);
+      showToast(result.error, 'error');
     } else {
       setStep(2);
       setResendTimer(RESEND_COOLDOWN);
@@ -109,7 +111,7 @@ export default function ForgotPasswordScreen() {
     setIsLoading(false);
 
     if (result.error) {
-      setError(result.error);
+      showToast(result.error, 'error');
     } else {
       // OTP verified — user now has a session; navigate to set new password
       router.replace('/(auth)/reset-password');
@@ -125,7 +127,7 @@ export default function ForgotPasswordScreen() {
     setIsLoading(false);
 
     if (result.error) {
-      setError(result.error);
+      showToast(result.error, 'error');
     } else {
       setResendTimer(RESEND_COOLDOWN);
     }

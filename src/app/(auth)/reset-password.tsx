@@ -9,12 +9,14 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 
 export default function ResetPasswordScreen() {
   const { updatePassword, signOut } = useAuth();
+  const { showToast } = useToast();
 
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -51,7 +53,7 @@ export default function ResetPasswordScreen() {
     setIsLoading(false);
 
     if (result.error) {
-      setError(result.error);
+      showToast(result.error, 'error');
     } else {
       setIsSuccess(true);
     }

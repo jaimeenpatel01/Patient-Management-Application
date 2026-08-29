@@ -89,7 +89,7 @@ export default function AddConsultationScreen() {
       setTimeout(() => {
         setShowSuccessModal(false);
         router.back();
-      }, 2500);
+      }, 1500);
     }
   };
 

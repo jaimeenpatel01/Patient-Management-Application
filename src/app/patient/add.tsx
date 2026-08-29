@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-} from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useAlert } from '@/contexts/AlertContext';
-import { createPatient } from '@/services/patientService';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
+import { Input } from '@/components/ui/Input';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import { GENDER_OPTIONS, VISIT_TYPE_OPTIONS } from '@/constants/options';
+import { BorderRadius, Colors, Shadows, Spacing, Typography } from '@/constants/theme';
+import { useAlert } from '@/contexts/AlertContext';
 import { validatePatientForm } from '@/lib/validators';
+import { createPatient } from '@/services/patientService';
 import type { Gender, VisitType } from '@/types';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 export default function AddPatientScreen() {
   const router = useRouter();
@@ -63,7 +63,7 @@ export default function AddPatientScreen() {
       setTimeout(() => {
         setShowSuccessModal(false);
         router.back();
-      }, 2500);
+      }, 1500);
     }
   };
 
@@ -178,9 +178,9 @@ export default function AddPatientScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <SuccessModal 
-        visible={showSuccessModal} 
-        message="Patient added successfully." 
+      <SuccessModal
+        visible={showSuccessModal}
+        message="Patient added successfully."
       />
     </>
   );

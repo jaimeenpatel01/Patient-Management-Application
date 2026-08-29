@@ -111,7 +111,7 @@ export default function AddDocumentScreen() {
       setTimeout(() => {
         setShowSuccessModal(false);
         router.back();
-      }, 2500);
+      }, 1500);
     }
   };
 
