@@ -7,19 +7,35 @@ export type PaymentWithPatient = Payment & {
 
 // ─── Fetch payments for a doctor ────────────────────────────────
 
-export async function getPayments(): Promise<{ data: PaymentWithPatient[]; error: string | null }> {
+export async function getPayments(page = 0, pageSize = 20, status?: string, dateFilter?: string): Promise<{ data: PaymentWithPatient[]; error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: [], error: 'Not authenticated' };
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('payments')
     .select(`
       *,
       patient:patients(full_name, phone)
     `)
-    .eq('doctor_id', user.id)
+    .eq('doctor_id', user.id);
+
+  if (status && status !== 'all') {
+    query = query.eq('status', status);
+  }
+  
+  if (dateFilter) {
+    query = query.eq('payment_date', dateFilter);
+  }
+
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  query = query
     .order('payment_date', { ascending: false, nullsFirst: false })
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .range(from, to);
+
+  const { data, error } = await query;
 
   if (error) return { data: [], error: error.message };
 

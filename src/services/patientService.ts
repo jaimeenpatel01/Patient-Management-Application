@@ -3,16 +3,22 @@ import type { Patient } from '@/types';
 
 // ─── Fetch all patients for the current doctor ────────────────
 
-export async function getPatients(): Promise<{ data: Patient[]; error: string | null }> {
+export async function getPatients(status: 'active' | 'inactive' | 'all' = 'active'): Promise<{ data: Patient[]; error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { data: [], error: 'Not authenticated' };
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('patients')
     .select('*')
-    .eq('doctor_id', user.id)
-    .eq('is_active', true)
-    .order('full_name', { ascending: true });
+    .eq('doctor_id', user.id);
+
+  if (status === 'active') {
+    query = query.eq('is_active', true);
+  } else if (status === 'inactive') {
+    query = query.eq('is_active', false);
+  }
+
+  const { data, error } = await query.order('full_name', { ascending: true });
 
   if (error) return { data: [], error: error.message };
   return { data: (data as Patient[]) ?? [], error: null };

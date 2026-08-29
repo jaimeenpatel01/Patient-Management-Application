@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import type { Attendance } from '@/types';
 
-export async function getAttendances(date?: string) {
+export async function getAttendances(date?: string, page = 0, pageSize = 20) {
   try {
     let query = supabase
       .from('attendances')
@@ -12,6 +12,10 @@ export async function getAttendances(date?: string) {
     if (date) {
       query = query.eq('attendance_date', date);
     }
+
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
 
     const { data, error } = await query;
     if (error) throw error;

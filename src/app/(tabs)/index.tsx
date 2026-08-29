@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { getDashboardStats, DashboardStats, DashboardFilter } from '@/services/dashboardService';
+import { getDashboardStats, DashboardStats } from '@/services/dashboardService';
 import { getDoctorDisplayName } from '@/lib/formatters';
 
 interface QuickActionProps {
@@ -23,36 +23,6 @@ const QuickAction = React.memo(function QuickAction({ icon, label, color, backgr
       </View>
       <Text style={styles.quickActionLabel}>{label}</Text>
     </TouchableOpacity>
-  );
-});
-
-interface FilterTabsProps {
-  value: DashboardFilter;
-  onChange: (value: DashboardFilter) => void;
-}
-
-const FILTER_OPTIONS: { label: string; value: DashboardFilter }[] = [
-  { label: 'Daily', value: 'daily' },
-  { label: 'Weekly', value: 'weekly' },
-  { label: 'Monthly', value: 'monthly' },
-];
-
-const FilterTabs = React.memo(function FilterTabs({ value, onChange }: FilterTabsProps) {
-  return (
-    <View style={styles.filterTabs}>
-      {FILTER_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt.value}
-          style={[styles.filterTab, value === opt.value && styles.filterTabActive]}
-          onPress={() => onChange(opt.value)}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.filterTabText, value === opt.value && styles.filterTabTextActive]}>
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
   );
 });
 
@@ -82,8 +52,6 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [overviewFilter, setOverviewFilter] = useState<DashboardFilter>('daily');
-  const [paymentFilter, setPaymentFilter] = useState<DashboardFilter>('monthly');
 
   const fetchStats = async () => {
     const { data } = await getDashboardStats();
@@ -154,14 +122,14 @@ export default function DashboardScreen() {
           />
           <QuickAction
             icon="checkmark-circle"
-            label="Attendance"
+            label="Mark Attendance"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
             onPress={() => router.push('/attendance/add' as any)}
           />
           <QuickAction
             icon="wallet"
-            label="Payment"
+            label="Record Payment"
             color={Colors.success}
             backgroundColor={Colors.successLight}
             onPress={() => router.push('/payment/add')}
@@ -172,37 +140,22 @@ export default function DashboardScreen() {
       {/* Overview */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Overview</Text>
-          <FilterTabs value={overviewFilter} onChange={setOverviewFilter} />
+          <Text style={styles.sectionTitle}>Patients Overview</Text>
         </View>
         <View style={styles.statsGrid}>
           <StatCard
             title="Active Patients"
-            value={stats?.[overviewFilter].overview.activePatients.toString() ?? '0'}
+            value={stats?.['daily'].overview.activePatients.toString() ?? '0'}
             icon="pulse"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
           />
           <StatCard
-            title="Total Treated"
-            value={stats?.[overviewFilter].overview.totalPatients.toString() ?? '0'}
+            title="Patients Treated"
+            value={stats?.['daily'].overview.totalPatients.toString() ?? '0'}
             icon="people"
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
-          />
-          <StatCard
-            title="Collected"
-            value={`₹${stats?.[overviewFilter].overview.collected ?? 0}`}
-            icon="checkmark-circle"
-            color={Colors.success}
-            backgroundColor={Colors.successLight}
-          />
-          <StatCard
-            title="Pending"
-            value={`₹${stats?.[overviewFilter].overview.pending ?? 0}`}
-            icon="time"
-            color={Colors.warning}
-            backgroundColor={Colors.warningLight}
           />
         </View>
       </View>
@@ -210,25 +163,19 @@ export default function DashboardScreen() {
       {/* Payment Summary */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Payments</Text>
-          <FilterTabs value={paymentFilter} onChange={setPaymentFilter} />
+          <Text style={styles.sectionTitle}>Payment Summary</Text>
         </View>
         <View style={[styles.monthlyCard, Shadows.md]}>
           <View style={styles.monthlyAccent} />
           <View style={styles.monthlyContent}>
             <View style={styles.monthlyRow}>
-              <Text style={styles.monthlyLabel}>Total Patients</Text>
-              <Text style={styles.monthlyValue}>{stats?.[paymentFilter].payment.totalPatients ?? 0}</Text>
+              <Text style={styles.monthlyLabel}>Total Earnings</Text>
+              <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.['monthly'].payment.revenue ?? 0}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.monthlyRow}>
-              <Text style={styles.monthlyLabel}>Revenue</Text>
-              <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.[paymentFilter].payment.revenue ?? 0}</Text>
-            </View>
-            <View style={styles.divider} />
-            <View style={styles.monthlyRow}>
-              <Text style={styles.monthlyLabel}>Outstanding</Text>
-              <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.[paymentFilter].payment.outstanding ?? 0}</Text>
+              <Text style={styles.monthlyLabel}>Total Due</Text>
+              <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.['monthly'].payment.outstanding ?? 0}</Text>
             </View>
           </View>
         </View>
@@ -298,30 +245,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
     color: Colors.text,
-  },
-  filterTabs: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.full,
-    padding: 3,
-  },
-  filterTab: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  filterTabActive: {
-    backgroundColor: Colors.surface,
-    ...Shadows.sm,
-  },
-  filterTabText: {
-    fontSize: Typography.xs,
-    color: Colors.textSecondary,
-    fontWeight: Typography.medium,
-  },
-  filterTabTextActive: {
-    color: Colors.primary,
-    fontWeight: Typography.bold,
   },
   quickActionsRow: {
     flexDirection: 'row',
