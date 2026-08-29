@@ -63,7 +63,7 @@ export default function AddPatientScreen() {
       setTimeout(() => {
         setShowSuccessModal(false);
         router.back();
-      }, 2500);
+      }, 1500);
     }
   };
 

@@ -1,19 +1,21 @@
 /**
  * Maps raw backend / SDK error strings to user-friendly messages.
  *
- * Add new entries to `ERROR_MAP` when you encounter a new raw error that
- * should be shown differently to the user.
+ * Keep messages:
+ * - Short enough for a toast
+ * - Clear about what happened
+ * - Actionable when possible
+ * - Free of backend / SDK terminology
  */
 
 // ── Mapping table ──────────────────────────────────────────────────────────────
-// Keys are matched case-insensitively against the raw error string using
-// `String.includes`, so partial matches work fine.
 
 const ERROR_MAP: Array<{ pattern: string; message: string }> = [
-  // ── Google Sign-In ──────────────────────────────────────────
+  // ── Google Sign-In ─────────────────────────────────────────────────────────
+
   {
     pattern: 'DEVELOPER_ERROR',
-    message: 'Google Sign-In is temporarily unavailable. Please try signing in with email.',
+    message: 'Google Sign-In is currently unavailable. Please try again later.',
   },
   {
     pattern: 'SIGN_IN_REQUIRED',
@@ -21,29 +23,38 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
   },
   {
     pattern: 'NETWORK_ERROR',
-    message: 'Network error. Please check your internet connection and try again.',
+    message: 'Google Sign-In is having trouble connecting. Please try again.',
   },
   {
     pattern: 'play services',
-    message: 'Google Play Services is required for Google Sign-In. Please update or install it.',
+    message: 'Google services are unavailable. Please update Google Play Services and try again.',
   },
   {
     pattern: 'Google Sign-In requires a development build',
-    message: 'Google Sign-In is not available in this build. Please use email login.',
+    message: 'Google Sign-In is currently unavailable. Please try again later.',
+  },
+  {
+    pattern: 'canceled',
+    message: 'Google Sign-In was canceled.',
+  },
+  {
+    pattern: 'cancelled',
+    message: 'Google Sign-In was canceled.',
   },
 
-  // ── Supabase Auth ───────────────────────────────────────────
+  // ── Supabase Auth ──────────────────────────────────────────────────────────
+
   {
     pattern: 'Invalid login credentials',
     message: 'Incorrect email or password. Please try again.',
   },
   {
     pattern: 'Email not confirmed',
-    message: 'Please verify your email address before signing in. Check your inbox.',
+    message: 'Please verify your email address before signing in.',
   },
   {
     pattern: 'User already registered',
-    message: 'An account with this email already exists. Try signing in instead.',
+    message: 'An account with this email already exists. Please sign in instead.',
   },
   {
     pattern: 'Password should be at least',
@@ -51,7 +62,7 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
   },
   {
     pattern: 'Email rate limit exceeded',
-    message: 'Too many attempts. Please wait a moment before trying again.',
+    message: 'Too many attempts. Please wait a moment and try again.',
   },
   {
     pattern: 'For security purposes, you can only request this after',
@@ -59,15 +70,15 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
   },
   {
     pattern: 'Token has expired or is invalid',
-    message: 'The verification code has expired. Please request a new one.',
+    message: 'Your verification code has expired. Please request a new one.',
   },
   {
     pattern: 'otp_expired',
-    message: 'The verification code has expired. Please request a new one.',
+    message: 'Your verification code has expired. Please request a new one.',
   },
   {
     pattern: 'New password should be different',
-    message: 'Your new password must be different from the current one.',
+    message: 'Your new password must be different from your current password.',
   },
   {
     pattern: 'Auth session missing',
@@ -82,7 +93,8 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
     message: 'Your session has expired. Please sign in again.',
   },
 
-  // ── Network / connectivity ──────────────────────────────────
+  // ── Network / Connectivity ────────────────────────────────────────────────
+
   {
     pattern: 'Failed to fetch',
     message: 'Unable to connect to the server. Please check your internet connection.',
@@ -93,67 +105,110 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
   },
   {
     pattern: 'ERR_NETWORK',
-    message: 'Network error. Please check your connection and try again.',
+    message: 'Network connection failed. Please try again.',
   },
   {
     pattern: 'timeout',
-    message: 'The request timed out. Please try again.',
+    message: 'The request took too long. Please try again.',
+  },
+  {
+    pattern: 'timed out',
+    message: 'The request took too long. Please try again.',
   },
 
-  // ── Storage / upload ────────────────────────────────────────
+  // ── Storage / Upload ──────────────────────────────────────────────────────
+
   {
     pattern: 'Payload too large',
     message: 'The file is too large. Please choose a smaller file.',
   },
   {
     pattern: 'The resource already exists',
-    message: 'This file already exists. Please rename it or delete the existing one.',
+    message: 'This file already exists. Please choose a different name.',
   },
 
-  // ── Generic Supabase / Postgres ─────────────────────────────
+  // ── Database / Supabase ───────────────────────────────────────────────────
+
   {
     pattern: 'duplicate key value violates unique constraint',
     message: 'This record already exists.',
   },
   {
     pattern: 'violates row-level security policy',
-    message: 'You don\'t have permission to perform this action.',
+    message: 'You don’t have permission to perform this action.',
   },
   {
     pattern: 'Not authenticated',
     message: 'Please sign in to continue.',
   },
+
+  // ── Common server errors ───────────────────────────────────────────────────
+
+  {
+    pattern: 'Internal Server Error',
+    message: 'Something went wrong on our end. Please try again later.',
+  },
+  {
+    pattern: '500',
+    message: 'Something went wrong on our end. Please try again later.',
+  },
+  {
+    pattern: '503',
+    message: 'The service is temporarily unavailable. Please try again later.',
+  },
+  {
+    pattern: 'Service Unavailable',
+    message: 'The service is temporarily unavailable. Please try again later.',
+  },
 ];
 
-// ── Public API ─────────────────────────────────────────────────────────────────
+// ── Generic fallback ──────────────────────────────────────────────────────────
 
 const GENERIC_FALLBACK = 'Something went wrong. Please try again.';
 
+// ── Public API ────────────────────────────────────────────────────────────────
+
 /**
  * Convert a raw error string from any SDK / backend into a user-friendly
- * message suitable for display in a toast or alert.
+ * message suitable for a toast or alert.
  *
- * If the error matches a known pattern, the mapped message is returned.
- * Otherwise a clean generic fallback is used.
+ * Known errors are mapped to friendly messages.
+ * Unknown technical errors fall back to a generic message.
  */
-export function getReadableError(rawError: string | null | undefined): string {
-  if (!rawError) return GENERIC_FALLBACK;
+export function getReadableError(
+  rawError: string | null | undefined
+): string {
+  if (!rawError) {
+    return GENERIC_FALLBACK;
+  }
 
   const lower = rawError.toLowerCase();
 
+  // Check known error mappings first
   for (const entry of ERROR_MAP) {
     if (lower.includes(entry.pattern.toLowerCase())) {
       return entry.message;
     }
   }
 
-  // If it's already a short, human-readable sentence (not a code/URL), pass it through.
-  // Heuristic: no URLs, no SCREAMING_CASE, and reasonably short.
+  // ─────────────────────────────────────────────────────────────────────────
+  // Pass through short, genuinely human-readable messages.
+  //
+  // Do NOT expose:
+  // - URLs
+  // - SDK error codes
+  // - database errors
+  // - stack traces
+  // - technical identifiers
+  // ─────────────────────────────────────────────────────────────────────────
+
   const looksReadable =
-    rawError.length < 120 &&
+    rawError.length < 100 &&
     !rawError.includes('http') &&
     !rawError.includes('://') &&
-    !/[A-Z_]{4,}/.test(rawError);
+    !/[A-Z_]{4,}/.test(rawError) &&
+    !/[{}[\]]/.test(rawError) &&
+    !rawError.includes('Error:');
 
   return looksReadable ? rawError : GENERIC_FALLBACK;
 }
