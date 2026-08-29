@@ -9,9 +9,9 @@ export const GENDER_OPTIONS: { label: string; value: Gender }[] = [
 ];
 
 export const VISIT_TYPE_OPTIONS: { label: string; value: VisitType }[] = [
-  { label: 'Home Visit', value: 'Home Visit' },
-  { label: 'Hospital Visit', value: 'Hospital Visit' },
-  { label: "Doctor's Home Visit", value: "Doctor's Home Visit" },
+  { label: 'Home', value: 'Home' },
+  { label: 'Hospital', value: 'Hospital' },
+  { label: "Doctor's Home", value: "Doctor's Home" },
 ];
 
 export const PAYMENT_TYPES: { label: string; value: PaymentType }[] = [

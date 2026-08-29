@@ -39,7 +39,7 @@ export interface Profile {
 
 // ─── Status Types (used across the app) ───────────────────────
 
-export type VisitType = 'Home Visit' | 'Hospital Visit' | "Doctor's Home Visit";
+export type VisitType = 'Home' | 'Hospital' | "Doctor's Home";
 
 export type PaymentStatus = 'paid' | 'pending' | 'partially_paid' | 'cancelled' | 'refunded';
 
