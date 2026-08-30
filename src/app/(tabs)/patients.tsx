@@ -27,10 +27,11 @@ export default function PatientsScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'active' | 'inactive'>('active');
 
   const loadPatients = useCallback(async () => {
     setError(null);
-    const result = await getPatients();
+    const result = await getPatients('all');
 
     if (result.error) {
       setError(result.error);
@@ -40,6 +41,7 @@ export default function PatientsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setIsLoading(true);
       loadPatients().finally(() => setIsLoading(false));
     }, [loadPatients])
   );
@@ -50,19 +52,25 @@ export default function PatientsScreen() {
     setIsRefreshing(false);
   };
 
+  const filteredPatients = React.useMemo(() => {
+    return patients.filter(p => 
+      filterStatus === 'active' ? p.is_active !== false : p.is_active === false
+    );
+  }, [patients, filterStatus]);
+
   const renderPatientCard = useCallback(({ item }: { item: Patient }) => (
     <TouchableOpacity
       style={[styles.patientCard, Shadows.md]}
       onPress={() => router.push(`/patient/${item.id}` as any)}
       activeOpacity={0.7}
     >
-      <View style={styles.cardAccent} />
+      <View style={[styles.cardAccent, item.is_active === false && { backgroundColor: Colors.border }]} />
       <View style={styles.cardContent}>
-        <View style={styles.avatarContainer}>
-          <Text style={styles.avatarText}>{getInitials(item.full_name)}</Text>
+        <View style={[styles.avatarContainer, item.is_active === false && { backgroundColor: Colors.surfaceSecondary, borderColor: Colors.border }]}>
+          <Text style={[styles.avatarText, item.is_active === false && { color: Colors.textSecondary }]}>{getInitials(item.full_name)}</Text>
         </View>
         <View style={styles.patientInfo}>
-          <Text style={styles.patientName} numberOfLines={1}>{item.full_name}</Text>
+          <Text style={[styles.patientName, item.is_active === false && { color: Colors.textSecondary }]} numberOfLines={1}>{item.full_name}</Text>
           <View style={styles.patientMeta}>
             <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
             <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
@@ -73,7 +81,7 @@ export default function PatientsScreen() {
     </TouchableOpacity>
   ), [router]);
 
-  if (isLoading) {
+  if (isLoading && patients.length === 0) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={Colors.primary} />
@@ -83,16 +91,38 @@ export default function PatientsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Search bar */}
-      <View style={styles.searchContainer}>
+      {/* Search bar & Filter */}
+      <View style={styles.headerContainer}>
         <PatientSearchPicker
-          patients={patients}
+          patients={patients} // pass all patients so user can search globally if needed
           loading={isLoading}
           value={null}
           placeholder="Search for a patient"
           onSelect={(patient) => router.push(`/patient/${patient.id}` as any)}
-          style={{ backgroundColor: Colors.surface, borderWidth: 0 }}
+          style={{ 
+            backgroundColor: Colors.surface, 
+            borderWidth: 1, 
+            borderColor: Colors.border,
+            borderRadius: BorderRadius.lg
+          }}
         />
+        
+        <View style={styles.filterTabs}>
+          <TouchableOpacity
+            style={[styles.filterTab, filterStatus === 'active' && styles.filterTabActive]}
+            onPress={() => setFilterStatus('active')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterTabText, filterStatus === 'active' && styles.filterTabTextActive]}>Active</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterTab, filterStatus === 'inactive' && styles.filterTabActive]}
+            onPress={() => setFilterStatus('inactive')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.filterTabText, filterStatus === 'inactive' && styles.filterTabTextActive]}>Inactive</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {error && (
@@ -103,26 +133,28 @@ export default function PatientsScreen() {
       )}
 
       {/* Patient count */}
-      {patients.length > 0 && (
+      {filteredPatients.length > 0 && (
         <View style={styles.countContainer}>
           <Text style={styles.countText}>
-            {patients.length} patient{patients.length !== 1 ? 's' : ''}
+            {filteredPatients.length} {filterStatus} patient{filteredPatients.length !== 1 ? 's' : ''}
           </Text>
         </View>
       )}
 
       {/* Patient list or empty state */}
-      {patients.length === 0 ? (
+      {filteredPatients.length === 0 && !isLoading ? (
         <EmptyState
-          icon="people-outline"
-          title="No Patients Yet"
-          subtitle="Add your first patient to get started with managing their records."
-          actionLabel="Add Patient"
-          onAction={() => router.push('/patient/add' as any)}
+          icon={filterStatus === 'active' ? "people-outline" : "archive-outline"}
+          title={filterStatus === 'active' ? "No Active Patients" : "No Inactive Patients"}
+          subtitle={filterStatus === 'active' 
+            ? "Add your first patient to get started with managing their records."
+            : "You don't have any inactive or deleted patients."}
+          actionLabel={filterStatus === 'active' ? "Add Patient" : undefined}
+          onAction={filterStatus === 'active' ? () => router.push('/patient/add' as any) : undefined}
         />
       ) : (
         <FlatList
-          data={patients}
+          data={filteredPatients}
           keyExtractor={(item) => item.id}
           renderItem={renderPatientCard}
           contentContainerStyle={styles.listContent}
@@ -161,13 +193,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: Colors.background,
   },
-  searchContainer: {
+  headerContainer: {
     paddingHorizontal: Spacing.base,
     paddingTop: Spacing.md,
     paddingBottom: Spacing.sm,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.borderLight,
+  },
+  filterTabs: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surfaceSecondary,
+    borderRadius: BorderRadius.full,
+    padding: 3,
+    marginTop: Spacing.sm,
+  },
+  filterTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+  },
+  filterTabActive: {
+    backgroundColor: Colors.surface,
+    ...Shadows.sm,
+  },
+  filterTabText: {
+    fontSize: Typography.sm,
+    color: Colors.textSecondary,
+    fontWeight: Typography.medium,
+  },
+  filterTabTextActive: {
+    color: Colors.primary,
+    fontWeight: Typography.bold,
   },
 
   errorBanner: {

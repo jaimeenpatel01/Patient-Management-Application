@@ -133,9 +133,7 @@ export function PatientSearchPicker({
           
           <SafeAreaView edges={['bottom']} style={styles.modalContainer}>
             {/* Drag Handle */}
-            <View style={styles.dragHandleContainer}>
-              <View style={styles.dragHandle} />
-            </View>
+            <View style={styles.dragHandleContainer}></View>
 
             {/* Header */}
             <View style={styles.modalHeader}>

@@ -31,7 +31,7 @@ export const Colors = {
   // Semantic
   success: '#16A34A',
   successLight: 'rgba(22, 163, 74, 0.1)',
-  warning: '#D97706',
+  warning: '#ff8800ff',
   warningLight: 'rgba(217, 119, 6, 0.1)',
   error: '#DC2626',
   errorLight: 'rgba(240, 50, 50, 0.17)',
