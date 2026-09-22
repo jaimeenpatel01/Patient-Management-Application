@@ -33,12 +33,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
-    // Get the initial session
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+    // Resolve with a fallback after `ms` milliseconds so offline network
+    // calls can never block the loading screen forever.
+    function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+      ]);
+    }
+
+    // Get the initial session (offline-safe: Supabase reads from AsyncStorage)
+    withTimeout(
+      supabase.auth.getSession(),
+      5000,
+      { data: { session: null }, error: null } as any,
+    ).then(async ({ data: { session: initialSession } }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       if (initialSession?.user) {
-        await fetchProfile(initialSession.user.id);
+        setUserId(initialSession.user.id);
+        // fetchProfile requires network — time-box it so offline start never hangs
+        await withTimeout(fetchProfile(initialSession.user.id), 5000, undefined);
       }
       setIsLoading(false);
     });
