@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useRouter, Stack, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { createAttendance, updateAttendance, getAttendanceById } from '@/services/attendanceService';
+import { createAttendance, updateAttendance, getAttendanceById } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
@@ -11,7 +11,7 @@ import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import type { Patient } from '@/types';
-import { getPatients } from '@/services/patientService';
+import { getPatients } from '@/services/offline/patientService.offline';
 import { useAlert } from '@/contexts/AlertContext';
 
 export default function MarkAttendanceScreen() {

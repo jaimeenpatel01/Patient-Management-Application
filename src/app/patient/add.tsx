@@ -6,7 +6,7 @@ import { GENDER_OPTIONS, VISIT_TYPE_OPTIONS } from '@/constants/options';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useAlert } from '@/contexts/AlertContext';
 import { validatePatientForm } from '@/lib/validators';
-import { createPatient } from '@/services/patientService';
+import { createPatient } from '@/services/offline/patientService.offline';
 import type { Gender, VisitType } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';

@@ -8,7 +8,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/paymentService';
+import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/offline/paymentService.offline';
 import { groupItemsByDate } from '@/lib/formatters';
 
 const PAGE_SIZE = 20;

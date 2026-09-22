@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Alert, Platform, ActivityIndicator } from 'reac
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { createConsultation, updateConsultation } from '@/services/medicalService';
+import { createConsultation, updateConsultation } from '@/services/offline/medicalService.offline';
 import { Colors, Typography, Spacing } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';

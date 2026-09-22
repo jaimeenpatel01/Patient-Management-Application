@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
-import { getDashboardStats, DashboardStats } from '@/services/dashboardService';
+import { getDashboardStats, DashboardStats } from '@/services/offline/dashboardService.offline';
 import { getDoctorDisplayName } from '@/lib/formatters';
 
 interface QuickActionProps {

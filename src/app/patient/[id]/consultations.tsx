@@ -5,7 +5,7 @@ import {
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlert } from '@/contexts/AlertContext';
-import { getConsultations, deleteConsultation } from '@/services/medicalService';
+import { getConsultations, deleteConsultation } from '@/services/offline/medicalService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';

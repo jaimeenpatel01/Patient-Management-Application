@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter , useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/medicalService';
+import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/offline/medicalService.offline';
 import { supabase } from '@/lib/supabase';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import type { Consultation, Diagnosis, Treatment, ExercisePlan } from '@/types';

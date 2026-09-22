@@ -10,8 +10,8 @@ import { ChipSelector } from '@/components/ui/ChipSelector';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { PAYMENT_TYPES, PAYMENT_METHODS, PAYMENT_STATUSES } from '@/constants/options';
-import { getPatients } from '@/services/patientService';
-import { createPayment, updatePayment } from '@/services/paymentService';
+import { getPatients } from '@/services/offline/patientService.offline';
+import { createPayment, updatePayment } from '@/services/offline/paymentService.offline';
 import type { Patient, PaymentType, PaymentMethod, PaymentStatus } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/contexts/AlertContext';
@@ -102,7 +102,7 @@ export default function AddPaymentScreen() {
         payment_type: paymentType,
         payment_method: paymentMethod,
         status: status,
-        payment_date: new Date().toISOString(),
+        payment_date: new Date().toISOString().split('T')[0],
         notes: notes.trim() || null,
       });
       error = res.error;

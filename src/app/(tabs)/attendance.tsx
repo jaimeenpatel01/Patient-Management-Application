@@ -4,7 +4,7 @@ import { useRouter, useFocusEffect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAlert } from '@/contexts/AlertContext';
-import { getAttendances, deleteAttendance } from '@/services/attendanceService';
+import { getAttendances, deleteAttendance } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';

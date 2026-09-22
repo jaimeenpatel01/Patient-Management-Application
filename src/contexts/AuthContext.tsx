@@ -4,6 +4,9 @@ import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
 import { getReadableError } from '@/lib/errorMessages';
 import type { AuthContextType, Profile } from '@/types';
+import { clearAll as clearOfflineCache } from '@/lib/offlineCache';
+import { clear as clearSyncQueue } from '@/lib/syncQueue';
+import { setUserId } from '@/lib/networkState';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -45,8 +48,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, newSession) => {
         if (newSession?.user) {
           await fetchProfile(newSession.user.id);
+          setUserId(newSession.user.id);
         } else {
           setProfile(null);
+          setUserId(null);
         }
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -172,6 +177,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore – no Google session or module unavailable
     }
+    // Clear offline cache and mutation queue before signing out
+    await Promise.allSettled([clearOfflineCache(), clearSyncQueue()]);
     await supabase.auth.signOut();
   }, []);
 

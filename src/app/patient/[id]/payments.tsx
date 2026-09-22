@@ -4,7 +4,7 @@ import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { getPaymentsByPatientId } from '@/services/paymentService';
+import { getPaymentsByPatientId } from '@/services/offline/paymentService.offline';
 import type { Payment } from '@/types';
 
 export default function PatientPaymentsScreen() {
