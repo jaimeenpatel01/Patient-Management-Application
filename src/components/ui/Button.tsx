@@ -148,7 +148,7 @@ const variantStyles: Record<ButtonVariant, ViewStyle> = {
 
 const variantShadows: Record<ButtonVariant, ViewStyle> = {
   primary: {
-    shadowColor: 'rgba(13, 148, 136, 0.35)',
+    shadowColor: Colors.shadowPrimary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,
@@ -157,7 +157,7 @@ const variantShadows: Record<ButtonVariant, ViewStyle> = {
   secondary: {},
   outline: {},
   danger: {
-    shadowColor: 'rgba(220, 38, 38, 0.25)',
+    shadowColor: Colors.shadowDanger,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 1,
     shadowRadius: 12,

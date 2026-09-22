@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   inputFocused: {
     borderColor: Colors.borderFocused,
     backgroundColor: Colors.surface,
-    shadowColor: 'rgba(13, 148, 136, 0.15)',
+    shadowColor: Colors.primaryFaded,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
     shadowRadius: 8,

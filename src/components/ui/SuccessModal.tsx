@@ -26,7 +26,7 @@ export function SuccessModal({ visible, title = 'Success!', message }: SuccessMo
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: Colors.overlayLight,
     justifyContent: 'center',
     alignItems: 'center',
   },

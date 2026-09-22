@@ -9,9 +9,11 @@ interface StatusBadgeProps {
 const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }> = {
   paid: { bg: Colors.successLight, text: Colors.success, border: 'rgba(22, 163, 74, 0.25)' },
   completed: { bg: Colors.successLight, text: Colors.success, border: 'rgba(22, 163, 74, 0.25)' },
+  active: { bg: Colors.successLight, text: Colors.success, border: 'rgba(22, 163, 74, 0.25)' },
   pending: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
   scheduled: { bg: Colors.infoLight, text: Colors.info, border: 'rgba(37, 99, 235, 0.25)' },
   cancelled: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
+  inactive: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
   no_show: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
 };
 

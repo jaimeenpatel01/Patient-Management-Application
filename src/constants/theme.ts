@@ -9,7 +9,6 @@ export const Colors = {
   primaryLight: '#14B8A6',
   primaryDark: '#0F766E',
   primaryFaded: 'rgba(13, 148, 136, 0.1)',
-  primaryGradientEnd: '#06B6D4',
 
   // Background
   background: '#F8FAFC',
@@ -31,7 +30,7 @@ export const Colors = {
   // Semantic
   success: '#16A34A',
   successLight: 'rgba(22, 163, 74, 0.1)',
-  warning: '#ff8800ff',
+  warning: '#F59E0B',
   warningLight: 'rgba(217, 119, 6, 0.1)',
   error: '#DC2626',
   errorLight: 'rgba(240, 50, 50, 0.17)',
@@ -49,9 +48,13 @@ export const Colors = {
   // Misc
   overlay: 'rgba(0, 0, 0, 0.5)',
   shadow: 'rgba(13, 148, 136, 0.10)',
-  shadowDark: 'rgba(15, 23, 42, 0.08)',
   disabled: '#CBD5E1',
-  tabInactive: '#6d85a5ff',
+  tabInactive: '#6D85A5',
+  overlayLight: 'rgba(15, 23, 42, 0.4)',
+  shadowPrimary: 'rgba(13, 148, 136, 0.3)',
+  shadowDanger: 'rgba(220, 38, 38, 0.25)',
+  successSurface: '#DCFCE7',
+  successBorder: '#BBF7D0',
 } as const;
 
 export const Typography = {
