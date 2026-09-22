@@ -54,11 +54,27 @@ export async function createExercisePlan(input: Omit<ExercisePlan, 'id' | 'docto
 }
 
 export async function updateConsultation(id: string, input: Partial<Omit<Consultation, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>): Promise<{ data: Consultation | null; error: string | null }> {
-  const { data, error } = await supabase.from('consultations').update(input).eq('id', id).select().single();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: 'Not authenticated' };
+
+  const { data, error } = await supabase
+    .from('consultations')
+    .update(input)
+    .eq('id', id)
+    .eq('doctor_id', user.id)
+    .select()
+    .single();
   return { data: (data as Consultation) || null, error: error?.message || null };
 }
 
 export async function deleteConsultation(id: string): Promise<{ error: string | null }> {
-  const { error } = await supabase.from('consultations').delete().eq('id', id);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('consultations')
+    .delete()
+    .eq('id', id)
+    .eq('doctor_id', user.id);
   return { error: error?.message || null };
 }

@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
@@ -19,9 +19,12 @@ export default function PatientPaymentsScreen() {
     setPayments(data);
   }, [patientId]);
 
-  React.useEffect(() => {
-    loadPayments().finally(() => setIsLoading(false));
-  }, [loadPayments]);
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      loadPayments().finally(() => setIsLoading(false));
+    }, [loadPayments])
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);

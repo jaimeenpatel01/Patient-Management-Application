@@ -45,10 +45,14 @@ export async function searchPatients(query: string): Promise<{ data: Patient[]; 
 // ─── Get a single patient by ID ───────────────────────────────
 
 export async function getPatientById(id: string): Promise<{ data: Patient | null; error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: 'Not authenticated' };
+
   const { data, error } = await supabase
     .from('patients')
     .select('*')
     .eq('id', id)
+    .eq('doctor_id', user.id)
     .single();
 
   if (error) return { data: null, error: error.message };
@@ -81,10 +85,14 @@ export async function createPatient(input: CreatePatientInput): Promise<{ data: 
 export type UpdatePatientInput = Partial<Omit<Patient, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>;
 
 export async function updatePatient(id: string, input: UpdatePatientInput): Promise<{ data: Patient | null; error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: 'Not authenticated' };
+
   const { data, error } = await supabase
     .from('patients')
     .update(input)
     .eq('id', id)
+    .eq('doctor_id', user.id)
     .select()
     .single();
 
@@ -95,10 +103,14 @@ export async function updatePatient(id: string, input: UpdatePatientInput): Prom
 // ─── Soft-delete a patient (set is_active = false) ────────────
 
 export async function deletePatient(id: string): Promise<{ error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
   const { error } = await supabase
     .from('patients')
     .update({ is_active: false })
-    .eq('id', id);
+    .eq('id', id)
+    .eq('doctor_id', user.id);
 
   if (error) return { error: error.message };
   return { error: null };

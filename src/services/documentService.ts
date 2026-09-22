@@ -58,7 +58,8 @@ export async function uploadDocument(input: {
       .single();
 
     if (dbError) {
-      // If DB insert fails, we should ideally clean up the storage file, but keeping it simple for now
+      // Clean up the orphaned storage file before returning the error
+      await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
       return { data: null, error: `Database error: ${dbError.message}` };
     }
 
@@ -86,6 +87,9 @@ export async function getPatientDocuments(patientId: string): Promise<{ data: Do
  * Gets a temporary signed URL to view or download the file securely.
  */
 export async function getDocumentUrl(storagePath: string): Promise<{ url: string | null; error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { url: null, error: 'Not authenticated' };
+
   // Generate a signed URL valid for 1 hour (3600 seconds)
   const { data, error } = await supabase.storage
     .from(BUCKET_NAME)
@@ -99,12 +103,19 @@ export async function getDocumentUrl(storagePath: string): Promise<{ url: string
  * Deletes a document from both Storage and the database.
  */
 export async function deleteDocument(id: string, storagePath: string): Promise<{ error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
   // 1. Delete from storage
   const { error: storageError } = await supabase.storage.from(BUCKET_NAME).remove([storagePath]);
   if (storageError) return { error: `Storage delete error: ${storageError.message}` };
 
   // 2. Delete from database
-  const { error: dbError } = await supabase.from('documents').delete().eq('id', id);
+  const { error: dbError } = await supabase
+    .from('documents')
+    .delete()
+    .eq('id', id)
+    .eq('doctor_id', user.id);
   if (dbError) return { error: `Database delete error: ${dbError.message}` };
 
   return { error: null };

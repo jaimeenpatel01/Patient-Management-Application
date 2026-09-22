@@ -9,8 +9,53 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/paymentService';
+import { groupItemsByDate } from '@/lib/formatters';
 
 const PAGE_SIZE = 20;
+
+interface PaymentItemProps {
+  item: PaymentWithPatient;
+  onMenuPress: (id: string) => void;
+}
+
+const PaymentItem = memo(function PaymentItem({ item, onMenuPress }: PaymentItemProps) {
+  const isPaid = item.status === 'paid';
+  return (
+    <View style={[styles.paymentCard, Shadows.md]}>
+      <View style={[styles.paymentAccent, { backgroundColor: isPaid ? Colors.success : Colors.warning }]} />
+      <View style={styles.paymentContent}>
+        <View style={styles.paymentHeader}>
+          <View style={styles.patientInfo}>
+            <Text style={styles.patientName} numberOfLines={1}>{item.patient?.full_name || 'Unknown Patient'}</Text>
+            <Text style={styles.paymentDate}>
+              {item.payment_type.replace('_', ' ')}
+            </Text>
+          </View>
+          <View style={styles.amountInfo}>
+            <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
+            <StatusBadge status={item.status} />
+          </View>
+        </View>
+
+        <View style={styles.paymentFooter}>
+          <View style={styles.footerLeft}>
+            {item.payment_method && (
+              <Text style={styles.methodText}>Method: {item.payment_method.toUpperCase()}</Text>
+            )}
+            {item.notes && (
+              <Text style={styles.notesText} numberOfLines={1}>{item.notes}</Text>
+            )}
+          </View>
+          <View style={styles.actionsContainer}>
+            <TouchableOpacity onPress={() => onMenuPress(item.id)} style={styles.actionBtn}>
+              <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+});
 
 export default function PaymentsScreen() {
   const router = useRouter();
@@ -32,17 +77,14 @@ export default function PaymentsScreen() {
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const fetchData = async (pageNumber = 0, statusFilter = filterStatus, refresh = false, targetDate = filterDate) => {
+  const fetchData = useCallback(async (pageNumber: number, statusFilter: string, refresh: boolean, targetDate: Date | null) => {
     if (pageNumber > 0) setIsLoadingMore(true);
 
-    let formattedDate = undefined;
-    if (targetDate) {
-      formattedDate = targetDate.toISOString().split('T')[0];
-    }
+    const formattedDate = targetDate ? targetDate.toISOString().split('T')[0] : undefined;
 
     const [paymentsRes, statsRes] = await Promise.all([
       getPayments(pageNumber, PAGE_SIZE, statusFilter, formattedDate),
-      pageNumber === 0 ? getRevenueStatistics() : Promise.resolve({ data: stats, error: null })
+      pageNumber === 0 ? getRevenueStatistics() : Promise.resolve(null),
     ]);
 
     if (!paymentsRes.error) {
@@ -54,19 +96,19 @@ export default function PaymentsScreen() {
       setHasMore(paymentsRes.data.length >= PAGE_SIZE);
       setPage(pageNumber);
     }
-    
-    if (!statsRes.error && pageNumber === 0) {
+
+    if (statsRes && !statsRes.error) {
       setStats(statsRes.data);
     }
-    
+
     setIsLoadingMore(false);
     setLoading(false);
-  };
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchData(0, filterStatus, true, filterDate);
-    }, [filterStatus, filterDate])
+    }, [fetchData, filterStatus, filterDate])
   );
 
   const onRefresh = async () => {
@@ -114,29 +156,10 @@ export default function PaymentsScreen() {
     ]);
   };
   
-  const groupPaymentsByDate = (data: PaymentWithPatient[]) => {
-    const grouped = data.reduce((acc, curr) => {
-      const date = curr.payment_date || 'Unknown Date';
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(curr);
-      return acc;
-    }, {} as Record<string, PaymentWithPatient[]>);
-
-    return Object.keys(grouped)
-      .sort((a, b) => (a < b ? 1 : -1))
-      .map(date => {
-        let formattedDate = date;
-        if (date !== 'Unknown Date') {
-          const parts = date.split('-');
-          if (parts.length === 3) {
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          }
-        }
-        return { title: formattedDate, data: grouped[date] };
-      });
-  };
-
-  const sections = useMemo(() => groupPaymentsByDate(payments), [payments]);
+  const sections = useMemo(
+    () => groupItemsByDate(payments, (p) => p.payment_date),
+    [payments]
+  );
 
   const renderHeader = () => (
     <View style={styles.dashboardContainer}>
@@ -206,46 +229,6 @@ export default function PaymentsScreen() {
     </View>
   );
 
-  const PaymentItem = memo(({ item }: { item: PaymentWithPatient }) => {
-    const isPaid = item.status === 'paid';
-    return (
-      <View style={[styles.paymentCard, Shadows.md]}>
-        <View style={[styles.paymentAccent, { backgroundColor: isPaid ? Colors.success : Colors.warning }]} />
-        <View style={styles.paymentContent}>
-          <View style={styles.paymentHeader}>
-            <View style={styles.patientInfo}>
-              <Text style={styles.patientName} numberOfLines={1}>{item.patient?.full_name || 'Unknown Patient'}</Text>
-              <Text style={styles.paymentDate}>
-                {item.payment_type.replace('_', ' ')}
-              </Text>
-            </View>
-            <View style={styles.amountInfo}>
-              <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
-              <StatusBadge status={item.status} />
-            </View>
-          </View>
-          
-          <View style={styles.paymentFooter}>
-            <View style={styles.footerLeft}>
-              {item.payment_method && (
-                <Text style={styles.methodText}>Method: {item.payment_method.toUpperCase()}</Text>
-              )}
-              {item.notes && (
-                <Text style={styles.notesText} numberOfLines={1}>{item.notes}</Text>
-              )}
-            </View>
-            <View style={styles.actionsContainer}>
-              <TouchableOpacity onPress={() => setActiveActionId(item.id)} style={styles.actionBtn}>
-                <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  });
-  PaymentItem.displayName = 'PaymentItem';
-
   if (loading && !refreshing) {
     return (
       <View style={styles.centerContainer}>
@@ -278,7 +261,7 @@ export default function PaymentsScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PaymentItem item={item} />}
+        renderItem={({ item }) => <PaymentItem item={item} onMenuPress={setActiveActionId} />}
         renderSectionHeader={({ section: { title } }) => (
           <View style={styles.sectionHeaderContainer}>
             <Ionicons name="calendar" size={16} color={Colors.textTertiary} style={styles.sectionHeaderIcon} />

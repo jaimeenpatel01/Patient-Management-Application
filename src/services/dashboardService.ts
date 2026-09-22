@@ -56,29 +56,40 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
   if (!user) return { data: null, error: 'Not authenticated' };
 
   try {
-    // 1. Fetch Global Patient Counts
-    const { count: totalPatientsCount, error: totalErr } = await supabase
-      .from('patients')
-      .select('*', { count: 'exact', head: true })
-      .eq('doctor_id', user.id);
+    // 1. Fetch Global Patient Counts and Payments in parallel
+    const [
+      { count: totalPatientsCount, error: totalErr },
+      { count: activePatientsCount, error: activeErr },
+      { data: allPayments, error: paymentsError },
+    ] = await Promise.all([
+      supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .eq('doctor_id', user.id),
+      supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true })
+        .eq('doctor_id', user.id)
+        .eq('is_active', true),
+      supabase
+        .from('payments')
+        .select('amount, status, created_at, payment_date, patient_id')
+        .eq('doctor_id', user.id),
+    ]);
+
     if (totalErr) throw new Error(totalErr.message);
-
-    const { count: activePatientsCount, error: activeErr } = await supabase
-      .from('patients')
-      .select('*', { count: 'exact', head: true })
-      .eq('doctor_id', user.id)
-      .eq('is_active', true);
     if (activeErr) throw new Error(activeErr.message);
-
-    // 2. Fetch Payments for all filters
-    const { data: allPayments, error: paymentsError } = await supabase
-      .from('payments')
-      .select('amount, status, created_at, payment_date, patient_id')
-      .eq('doctor_id', user.id);
     if (paymentsError) throw new Error(paymentsError.message);
 
     const filters: DashboardFilter[] = ['daily', 'weekly', 'monthly'];
-    const stats: DashboardStats = {} as any;
+    const stats = {} as DashboardStats;
+
+    // Pre-compute date strings once per payment to avoid repeated string parsing in the inner loop
+    const payments = (allPayments || []).map(p => ({
+      ...p,
+      createdStr: p.created_at.split('T')[0],
+      paidStr: p.payment_date?.split('T')[0],
+    }));
 
     for (const filter of filters) {
       const range = getFilterDateRange(filter);
@@ -87,14 +98,11 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
 
       let collected = 0;
       let pending = 0;
-      let paymentPatients = new Set<string>();
+      const paymentPatients = new Set<string>();
 
-      for (const p of allPayments || []) {
-        const createdStr = p.created_at.split('T')[0];
-        const paidStr = p.payment_date?.split('T')[0];
-        
-        const inCreated = createdStr >= startStr && createdStr <= endStr;
-        const inPaid = paidStr && paidStr >= startStr && paidStr <= endStr;
+      for (const p of payments) {
+        const inCreated = p.createdStr >= startStr && p.createdStr <= endStr;
+        const inPaid = p.paidStr && p.paidStr >= startStr && p.paidStr <= endStr;
 
         if (p.status === 'paid' && (inPaid || inCreated)) {
           collected += p.amount;
@@ -109,8 +117,8 @@ export async function getDashboardStats(): Promise<{ data: DashboardStats | null
         overview: {
           activePatients: activePatientsCount || 0,
           totalPatients: totalPatientsCount || 0,
-          collected: collected,
-          pending: pending,
+          collected,
+          pending,
         },
         payment: {
           totalPatients: paymentPatients.size,
