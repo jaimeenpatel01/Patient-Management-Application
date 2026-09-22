@@ -11,8 +11,8 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlert } from '@/contexts/AlertContext';
-import { getPatientById, updatePatient } from '@/services/patientService';
-import { Colors, Typography, Spacing } from '@/constants/theme';
+import { getPatientById, updatePatient } from '@/services/offline/patientService.offline';
+import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
@@ -134,92 +134,113 @@ export default function EditPatientScreen() {
         extraScrollHeight={50}
         extraHeight={150}
       >
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="person-outline" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+          </View>
 
           <Input
             label="Full Name *"
             placeholder="Enter patient full name"
-          leftIcon="person-outline"
-          value={fullName}
-          onChangeText={setFullName}
-          error={errors.fullName}
-          autoCapitalize="words"
-        />
+            leftIcon="person-outline"
+            value={fullName}
+            onChangeText={setFullName}
+            error={errors.fullName}
+            autoCapitalize="words"
+          />
 
-        <Input
-          label="Phone Number *"
-          placeholder="9876543210"
-          leftIcon="call-outline"
-          value={phone}
-          onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
-          error={errors.phone}
-          keyboardType="phone-pad"
-          maxLength={10}
-        />
+          <Input
+            label="Age *"
+            placeholder="e.g. 35"
+            leftIcon="calendar-outline"
+            value={age}
+            onChangeText={(text) => setAge(text.replace(/[^0-9]/g, '').slice(0, 3))}
+            error={errors.age}
+            keyboardType="number-pad"
+            maxLength={3}
+          />
 
-        <Input
-          label="Age *"
-          placeholder="e.g. 35"
-          leftIcon="calendar-outline"
-          value={age}
-          onChangeText={(text) => setAge(text.replace(/[^0-9]/g, '').slice(0, 3))}
-          error={errors.age}
-          keyboardType="number-pad"
-          maxLength={3}
-        />
+          <Text style={styles.fieldLabel}>Gender *</Text>
+          <ChipSelector
+            options={GENDER_OPTIONS}
+            value={gender}
+            onChange={setGender}
+            allowDeselect
+          />
+          {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
 
-        {/* Gender selector */}
-        <Text style={styles.fieldLabel}>Gender *</Text>
-        <ChipSelector
-          options={GENDER_OPTIONS}
-          value={gender}
-          onChange={setGender}
-          allowDeselect
-        />
-        {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
-
-        {/* Visit Type selector */}
-        <Text style={styles.fieldLabel}>Visit Type *</Text>
-        <ChipSelector
-          options={VISIT_TYPE_OPTIONS}
-          value={visitType}
-          onChange={setVisitType}
-          allowDeselect
-        />
-        {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
-
-        <Text style={[styles.sectionTitle, { marginTop: Spacing.xl }]}>Additional Information</Text>
-
-        <View style={styles.toggleRow}>
-          <Text style={styles.fieldLabel}>Active Patient</Text>
-          <TouchableOpacity 
-            style={[styles.toggleButton, isActive ? styles.toggleActive : styles.toggleInactive]}
-            onPress={() => setIsActive(!isActive)}
-          >
-            <View style={[styles.toggleKnob, isActive ? styles.toggleKnobActive : styles.toggleKnobInactive]} />
-          </TouchableOpacity>
+          <Text style={styles.fieldLabel}>Visit Type *</Text>
+          <ChipSelector
+            options={VISIT_TYPE_OPTIONS}
+            value={visitType}
+            onChange={setVisitType}
+            allowDeselect
+          />
+          {errors.visitType && <Text style={styles.errorText}>{errors.visitType}</Text>}
         </View>
 
-        <Input
-          label="Full Address *"
-          placeholder="Enter patient's full address"
-          leftIcon="location-outline"
-          value={address}
-          onChangeText={setAddress}
-          error={errors.address}
-          multiline
-          numberOfLines={2}
-        />
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="call-outline" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Contact Information</Text>
+          </View>
 
-        <Input
-          label="Notes"
-          placeholder="Any additional notes..."
-          leftIcon="document-text-outline"
-          value={notes}
-          onChangeText={setNotes}
-          multiline
-          numberOfLines={3}
-        />
+          <Input
+            label="Phone Number *"
+            placeholder="9876543210"
+            leftIcon="call-outline"
+            value={phone}
+            onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
+            error={errors.phone}
+            keyboardType="phone-pad"
+            maxLength={10}
+          />
+
+          <Input
+            label="Full Address *"
+            placeholder="Enter patient's full address"
+            leftIcon="location-outline"
+            value={address}
+            onChangeText={setAddress}
+            error={errors.address}
+            multiline
+            numberOfLines={2}
+          />
+
+          <Input
+            label="Notes"
+            placeholder="Any additional notes..."
+            leftIcon="document-text-outline"
+            value={notes}
+            onChangeText={setNotes}
+            multiline
+            numberOfLines={3}
+          />
+        </View>
+
+        <View style={[styles.sectionCard, Shadows.sm]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionIconBg}>
+              <Ionicons name="checkmark-circle-outline" size={18} color={Colors.primary} />
+            </View>
+            <Text style={styles.sectionTitle}>Status</Text>
+          </View>
+
+          <View style={styles.toggleRow}>
+            <Text style={styles.fieldLabel}>Active Patient</Text>
+            <TouchableOpacity
+              style={[styles.toggleButton, isActive ? styles.toggleActive : styles.toggleInactive]}
+              onPress={() => setIsActive(!isActive)}
+            >
+              <View style={[styles.toggleKnob, isActive ? styles.toggleKnobActive : styles.toggleKnobInactive]} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <View style={styles.submitContainer}>
           <Button
@@ -251,22 +272,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing['2xl'],
   },
   errorText: {
-    fontSize: Typography.base,
-    color: Colors.textSecondary,
-    marginTop: Spacing.base,
-    textAlign: 'center',
+    color: Colors.error,
+    fontSize: Typography.xs,
+    marginTop: -Spacing.sm,
+    marginBottom: Spacing.base,
+    marginLeft: Spacing.xs,
+  },
+  sectionCard: {
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+    borderWidth: 0,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  sectionIconBg: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
   },
   sectionTitle: {
     fontSize: Typography.lg,
-    fontWeight: Typography.semibold,
+    fontWeight: Typography.bold,
     color: Colors.text,
-    marginBottom: Spacing.base,
   },
   fieldLabel: {
     fontSize: Typography.sm,
-    fontWeight: Typography.medium,
+    fontWeight: Typography.bold,
     color: Colors.text,
     marginBottom: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   toggleRow: {
     flexDirection: 'row',
@@ -300,6 +343,6 @@ const styles = StyleSheet.create({
     transform: [{ translateX: 0 }],
   },
   submitContainer: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.sm,
   },
 });

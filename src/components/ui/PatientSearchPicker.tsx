@@ -133,7 +133,9 @@ export function PatientSearchPicker({
           
           <SafeAreaView edges={['bottom']} style={styles.modalContainer}>
             {/* Drag Handle */}
-            <View style={styles.dragHandleContainer}></View>
+            <View style={styles.dragHandleContainer}>
+              <View style={styles.dragHandle} />
+            </View>
 
             {/* Header */}
             <View style={styles.modalHeader}>
@@ -305,7 +307,7 @@ const styles = StyleSheet.create({
   },
 
   errorText: {
-    fontSize: Typography.sm,
+    fontSize: Typography.xs,
     color: Colors.error,
     marginTop: Spacing.xs,
   },
@@ -314,7 +316,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: Colors.overlayLight,
   },
   modalContainer: {
     backgroundColor: Colors.surface,

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getPatients } from '@/services/patientService';
+import { getPatients } from '@/services/offline/patientService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: Spacing.base,
-    paddingBottom: 100,
+    paddingBottom: Spacing['6xl'],
   },
   patientCard: {
     backgroundColor: Colors.surfaceElevated,
@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: Spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(13, 148, 136, 0.1)',
+    borderColor: Colors.primaryFaded,
   },
   avatarText: {
     fontSize: Typography.lg,
@@ -311,9 +311,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: Spacing.lg,
     bottom: Spacing.lg,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',

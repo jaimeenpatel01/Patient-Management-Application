@@ -1,14 +1,14 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useAlert } from '@/contexts/AlertContext';
-import { getAttendances, deleteAttendance } from '@/services/attendanceService';
+import { getAttendances, deleteAttendance } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
-import { formatTime12Hour } from '@/lib/formatters';
+import { formatTime12Hour, groupItemsByDate } from '@/lib/formatters';
 import type { Attendance } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -98,29 +98,10 @@ export default function AttendanceScreen() {
     ]);
   };
 
-  const groupAttendancesByDate = (data: Attendance[]) => {
-    const grouped = data.reduce((acc, curr) => {
-      const date = curr.attendance_date || 'Unknown Date';
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(curr);
-      return acc;
-    }, {} as Record<string, Attendance[]>);
-
-    return Object.keys(grouped)
-      .sort((a, b) => (a < b ? 1 : -1))
-      .map(date => {
-        let formattedDate = date;
-        if (date !== 'Unknown Date') {
-          const parts = date.split('-');
-          if (parts.length === 3) {
-            formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
-          }
-        }
-        return { title: formattedDate, data: grouped[date] };
-      });
-  };
-
-  const sections = useMemo(() => groupAttendancesByDate(attendances), [attendances]);
+  const sections = useMemo(
+    () => groupItemsByDate(attendances, (a) => a.attendance_date),
+    [attendances]
+  );
 
   const renderHeader = () => {
     if (!filterDate) return null;
@@ -276,7 +257,7 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: Spacing.base, paddingBottom: 100, paddingTop: Spacing.md },
+  listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'], paddingTop: Spacing.md },
   
   activeFilterContainer: {
     marginBottom: Spacing.sm,
@@ -358,8 +339,8 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.lg,
     backgroundColor: Colors.primary, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full, ...Shadows.xl,
+    paddingHorizontal: Spacing.lg, height: 56,
+    borderRadius: 28, ...Shadows.xl,
   },
   fabText: { color: Colors.textInverse, fontWeight: Typography.bold, marginLeft: Spacing.xs, fontSize: Typography.base },
 });

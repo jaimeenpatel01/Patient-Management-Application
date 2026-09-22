@@ -123,7 +123,7 @@ export function AppDateTimePicker({ label, value, onChange, mode = 'date', error
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.base,
   },
   label: {
     fontSize: Typography.sm,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     justifyContent: 'flex-end',
-    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    backgroundColor: Colors.overlayLight,
   },
   pickerContainer: {
     backgroundColor: Colors.surface,

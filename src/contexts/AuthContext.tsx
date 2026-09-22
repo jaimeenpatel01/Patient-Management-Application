@@ -4,6 +4,9 @@ import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
 import { getReadableError } from '@/lib/errorMessages';
 import type { AuthContextType, Profile } from '@/types';
+import { clearAll as clearOfflineCache, getRecord, setRecord } from '@/lib/offlineCache';
+import { clear as clearSyncQueue } from '@/lib/syncQueue';
+import { setUserId } from '@/lib/networkState';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,8 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (!error && data) {
       setProfile(data);
+      // Cache profile for offline startup
+      await setRecord('profiles', data);
     } else {
-      setProfile(null);
+      // Fallback to cached profile when offline / network error
+      const cached = await getRecord<Profile>('profiles', userId);
+      setProfile(cached);
     }
   }, []);
 
@@ -30,12 +37,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, fetchProfile]);
 
   useEffect(() => {
-    // Get the initial session
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
+    // Resolve with a fallback after `ms` milliseconds so offline network
+    // calls can never block the loading screen forever.
+    function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+      ]);
+    }
+
+    // Get the initial session (offline-safe: Supabase reads from AsyncStorage)
+    withTimeout(
+      supabase.auth.getSession(),
+      10000,
+      { data: { session: null }, error: null } as any,
+    ).then(async ({ data: { session: initialSession } }) => {
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
       if (initialSession?.user) {
-        await fetchProfile(initialSession.user.id);
+        setUserId(initialSession.user.id);
+        // fetchProfile requires network — time-box it so offline start never hangs
+        await withTimeout(fetchProfile(initialSession.user.id), 10000, undefined);
       }
       setIsLoading(false);
     });
@@ -45,8 +67,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, newSession) => {
         if (newSession?.user) {
           await fetchProfile(newSession.user.id);
+          setUserId(newSession.user.id);
         } else {
           setProfile(null);
+          setUserId(null);
         }
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -172,6 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       // Ignore – no Google session or module unavailable
     }
+    // Clear offline cache and mutation queue before signing out
+    await Promise.allSettled([clearOfflineCache(), clearSyncQueue()]);
     await supabase.auth.signOut();
   }, []);
 

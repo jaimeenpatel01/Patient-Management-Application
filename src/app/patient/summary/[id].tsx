@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, Stack , useFocusEffect } from 'expo-router';
-import { getPatientById } from '@/services/patientService';
-import { getAttendances } from '@/services/attendanceService';
-import { getPaymentsByPatientId } from '@/services/paymentService';
+import { getPatientById } from '@/services/offline/patientService.offline';
+import { getAttendances } from '@/services/offline/attendanceService.offline';
+import { getPaymentsByPatientId } from '@/services/offline/paymentService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import type { Patient, Attendance, Payment } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   content: { padding: Spacing.base, paddingBottom: Spacing['4xl'] },
   section: { marginBottom: Spacing.xl },
-  sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.primary, marginBottom: Spacing.sm },
+  sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.text, marginBottom: Spacing.sm },
   card: { backgroundColor: Colors.surface, padding: Spacing.base, borderRadius: BorderRadius.lg, ...Shadows.sm },
   label: { fontSize: Typography.sm, color: Colors.textSecondary, marginBottom: 4 },
   value: { fontSize: Typography.base, color: Colors.text, fontWeight: Typography.medium },

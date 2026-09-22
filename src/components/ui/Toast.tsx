@@ -5,12 +5,11 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useToast } from '@/contexts/ToastContext';
-import { Colors, Spacing } from '@/constants/theme';
+import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Toast Configuration
@@ -19,34 +18,20 @@ import { Colors, Spacing } from '@/constants/theme';
 const TOAST_CONFIG: Record<
   'error' | 'success' | 'warning',
   {
-    background: string;
-    iconBackground: string;
     iconColor: string;
-    accentColor: string;
     icon: keyof typeof Ionicons.glyphMap;
   }
 > = {
-  error: {
-    background: '#FFF8F8',
-    iconBackground: '#FDEBEC',
-    iconColor: '#E5484D',
-    accentColor: '#E5484D',
-    icon: 'alert-circle',
-  },
-
   success: {
-    background: '#F6FCFA',
-    iconBackground: '#E5F7F1',
-    iconColor: '#109C89',
-    accentColor: '#109C89',
+    iconColor: Colors.success,
     icon: 'checkmark-circle',
   },
-
+  error: {
+    iconColor: Colors.error,
+    icon: 'close-circle',
+  },
   warning: {
-    background: '#FFFBF4',
-    iconBackground: '#FFF1D6',
-    iconColor: '#D88A00',
-    accentColor: '#E5A126',
+    iconColor: Colors.warning,
     icon: 'warning',
   },
 };
@@ -57,25 +42,16 @@ const TOAST_CONFIG: Record<
 
 export function Toast() {
   const { toastState, hideToast } = useToast();
-
-  const {
-    visible,
-    message,
-    type,
-    duration,
-    id,
-  } = toastState;
-
+  const { visible, message, type, duration, id } = toastState;
   const insets = useSafeAreaInsets();
 
   // ───────────────────────────────────────────────────────────────────────────
   // Animation values
   // ───────────────────────────────────────────────────────────────────────────
 
-  const translateY = useRef(new Animated.Value(-100)).current;
+  const translateY = useRef(new Animated.Value(-80)).current;
   const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.97)).current;
-  const progress = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastIdRef = useRef(-1);
@@ -92,50 +68,37 @@ export function Toast() {
 
     Animated.parallel([
       Animated.timing(translateY, {
-        toValue: -80,
+        toValue: -60,
         duration: 180,
         useNativeDriver: true,
       }),
-
       Animated.timing(opacity, {
         toValue: 0,
         duration: 150,
         useNativeDriver: true,
       }),
-
       Animated.timing(scale, {
-        toValue: 0.97,
+        toValue: 0.9,
         duration: 150,
         useNativeDriver: true,
       }),
     ]).start(({ finished }) => {
-      if (finished) {
-        hideToast();
-      }
+      if (finished) hideToast();
     });
   };
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Swipe to dismiss
+  // Swipe up to dismiss
   // ───────────────────────────────────────────────────────────────────────────
 
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
-
-      onMoveShouldSetPanResponder: (_, gesture) => {
-        return (
-          gesture.dy < -8 &&
-          Math.abs(gesture.dy) > Math.abs(gesture.dx)
-        );
-      },
-
+      onMoveShouldSetPanResponder: (_, gesture) =>
+        gesture.dy < -8 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
       onPanResponderMove: (_, gesture) => {
-        if (gesture.dy < 0) {
-          translateY.setValue(gesture.dy);
-        }
+        if (gesture.dy < 0) translateY.setValue(gesture.dy);
       },
-
       onPanResponderRelease: (_, gesture) => {
         if (gesture.dy < -40 || gesture.vy < -0.5) {
           dismissToast();
@@ -156,58 +119,39 @@ export function Toast() {
   // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!visible || id === lastIdRef.current) {
-      return;
-    }
-
+    if (!visible || id === lastIdRef.current) return;
     lastIdRef.current = id;
 
-    // Reset
-    translateY.setValue(-100);
+    translateY.setValue(-80);
     opacity.setValue(0);
-    scale.setValue(0.97);
-    progress.setValue(0);
+    scale.setValue(0.9);
 
-    // Clear previous timer
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
 
-    // Entrance animation
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: 0,
         useNativeDriver: true,
-        tension: 80,
-        friction: 11,
+        tension: 70,
+        friction: 10,
       }),
-
       Animated.timing(opacity, {
         toValue: 1,
-        duration: 180,
+        duration: 200,
         useNativeDriver: true,
       }),
-
       Animated.spring(scale, {
         toValue: 1,
         useNativeDriver: true,
-        tension: 90,
-        friction: 10,
+        tension: 80,
+        friction: 9,
       }),
     ]).start();
 
-    // Progress
-    Animated.timing(progress, {
-      toValue: 1,
-      duration,
-      useNativeDriver: false,
-    }).start();
-
-    // Auto dismiss
-    timerRef.current = setTimeout(() => {
-      dismissToast();
-    }, duration);
+    timerRef.current = setTimeout(dismissToast, duration);
 
     return () => {
       if (timerRef.current) {
@@ -217,15 +161,9 @@ export function Toast() {
     };
   }, [visible, id]);
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Cleanup
-  // ───────────────────────────────────────────────────────────────────────────
-
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
+      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, []);
 
@@ -233,17 +171,9 @@ export function Toast() {
   // Don't render when hidden
   // ───────────────────────────────────────────────────────────────────────────
 
-  if (!visible) {
-    return null;
-  }
+  if (!visible) return null;
 
   const config = TOAST_CONFIG[type];
-
-  // 100% → 0%
-  const progressWidth = progress.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['100%', '0%'],
-  });
 
   // ───────────────────────────────────────────────────────────────────────────
   // UI
@@ -254,103 +184,28 @@ export function Toast() {
       style={[
         styles.container,
         {
-          top: insets.top + 12,
+          top: insets.top + Spacing.md,
           opacity,
-          transform: [
-            { translateY },
-            { scale },
-          ],
+          transform: [{ translateY }, { scale }],
         },
       ]}
       {...panResponder.panHandlers}
     >
-      <View
-        style={[
-          styles.toast,
-          {
-            backgroundColor: config.background,
-          },
-        ]}
+      <TouchableOpacity
+        style={styles.pill}
+        onPress={dismissToast}
+        activeOpacity={0.85}
       >
-        {/* ────────────────────────────────────────────────────────────────────
-            Colored accent
-        ──────────────────────────────────────────────────────────────────── */}
-
-        <View
-          style={[
-            styles.accent,
-            {
-              backgroundColor: config.accentColor,
-            },
-          ]}
+        <Ionicons
+          name={config.icon}
+          size={18}
+          color={config.iconColor}
+          style={styles.icon}
         />
-
-        {/* ────────────────────────────────────────────────────────────────────
-            Icon
-        ──────────────────────────────────────────────────────────────────── */}
-
-        <View
-          style={[
-            styles.iconWrapper,
-            {
-              backgroundColor: config.iconBackground,
-            },
-          ]}
-        >
-          <Ionicons
-            name={config.icon}
-            size={19}
-            color={config.iconColor}
-          />
-        </View>
-
-        {/* ────────────────────────────────────────────────────────────────────
-            Message
-        ──────────────────────────────────────────────────────────────────── */}
-
-        <Text
-          style={styles.message}
-          numberOfLines={3}
-        >
+        <Text style={styles.message} numberOfLines={2}>
           {message}
         </Text>
-
-        {/* ────────────────────────────────────────────────────────────────────
-            Close
-        ──────────────────────────────────────────────────────────────────── */}
-
-        <TouchableOpacity
-          style={styles.closeButton}
-          onPress={dismissToast}
-          activeOpacity={0.6}
-          hitSlop={{
-            top: 10,
-            bottom: 10,
-            left: 10,
-            right: 10,
-          }}
-        >
-          <Ionicons
-            name="close"
-            size={18}
-            color="#94A3B8"
-          />
-        </TouchableOpacity>
-
-        {/* ────────────────────────────────────────────────────────────────────
-            Progress
-        ──────────────────────────────────────────────────────────────────── */}
-
-        <Animated.View
-          style={[
-            styles.progress,
-            {
-              backgroundColor: config.accentColor,
-              width: progressWidth as any,
-            },
-          ]}
-        />
-      </View>
+      </TouchableOpacity>
     </Animated.View>
   );
 }
@@ -360,127 +215,40 @@ export function Toast() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  // ───────────────────────────────────────────────────────────────────────────
-  // Container
-  // ───────────────────────────────────────────────────────────────────────────
-
   container: {
     position: 'absolute',
-
-    left: 20,
-    right: 20,
-
+    left: 0,
+    right: 0,
+    alignItems: 'center',
     zIndex: 9999,
     elevation: 9999,
   },
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Toast
-  // ───────────────────────────────────────────────────────────────────────────
-
-  toast: {
-    minHeight: 62,
-
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
-
-    paddingLeft: 14,
-    paddingRight: 10,
-
-    borderRadius: 18,
-
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(15, 23, 42, 0.10)',
-
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
+    maxWidth: 320,
     // iOS
-    shadowColor: '#0F172A',
-    shadowOffset: {
-      width: 0,
-      height: 5,
-    },
-    shadowOpacity: 0.10,
-    shadowRadius: 12,
-
+    shadowColor: Colors.text,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
     // Android
-    elevation: 5,
-
-    overflow: 'hidden',
+    elevation: 6,
   },
 
-  // ───────────────────────────────────────────────────────────────────────────
-  // Left accent
-  // ───────────────────────────────────────────────────────────────────────────
-
-  accent: {
-    position: 'absolute',
-
-    left: 0,
-    top: 0,
-    bottom: 0,
-
-    width: 4,
+  icon: {
+    marginRight: Spacing.sm,
   },
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Icon
-  // ───────────────────────────────────────────────────────────────────────────
-
-  iconWrapper: {
-    width: 38,
-    height: 38,
-
-    borderRadius: 19,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    marginLeft: 2,
-    marginRight: 12,
-  },
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Message
-  // ───────────────────────────────────────────────────────────────────────────
 
   message: {
-    flex: 1,
-
-    fontSize: 15.5,
-    lineHeight: 21,
-
-    fontWeight: '500',
-
-    color: '#172033',
-
-    letterSpacing: -0.15,
-
-    paddingVertical: 10,
-  },
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Close button
-  // ───────────────────────────────────────────────────────────────────────────
-
-  closeButton: {
-    width: 34,
-    height: 34,
-
-    alignItems: 'center',
-    justifyContent: 'center',
-
-    marginLeft: 5,
-  },
-
-  // ───────────────────────────────────────────────────────────────────────────
-  // Progress
-  // ───────────────────────────────────────────────────────────────────────────
-
-  progress: {
-    position: 'absolute',
-
-    left: 0,
-    bottom: 0,
-
-    height: 2,
+    fontSize: Typography.sm,
+    fontWeight: Typography.medium,
+    color: Colors.text,
+    flexShrink: 1,
   },
 });

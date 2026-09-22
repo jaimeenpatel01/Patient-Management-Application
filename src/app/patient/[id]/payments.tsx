@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
-import { useLocalSearchParams, Stack } from 'expo-router';
+import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { getPaymentsByPatientId } from '@/services/paymentService';
+import { getPaymentsByPatientId } from '@/services/offline/paymentService.offline';
 import type { Payment } from '@/types';
 
 export default function PatientPaymentsScreen() {
@@ -19,9 +19,12 @@ export default function PatientPaymentsScreen() {
     setPayments(data);
   }, [patientId]);
 
-  React.useEffect(() => {
-    loadPayments().finally(() => setIsLoading(false));
-  }, [loadPayments]);
+  useFocusEffect(
+    useCallback(() => {
+      setIsLoading(true);
+      loadPayments().finally(() => setIsLoading(false));
+    }, [loadPayments])
+  );
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -92,7 +95,7 @@ export default function PatientPaymentsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: Spacing.base, paddingBottom: 100 },
+  listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'] },
   paymentCard: {
     backgroundColor: Colors.surface, borderRadius: BorderRadius.md, padding: Spacing.base,
     borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.md, ...Shadows.sm

@@ -13,6 +13,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { NetworkProvider } from '@/contexts/NetworkContext';
 import { CustomAlert } from '@/components/ui/CustomAlert';
 import { Toast } from '@/components/ui/Toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -73,6 +74,12 @@ function RootNavigator() {
   );
 }
 
+// ─── NetworkProvider bridge (reads userId from AuthContext) ───────────────────
+function NetworkProviderWithAuth({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  return <NetworkProvider userId={user?.id}>{children}</NetworkProvider>;
+}
+
 // ─── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
@@ -91,7 +98,9 @@ export default function RootLayout() {
         <AlertProvider>
           <ToastProvider>
             <AuthProvider>
-              <RootNavigator />
+              <NetworkProviderWithAuth>
+                <RootNavigator />
+              </NetworkProviderWithAuth>
             </AuthProvider>
             <Toast />
           </ToastProvider>

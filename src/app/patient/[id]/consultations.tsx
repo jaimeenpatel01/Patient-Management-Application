@@ -5,7 +5,7 @@ import {
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlert } from '@/contexts/AlertContext';
-import { getConsultations, deleteConsultation } from '@/services/medicalService';
+import { getConsultations, deleteConsultation } from '@/services/offline/medicalService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
@@ -151,7 +151,7 @@ export default function PatientConsultationsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: Spacing.base, paddingBottom: 100 },
+  listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'] },
   card: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface,
     padding: Spacing.base, borderRadius: BorderRadius.lg, marginBottom: Spacing.sm, ...Shadows.sm,

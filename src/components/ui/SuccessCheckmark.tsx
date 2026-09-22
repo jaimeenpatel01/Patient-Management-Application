@@ -35,12 +35,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#DCFCE7', // matching success light tint
+    backgroundColor: Colors.successSurface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.lg,
     borderWidth: 4,
-    borderColor: '#BBF7D0',
+    borderColor: Colors.successBorder,
     ...Shadows.sm,
   },
   icon: {

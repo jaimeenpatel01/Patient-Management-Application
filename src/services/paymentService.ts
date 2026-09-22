@@ -135,10 +135,14 @@ export async function createPayment(input: CreatePaymentInput): Promise<{ data: 
 // ─── Update payment status ──────────────────────────────────────
 
 export async function updatePaymentStatus(id: string, status: PaymentStatus): Promise<{ data: Payment | null; error: string | null }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: 'Not authenticated' };
+
   const { data, error } = await supabase
     .from('payments')
     .update({ status })
     .eq('id', id)
+    .eq('doctor_id', user.id)
     .select()
     .single();
 
@@ -147,11 +151,27 @@ export async function updatePaymentStatus(id: string, status: PaymentStatus): Pr
 }
 
 export async function updatePayment(id: string, input: Partial<Omit<Payment, 'id' | 'doctor_id' | 'created_at' | 'updated_at'>>): Promise<{ data: Payment | null; error: string | null }> {
-  const { data, error } = await supabase.from('payments').update(input).eq('id', id).select().single();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { data: null, error: 'Not authenticated' };
+
+  const { data, error } = await supabase
+    .from('payments')
+    .update(input)
+    .eq('id', id)
+    .eq('doctor_id', user.id)
+    .select()
+    .single();
   return { data: (data as Payment) || null, error: error?.message || null };
 }
 
 export async function deletePayment(id: string): Promise<{ error: string | null }> {
-  const { error } = await supabase.from('payments').delete().eq('id', id);
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Not authenticated' };
+
+  const { error } = await supabase
+    .from('payments')
+    .delete()
+    .eq('id', id)
+    .eq('doctor_id', user.id);
   return { error: error?.message || null };
 }

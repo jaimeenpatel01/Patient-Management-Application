@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Modal, TouchableWithoutFeedback, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, Stack, useRouter , useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/medicalService';
+import { getConsultations, getDiagnoses, getTreatments, getExercisePlans, createDiagnosis, createTreatment, createExercisePlan } from '@/services/offline/medicalService.offline';
 import { supabase } from '@/lib/supabase';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import type { Consultation, Diagnosis, Treatment, ExercisePlan } from '@/types';
@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   itemHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: Spacing.xs },
   itemTitle: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text },
   itemDesc: { fontSize: Typography.sm, color: Colors.textSecondary, lineHeight: 20 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.4)', justifyContent: 'flex-end' },
+  modalOverlay: { flex: 1, backgroundColor: Colors.overlayLight, justifyContent: 'flex-end' },
   modalContent: { backgroundColor: Colors.surface, width: '100%', borderTopLeftRadius: BorderRadius['2xl'], borderTopRightRadius: BorderRadius['2xl'], paddingHorizontal: Spacing.xl, paddingTop: Spacing.md, paddingBottom: Platform.OS === 'ios' ? Spacing['4xl'] : Spacing.xl, ...Shadows.xl },
   dragHandleContainer: { alignItems: 'center', marginBottom: Spacing.lg },
   dragHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: Colors.disabled },

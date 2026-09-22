@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   chipActive: {
     backgroundColor: Colors.primaryFaded,
     borderColor: Colors.primary,
-    shadowColor: 'rgba(13, 148, 136, 0.15)',
+    shadowColor: Colors.primaryFaded,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 1,
     shadowRadius: 6,
