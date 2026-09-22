@@ -9,6 +9,8 @@ npx expo start          # Start dev server (scan QR for mobile, press w for web)
 npm run android         # Run on Android emulator
 npm run ios             # Run on iOS simulator
 npm run lint            # ESLint
+npm test                # Run unit tests (Jest)
+npm run test:coverage   # Run tests with coverage report
 eas build --platform android --profile preview   # Preview APK build
 eas build --platform android --profile production # Production build
 ```

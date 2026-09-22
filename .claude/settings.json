@@ -1,0 +1,45 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx expo export:*)",
+      "Bash(eas build:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); [[ \"$f\" =~ /src/.*\\.(ts|tsx)$ ]] || exit 0; cd /Users/personal/Ketu/application && OUT=$(npx eslint \"$f\" --max-warnings 0 2>&1); [ -z \"$OUT\" ] && exit 0; jq -n --arg c \"ESLint issues in $(basename \"$f\"):\\n$OUT\" '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":$c}}'",
+            "statusMessage": "Linting...",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); [[ \"$f\" =~ /src/(services|lib)/[^/]+\\.ts$ ]] || exit 0; b=$(basename \"$f\" .ts); d=$(dirname \"$f\"); t=\"$d/__tests__/$b.test.ts\"; [ -f \"$t\" ] || exit 0; cd /Users/personal/Ketu/application && OUT=$(npx jest \"$t\" --no-coverage --passWithNoTests 2>&1 | tail -8); jq -n --arg c \"Jest ($b):\\n$OUT\" '{\"hookSpecificOutput\":{\"hookEventName\":\"PostToolUse\",\"additionalContext\":$c}}'",
+            "statusMessage": "Running tests...",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /Users/personal/Ketu/application && STAT=$(git status --short 2>/dev/null); [ -z \"$STAT\" ] && exit 0; jq -n --arg m \"Uncommitted changes:\\n$STAT\" '{\"systemMessage\":$m}'"
+          }
+        ]
+      }
+    ]
+  }
+}
