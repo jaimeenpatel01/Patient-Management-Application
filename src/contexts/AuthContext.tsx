@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Get the initial session (offline-safe: Supabase reads from AsyncStorage)
     withTimeout(
       supabase.auth.getSession(),
-      5000,
+      10000,
       { data: { session: null }, error: null } as any,
     ).then(async ({ data: { session: initialSession } }) => {
       setSession(initialSession);
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (initialSession?.user) {
         setUserId(initialSession.user.id);
         // fetchProfile requires network — time-box it so offline start never hangs
-        await withTimeout(fetchProfile(initialSession.user.id), 5000, undefined);
+        await withTimeout(fetchProfile(initialSession.user.id), 10000, undefined);
       }
       setIsLoading(false);
     });
