@@ -95,7 +95,7 @@ export default function PatientPaymentsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: Spacing.base, paddingBottom: 100 },
+  listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'] },
   paymentCard: {
     backgroundColor: Colors.surface, borderRadius: BorderRadius.md, padding: Spacing.base,
     borderWidth: 1, borderColor: Colors.border, marginBottom: Spacing.md, ...Shadows.sm

@@ -257,7 +257,7 @@ export default function AttendanceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  listContent: { padding: Spacing.base, paddingBottom: 100, paddingTop: Spacing.md },
+  listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'], paddingTop: Spacing.md },
   
   activeFilterContainer: {
     marginBottom: Spacing.sm,
@@ -339,8 +339,8 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.lg,
     backgroundColor: Colors.primary, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.lg, paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.full, ...Shadows.xl,
+    paddingHorizontal: Spacing.lg, height: 56,
+    borderRadius: 28, ...Shadows.xl,
   },
   fabText: { color: Colors.textInverse, fontWeight: Typography.bold, marginLeft: Spacing.xs, fontSize: Typography.base },
 });

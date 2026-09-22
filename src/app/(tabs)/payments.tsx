@@ -461,7 +461,7 @@ const styles = StyleSheet.create({
   
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.xl,
-    width: 60, height: 60, borderRadius: 30, backgroundColor: Colors.primary,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
     justifyContent: 'center', alignItems: 'center', ...Shadows.xl,
   },
 });

@@ -14,6 +14,7 @@ import * as Clipboard from 'expo-clipboard';
 import { getPatientById, deletePatient } from '@/services/patientService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Button } from '@/components/ui/Button';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
 import { useAlert } from '@/contexts/AlertContext';
@@ -167,8 +168,8 @@ export default function PatientDetailScreen() {
             <Text style={styles.avatarLargeText}>{getInitials(patient.full_name)}</Text>
           </View>
           <Text style={styles.patientName}>{patient.full_name}</Text>
-          <View style={[styles.statusBadge, { backgroundColor: patient.is_active ? Colors.success : Colors.error }]}>
-            <Text style={styles.statusBadgeText}>{patient.is_active ? 'Active' : 'Inactive'}</Text>
+          <View style={styles.statusBadge}>
+            <StatusBadge status={patient.is_active ? 'active' : 'inactive'} />
           </View>
           {ageDisplay && (
             <Text style={styles.patientAge}>
@@ -358,15 +359,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   statusBadge: {
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
     marginTop: Spacing.sm,
-  },
-  statusBadgeText: {
-    color: Colors.textInverse,
-    fontSize: Typography.xs,
-    fontWeight: Typography.bold,
   },
   section: {
     marginTop: Spacing.lg,
