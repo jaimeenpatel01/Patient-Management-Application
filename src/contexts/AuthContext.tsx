@@ -4,7 +4,7 @@ import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
 import { getReadableError } from '@/lib/errorMessages';
 import type { AuthContextType, Profile } from '@/types';
-import { clearAll as clearOfflineCache } from '@/lib/offlineCache';
+import { clearAll as clearOfflineCache, getRecord, setRecord } from '@/lib/offlineCache';
 import { clear as clearSyncQueue } from '@/lib/syncQueue';
 import { setUserId } from '@/lib/networkState';
 
@@ -21,8 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
     if (!error && data) {
       setProfile(data);
+      // Cache profile for offline startup
+      await setRecord('profiles', data);
     } else {
-      setProfile(null);
+      // Fallback to cached profile when offline / network error
+      const cached = await getRecord<Profile>('profiles', userId);
+      setProfile(cached);
     }
   }, []);
 
