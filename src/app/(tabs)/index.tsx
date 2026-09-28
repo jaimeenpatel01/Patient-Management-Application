@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { getDashboardStats, DashboardStats } from '@/services/offline/dashboardService.offline';
@@ -47,6 +48,7 @@ const StatCard = React.memo(function StatCard({ title, value, icon, color, backg
 });
 
 export default function DashboardScreen() {
+  const { t } = useTranslation();
   const { user, profile } = useAuth();
   const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -75,9 +77,9 @@ export default function DashboardScreen() {
   
   // Simple greeting based on time
   const hour = new Date().getHours();
-  let greeting = 'Good Evening';
-  if (hour < 12) greeting = 'Good Morning';
-  else if (hour < 17) greeting = 'Good Afternoon';
+  let greeting = t('dashboard.goodEvening');
+  if (hour < 12) greeting = t('dashboard.goodMorning');
+  else if (hour < 17) greeting = t('dashboard.goodAfternoon');
 
   if (loading) {
     return (
@@ -111,25 +113,25 @@ export default function DashboardScreen() {
 
       {/* Quick Actions */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { marginBottom: Spacing.md }]}>Quick Actions</Text>
+        <Text style={[styles.sectionTitle, { marginBottom: Spacing.md }]}>{t('dashboard.quickActions')}</Text>
         <View style={styles.quickActionsRow}>
           <QuickAction
             icon="person-add"
-            label="Add Patient"
+            label={t('dashboard.addPatient')}
             color={Colors.primary}
             backgroundColor={Colors.primaryFaded}
             onPress={() => router.push('/patient/add')}
           />
           <QuickAction
             icon="checkmark-circle"
-            label="Mark Attendance"
+            label={t('dashboard.markAttendance')}
             color={Colors.info}
             backgroundColor={Colors.infoLight}
             onPress={() => router.push('/attendance/add' as any)}
           />
           <QuickAction
             icon="wallet"
-            label="Record Payment"
+            label={t('dashboard.recordPayment')}
             color={Colors.success}
             backgroundColor={Colors.successLight}
             onPress={() => router.push('/payment/add')}
@@ -140,18 +142,18 @@ export default function DashboardScreen() {
       {/* Overview */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Patients Overview</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.patientsOverview')}</Text>
         </View>
         <View style={styles.statsGrid}>
           <StatCard
-            title="Active Patients"
+            title={t('dashboard.activePatients')}
             value={stats?.['daily'].overview.activePatients.toString() ?? '0'}
             icon="pulse"
             color={Colors.info}
             backgroundColor={Colors.infoLight}
           />
           <StatCard
-            title="Patients Treated"
+            title={t('dashboard.patientsTreated')}
             value={stats?.['daily'].overview.totalPatients.toString() ?? '0'}
             icon="people"
             color={Colors.primary}
@@ -163,18 +165,18 @@ export default function DashboardScreen() {
       {/* Payment Summary */}
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Payment Summary</Text>
+          <Text style={styles.sectionTitle}>{t('dashboard.paymentSummary')}</Text>
         </View>
         <View style={[styles.monthlyCard, Shadows.md]}>
           <View style={styles.monthlyAccent} />
           <View style={styles.monthlyContent}>
             <View style={styles.monthlyRow}>
-              <Text style={styles.monthlyLabel}>Total Earnings</Text>
+              <Text style={styles.monthlyLabel}>{t('dashboard.totalEarnings')}</Text>
               <Text style={[styles.monthlyValue, { color: Colors.success }]}>₹{stats?.['monthly'].payment.revenue ?? 0}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.monthlyRow}>
-              <Text style={styles.monthlyLabel}>Total Due</Text>
+              <Text style={styles.monthlyLabel}>{t('dashboard.totalDue')}</Text>
               <Text style={[styles.monthlyValue, { color: Colors.warning }]}>₹{stats?.['monthly'].payment.outstanding ?? 0}</Text>
             </View>
           </View>

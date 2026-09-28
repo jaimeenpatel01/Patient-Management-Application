@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getPatients } from '@/services/offline/patientService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -17,11 +18,8 @@ import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
 
-function formatPhone(phone: string | null): string {
-  return phone || 'No phone';
-}
-
 export default function PatientsScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -73,13 +71,13 @@ export default function PatientsScreen() {
           <Text style={[styles.patientName, item.is_active === false && { color: Colors.textSecondary }]} numberOfLines={1}>{item.full_name}</Text>
           <View style={styles.patientMeta}>
             <Ionicons name="call-outline" size={14} color={Colors.textTertiary} />
-            <Text style={styles.patientMetaText}>{formatPhone(item.phone)}</Text>
+            <Text style={styles.patientMetaText}>{item.phone || t('patients.noPhone')}</Text>
           </View>
         </View>
         <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
       </View>
     </TouchableOpacity>
-  ), [router]);
+  ), [router, t]);
 
   if (isLoading && patients.length === 0) {
     return (
@@ -97,7 +95,7 @@ export default function PatientsScreen() {
           patients={patients} // pass all patients so user can search globally if needed
           loading={isLoading}
           value={null}
-          placeholder="Search for a patient"
+          placeholder={t('patients.searchPlaceholder')}
           onSelect={(patient) => router.push(`/patient/${patient.id}` as any)}
           style={{ 
             backgroundColor: Colors.surface, 
@@ -113,14 +111,14 @@ export default function PatientsScreen() {
             onPress={() => setFilterStatus('active')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.filterTabText, filterStatus === 'active' && styles.filterTabTextActive]}>Active</Text>
+            <Text style={[styles.filterTabText, filterStatus === 'active' && styles.filterTabTextActive]}>{t('patients.active')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.filterTab, filterStatus === 'inactive' && styles.filterTabActive]}
             onPress={() => setFilterStatus('inactive')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.filterTabText, filterStatus === 'inactive' && styles.filterTabTextActive]}>Inactive</Text>
+            <Text style={[styles.filterTabText, filterStatus === 'inactive' && styles.filterTabTextActive]}>{t('patients.inactive')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -136,7 +134,8 @@ export default function PatientsScreen() {
       {filteredPatients.length > 0 && (
         <View style={styles.countContainer}>
           <Text style={styles.countText}>
-            {filteredPatients.length} {filterStatus} patient{filteredPatients.length !== 1 ? 's' : ''}
+            {filteredPatients.length} {filterStatus === 'active' ? t('patients.active') : t('patients.inactive')}{' '}
+            {filteredPatients.length !== 1 ? t('patients.patientCountSuffixPlural') : t('patients.patientCountSuffix')}
           </Text>
         </View>
       )}
@@ -145,11 +144,11 @@ export default function PatientsScreen() {
       {filteredPatients.length === 0 && !isLoading ? (
         <EmptyState
           icon={filterStatus === 'active' ? "people-outline" : "archive-outline"}
-          title={filterStatus === 'active' ? "No Active Patients" : "No Inactive Patients"}
-          subtitle={filterStatus === 'active' 
-            ? "Add your first patient to get started with managing their records."
-            : "You don't have any inactive or deleted patients."}
-          actionLabel={filterStatus === 'active' ? "Add Patient" : undefined}
+          title={filterStatus === 'active' ? t('patients.noActiveTitle') : t('patients.noInactiveTitle')}
+          subtitle={filterStatus === 'active'
+            ? t('patients.noActiveSubtitle')
+            : t('patients.noInactiveSubtitle')}
+          actionLabel={filterStatus === 'active' ? t('patients.addPatient') : undefined}
           onAction={filterStatus === 'active' ? () => router.push('/patient/add' as any) : undefined}
         />
       ) : (

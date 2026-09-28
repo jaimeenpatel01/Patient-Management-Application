@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "dashboard": "डैशबोर्ड",
+    "patients": "मरीज़",
+    "attendance": "उपस्थिति",
+    "payments": "भुगतान",
+    "profile": "प्रोफ़ाइल"
+  },
+  "login": {
+    "appName": "PhysioDesk",
+    "appTagline": "अपने क्लिनिक को कुशलता से प्रबंधित करें",
+    "signIn": "साइन इन करें",
+    "emailLabel": "ईमेल",
+    "emailPlaceholder": "doctor@clinic.com",
+    "passwordLabel": "पासवर्ड",
+    "passwordPlaceholder": "अपना पासवर्ड दर्ज करें",
+    "forgotPassword": "पासवर्ड भूल गए?",
+    "emailAndPassword": "ईमेल और पासवर्ड",
+    "orContinueWith": "या इसके साथ जारी रखें",
+    "signingIn": "साइन इन हो रहा है...",
+    "signInWithGoogle": "Google से साइन इन करें",
+    "noAccount": "खाता नहीं है? ",
+    "signUp": "साइन अप करें",
+    "errorEmailRequired": "कृपया अपना ईमेल पता दर्ज करें।",
+    "errorEmailInvalid": "कृपया एक मान्य ईमेल पता दर्ज करें।",
+    "errorPasswordRequired": "कृपया अपना पासवर्ड दर्ज करें।",
+    "errorPasswordLength": "पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।"
+  },
+  "dashboard": {
+    "goodMorning": "सुप्रभात",
+    "goodAfternoon": "शुभ दोपहर",
+    "goodEvening": "शुभ संध्या",
+    "quickActions": "त्वरित कार्य",
+    "addPatient": "मरीज़ जोड़ें",
+    "markAttendance": "उपस्थिति दर्ज करें",
+    "recordPayment": "भुगतान दर्ज करें",
+    "patientsOverview": "मरीज़ों का विवरण",
+    "activePatients": "सक्रिय मरीज़",
+    "patientsTreated": "उपचारित मरीज़",
+    "paymentSummary": "भुगतान सारांश",
+    "totalEarnings": "कुल कमाई",
+    "totalDue": "कुल बकाया"
+  },
+  "patients": {
+    "searchPlaceholder": "मरीज़ खोजें",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "noActiveTitle": "कोई सक्रिय मरीज़ नहीं",
+    "noActiveSubtitle": "उनके रिकॉर्ड प्रबंधित करना शुरू करने के लिए अपना पहला मरीज़ जोड़ें।",
+    "noInactiveTitle": "कोई निष्क्रिय मरीज़ नहीं",
+    "noInactiveSubtitle": "आपके पास कोई निष्क्रिय या हटाया गया मरीज़ नहीं है।",
+    "addPatient": "मरीज़ जोड़ें",
+    "noPhone": "कोई फ़ोन नंबर नहीं",
+    "patientCountSuffix": "मरीज़",
+    "patientCountSuffixPlural": "मरीज़"
+  },
+  "language": {
+    "title": "भाषा",
+    "subtitle": "अपनी पसंदीदा भाषा चुनें",
+    "english": "English",
+    "hindi": "हिन्दी"
+  }
+}

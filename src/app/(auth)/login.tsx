@@ -10,6 +10,7 @@ import {
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/contexts/ToastContext';
 import { Button } from '@/components/ui/Button';
@@ -29,6 +30,7 @@ function CrossMark({ style }: { style?: object }) {
 }
 
 export default function LoginScreen() {
+  const { t } = useTranslation();
   const { signIn, signInWithGoogle } = useAuth();
   const { showToast } = useToast();
 
@@ -41,23 +43,23 @@ export default function LoginScreen() {
 
   const validateForm = (): boolean => {
     if (!email.trim()) {
-      setError('Please enter your email address.');
+      setError(t('login.errorEmailRequired'));
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email.trim())) {
-      setError('Please enter a valid email address.');
+      setError(t('login.errorEmailInvalid'));
       return false;
     }
 
     if (!password) {
-      setError('Please enter your password.');
+      setError(t('login.errorPasswordRequired'));
       return false;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+      setError(t('login.errorPasswordLength'));
       return false;
     }
 
@@ -113,13 +115,13 @@ export default function LoginScreen() {
             source={require('@/assets/images/icon.png')}
             style={styles.appIcon}
           />
-          <Text style={styles.appName}>PhysioDesk</Text>
-          <Text style={styles.appTagline}>Manage your clinic efficiently</Text>
+          <Text style={styles.appName}>{t('login.appName')}</Text>
+          <Text style={styles.appTagline}>{t('login.appTagline')}</Text>
         </View>
 
         {/* Login Form */}
         <View style={styles.formCard}>
-          <Text style={styles.formTitle}>Sign In</Text>
+          <Text style={styles.formTitle}>{t('login.signIn')}</Text>
 
           {error ? (
             <View style={styles.errorContainer}>
@@ -131,8 +133,8 @@ export default function LoginScreen() {
           {showEmailForm ? (
             <>
               <Input
-                label="Email"
-                placeholder="doctor@clinic.com"
+                label={t('login.emailLabel')}
+                placeholder={t('login.emailPlaceholder')}
                 leftIcon="mail-outline"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -144,8 +146,8 @@ export default function LoginScreen() {
               />
 
               <Input
-                label="Password"
-                placeholder="Enter your password"
+                label={t('login.passwordLabel')}
+                placeholder={t('login.passwordPlaceholder')}
                 leftIcon="lock-closed-outline"
                 secureTextEntry
                 autoComplete="password"
@@ -159,7 +161,7 @@ export default function LoginScreen() {
               />
 
               <Button
-                title="Sign In"
+                title={t('login.signIn')}
                 onPress={handleLogin}
                 loading={isLoading}
                 size="lg"
@@ -169,7 +171,7 @@ export default function LoginScreen() {
                 style={styles.forgotButton}
                 onPress={() => router.push('/(auth)/forgot-password')}
               >
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>{t('login.forgotPassword')}</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -179,14 +181,14 @@ export default function LoginScreen() {
               activeOpacity={0.7}
             >
               <Ionicons name="mail" size={24} color={Colors.text} />
-              <Text style={styles.emailOptionText}>Email and Password</Text>
+              <Text style={styles.emailOptionText}>{t('login.emailAndPassword')}</Text>
             </TouchableOpacity>
           )}
 
           {/* Divider */}
           <View style={styles.dividerContainer}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
+            <Text style={styles.dividerText}>{t('login.orContinueWith')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -198,7 +200,7 @@ export default function LoginScreen() {
             activeOpacity={0.7}
           >
             {isGoogleLoading ? (
-              <Text style={styles.googleButtonText}>Signing in...</Text>
+              <Text style={styles.googleButtonText}>{t('login.signingIn')}</Text>
             ) : (
               <>
                 <Image
@@ -206,15 +208,15 @@ export default function LoginScreen() {
                   style={styles.googleIconImage}
                   resizeMode="contain"
                 />
-                <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                <Text style={styles.googleButtonText}>{t('login.signInWithGoogle')}</Text>
               </>
             )}
           </TouchableOpacity>
 
           <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don&apos;t have an account? </Text>
+            <Text style={styles.signupText}>{t('login.noAccount')}</Text>
             <TouchableOpacity onPress={() => router.push('/(auth)/register' as any)}>
-              <Text style={styles.signupLink}>Sign Up</Text>
+              <Text style={styles.signupLink}>{t('login.signUp')}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1,0 +1,63 @@
+{
+  "tabs": {
+    "dashboard": "Dashboard",
+    "patients": "Patients",
+    "attendance": "Attendance",
+    "payments": "Payments",
+    "profile": "Profile"
+  },
+  "login": {
+    "appName": "PhysioDesk",
+    "appTagline": "Manage your clinic efficiently",
+    "signIn": "Sign In",
+    "emailLabel": "Email",
+    "emailPlaceholder": "doctor@clinic.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot Password?",
+    "emailAndPassword": "Email and Password",
+    "orContinueWith": "or continue with",
+    "signingIn": "Signing in...",
+    "signInWithGoogle": "Sign in with Google",
+    "noAccount": "Don't have an account? ",
+    "signUp": "Sign Up",
+    "errorEmailRequired": "Please enter your email address.",
+    "errorEmailInvalid": "Please enter a valid email address.",
+    "errorPasswordRequired": "Please enter your password.",
+    "errorPasswordLength": "Password must be at least 6 characters."
+  },
+  "dashboard": {
+    "goodMorning": "Good Morning",
+    "goodAfternoon": "Good Afternoon",
+    "goodEvening": "Good Evening",
+    "quickActions": "Quick Actions",
+    "addPatient": "Add Patient",
+    "markAttendance": "Mark Attendance",
+    "recordPayment": "Record Payment",
+    "patientsOverview": "Patients Overview",
+    "activePatients": "Active Patients",
+    "patientsTreated": "Patients Treated",
+    "paymentSummary": "Payment Summary",
+    "totalEarnings": "Total Earnings",
+    "totalDue": "Total Due"
+  },
+  "patients": {
+    "searchPlaceholder": "Search for a patient",
+    "active": "Active",
+    "inactive": "Inactive",
+    "noActiveTitle": "No Active Patients",
+    "noActiveSubtitle": "Add your first patient to get started with managing their records.",
+    "noInactiveTitle": "No Inactive Patients",
+    "noInactiveSubtitle": "You don't have any inactive or deleted patients.",
+    "addPatient": "Add Patient",
+    "noPhone": "No phone",
+    "patientCountSuffix": "patient",
+    "patientCountSuffixPlural": "patients"
+  },
+  "language": {
+    "title": "Language",
+    "subtitle": "Choose your preferred language",
+    "english": "English",
+    "hindi": "हिन्दी"
+  }
+}

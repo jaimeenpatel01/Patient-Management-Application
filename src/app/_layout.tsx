@@ -1,3 +1,5 @@
+import '@/lib/i18n';
+
 import React, { useRef, useEffect, useState } from 'react';
 import {
   Animated,
