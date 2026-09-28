@@ -219,6 +219,17 @@ export default function LoginScreen() {
               <Text style={styles.signupLink}>{t('login.signUp')}</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={styles.patientSignupButton}
+            onPress={() => router.push('/(auth)/patient-signup' as any)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="key-outline" size={16} color={Colors.textSecondary} />
+            <Text style={styles.patientSignupText}>
+              Have an invite code? Sign up as a patient
+            </Text>
+          </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
     </View>
@@ -414,5 +425,18 @@ const styles = StyleSheet.create({
     fontSize: Typography.sm,
     color: Colors.primary,
     fontWeight: Typography.bold,
+  },
+  patientSignupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  patientSignupText: {
+    fontSize: Typography.xs,
+    color: Colors.textSecondary,
+    fontWeight: Typography.medium,
   },
 });

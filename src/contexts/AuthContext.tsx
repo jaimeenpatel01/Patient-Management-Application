@@ -3,7 +3,7 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
 import { getReadableError } from '@/lib/errorMessages';
-import type { AuthContextType, Profile } from '@/types';
+import type { AuthContextType, Profile, UserRole } from '@/types';
 import { clearAll as clearOfflineCache, getRecord, setRecord } from '@/lib/offlineCache';
 import { clear as clearSyncQueue } from '@/lib/syncQueue';
 import { setUserId } from '@/lib/networkState';
@@ -168,13 +168,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+  const signUp = useCallback(async (email: string, password: string, fullName: string, role: UserRole = 'doctor') => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          role,
         },
       },
     });
