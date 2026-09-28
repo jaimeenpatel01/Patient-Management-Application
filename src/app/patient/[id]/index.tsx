@@ -85,12 +85,6 @@ export default function PatientDetailScreen() {
     }, [id])
   );
 
-  const handleCopyInviteCode = async () => {
-    if (!patient?.invite_code) return;
-    await Clipboard.setStringAsync(patient.invite_code);
-    showAlert('Copied', 'Invite code copied to clipboard.', [{ text: 'OK', style: 'cancel' }]);
-  };
-
   const handleDelete = () => {
     showAlert(
       'Delete Patient',
@@ -193,36 +187,6 @@ export default function PatientDetailScreen() {
           <View style={styles.infoCard}>
             <InfoRow icon="call-outline" label="Phone" value={patient.phone} copyable={true} />
             <InfoRow icon="location-outline" label="Address" value={patient.address} copyable={true} />
-          </View>
-        </View>
-
-        {/* Patient portal access */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Patient Portal</Text>
-          <View style={styles.infoCard}>
-            {patient.user_id ? (
-              <View style={styles.portalActiveRow}>
-                <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
-                <Text style={styles.portalActiveText}>Portal access: active</Text>
-              </View>
-            ) : (
-              <>
-                <Text style={styles.portalHint}>
-                  Share this code with the patient so they can access their portal
-                </Text>
-                <View style={styles.inviteCodeRow}>
-                  <Text style={styles.inviteCodeText}>{patient.invite_code}</Text>
-                  <Button
-                    title="Copy"
-                    onPress={handleCopyInviteCode}
-                    variant="outline"
-                    size="sm"
-                    fullWidth={false}
-                    icon={<Ionicons name="copy-outline" size={16} color={Colors.primary} style={{ marginRight: Spacing.xs }} />}
-                  />
-                </View>
-              </>
-            )}
           </View>
         </View>
 
@@ -441,36 +405,6 @@ const styles = StyleSheet.create({
     fontSize: Typography.base,
     color: Colors.text,
     marginTop: 2,
-  },
-  portalActiveRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  portalActiveText: {
-    fontSize: Typography.base,
-    fontWeight: Typography.medium,
-    color: Colors.success,
-  },
-  portalHint: {
-    fontSize: Typography.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.md,
-  },
-  inviteCodeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.md,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.base,
-  },
-  inviteCodeText: {
-    fontSize: Typography.lg,
-    fontWeight: Typography.bold,
-    color: Colors.text,
-    letterSpacing: 2,
   },
   notesCard: {
     backgroundColor: Colors.surface,

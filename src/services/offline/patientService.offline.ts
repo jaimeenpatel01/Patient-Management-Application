@@ -149,8 +149,6 @@ export async function createPatient(
     id: tempId,
     doctor_id: userId,
     is_active: true,
-    user_id: null,
-    invite_code: null,
     created_at: now,
     updated_at: now,
     ...input,

@@ -61,7 +61,7 @@ export async function getPatientById(id: string): Promise<{ data: Patient | null
 
 // ─── Create a new patient ─────────────────────────────────────
 
-export type CreatePatientInput = Omit<Patient, 'id' | 'doctor_id' | 'is_active' | 'user_id' | 'invite_code' | 'created_at' | 'updated_at'>;
+export type CreatePatientInput = Omit<Patient, 'id' | 'doctor_id' | 'is_active' | 'created_at' | 'updated_at'>;
 
 export async function createPatient(input: CreatePatientInput): Promise<{ data: Patient | null; error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser();

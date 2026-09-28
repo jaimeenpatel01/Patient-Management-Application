@@ -66,8 +66,6 @@ export interface Patient {
   visit_type: VisitType | null;
   notes: string | null;
   is_active: boolean;
-  user_id: string | null;
-  invite_code: string | null;
   created_at: string;
   updated_at: string;
 }

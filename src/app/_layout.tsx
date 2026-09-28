@@ -45,17 +45,10 @@ function RootNavigator() {
     } else if (session) {
       const isGoogleUser = session.user.app_metadata?.provider === 'google';
       const isProfileComplete = profile && profile.phone;
-      const isPatient = profile?.role === 'patient';
 
       if (isGoogleUser && !isProfileComplete) {
         if (segments[1] !== 'complete-profile') {
           router.replace('/(auth)/complete-profile');
-        }
-      } else if (isPatient) {
-        // Patients get their own route group — keep them out of (tabs) and
-        // the doctor-only screens even if they try to deep-link into them.
-        if ((segments[0] as string) !== '(patient)') {
-          router.replace('/(patient)' as any);
         }
       } else if (inAuthGroup && !isResetPasswordFlow) {
         router.replace('/(tabs)');
@@ -73,7 +66,6 @@ function RootNavigator() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(patient)" />
         <Stack.Screen name="patient" />
         <Stack.Screen name="consultation" />
         <Stack.Screen name="attendance" />
