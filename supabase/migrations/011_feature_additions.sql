@@ -1,4 +1,4 @@
--- Feature additions: billing info, recurring sessions, waitlist
+-- Feature additions: clinic billing info, waitlist
 
 -- 1. Clinic billing info on profiles (for GST invoices)
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS clinic_name TEXT;
@@ -6,14 +6,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS clinic_address TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS clinic_phone TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS gst_number TEXT;
 
--- 2. Recurring/multi-session attendance series
-ALTER TABLE public.attendances ADD COLUMN IF NOT EXISTS series_id UUID;
-ALTER TABLE public.attendances ADD COLUMN IF NOT EXISTS series_index INTEGER;
-ALTER TABLE public.attendances ADD COLUMN IF NOT EXISTS series_total INTEGER;
-
-CREATE INDEX IF NOT EXISTS idx_attendances_series_id ON public.attendances(series_id);
-
--- 3. Waitlist
+-- 2. Waitlist
 CREATE TABLE IF NOT EXISTS public.waitlist (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   doctor_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
