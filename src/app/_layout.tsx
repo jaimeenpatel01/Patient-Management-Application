@@ -79,6 +79,7 @@ function RootNavigator() {
         <Stack.Screen name="attendance" />
         <Stack.Screen name="payment" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="waitlist" />
       </Stack>
     </>
   );

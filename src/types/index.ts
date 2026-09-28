@@ -174,3 +174,19 @@ export interface Payment {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Waitlist ──────────────────────────────────────────────────
+
+export type WaitlistStatus = 'waiting' | 'contacted' | 'scheduled' | 'cancelled';
+
+export interface WaitlistEntry {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  requested_date: string | null;
+  notes: string | null;
+  status: WaitlistStatus;
+  patient?: { full_name: string; phone: string | null };
+  created_at: string;
+  updated_at: string;
+}
