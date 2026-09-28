@@ -6,9 +6,14 @@ export default function ProfileLayout() {
   return (
     <Stack screenOptions={STACK_HEADER_OPTIONS}>
       <Stack.Screen name="personal-info" options={{ title: 'Personal Information' }} />
+      <Stack.Screen name="notifications" options={{ title: 'Reminders' }} />
+      <Stack.Screen name="billing-info" options={{ title: 'Billing Information' }} />
       <Stack.Screen name="change-password" options={{ title: 'Change Password' }} />
+      <Stack.Screen name="data-export" options={{ title: 'Export Data' }} />
       <Stack.Screen name="help-support" options={{ title: 'Help & Support' }} />
       <Stack.Screen name="about" options={{ title: 'About PhysioDesk' }} />
+      <Stack.Screen name="language" options={{ title: 'Language' }} />
+      <Stack.Screen name="reports" options={{ title: 'Business Reports' }} />
     </Stack>
   );
 }
