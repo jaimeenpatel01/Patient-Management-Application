@@ -33,6 +33,10 @@ export interface Profile {
   role: UserRole;
   phone: string | null;
   avatar_url: string | null;
+  clinic_name: string | null;
+  clinic_address: string | null;
+  clinic_phone: string | null;
+  gst_number: string | null;
   created_at: string;
   updated_at: string;
 }
