@@ -441,3 +441,22 @@ export async function createExercisePlan(
 
   return { data: strip(optimistic), error: null };
 }
+
+/**
+ * Uploads exercise media to Supabase Storage. This is a network-only
+ * operation (no offline queueing) since the upload itself requires
+ * connectivity — mirrors how the rest of this file falls back to
+ * `getIsOnline()` before attempting any Supabase call.
+ */
+export async function uploadExerciseMedia(
+  input: { patient_id: string; file_name: string; file_type: string; base64Data: string },
+): Promise<{ url: string | null; error: string | null }> {
+  if (!getIsOnline()) {
+    return { url: null, error: 'You appear to be offline. Connect to the internet to attach media.' };
+  }
+  try {
+    return await medicalService.uploadExerciseMedia(input);
+  } catch (err: any) {
+    return { url: null, error: err.message || 'Unknown error occurred during media upload' };
+  }
+}
