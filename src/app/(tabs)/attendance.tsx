@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicato
 import { useRouter, useFocusEffect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import { useAlert } from '@/contexts/AlertContext';
 import { getAttendances, deleteAttendance } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
@@ -12,6 +14,65 @@ import { formatTime12Hour, groupItemsByDate } from '@/lib/formatters';
 import type { Attendance } from '@/types';
 
 const PAGE_SIZE = 20;
+
+// Default length of a physiotherapy session used to compute DTEND when
+// generating a calendar event for an attendance record.
+const SESSION_DURATION_MINUTES = 30;
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+/** Format a Date as a floating-local-time iCalendar DATE-TIME value (no "Z" suffix). */
+function formatIcsDateTime(date: Date): string {
+  return `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}T${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
+}
+
+/** Escape text per RFC 5545 §3.3.11 for use in an iCalendar content line. */
+function escapeIcsText(text: string): string {
+  return text.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+}
+
+/** Build a minimal valid .ics file for a single attendance and share it. */
+async function shareAttendanceAsCalendarEvent(attendance: Attendance): Promise<void> {
+  const [year, month, day] = attendance.attendance_date.split('-').map(Number);
+  const [hour, minute] = attendance.attendance_time.split(':').map(Number);
+  const start = new Date(year, (month || 1) - 1, day, hour || 0, minute || 0, 0);
+  const end = new Date(start.getTime() + SESSION_DURATION_MINUTES * 60 * 1000);
+
+  const patientName = attendance.patient?.full_name || 'Patient';
+  const summary = `Physiotherapy session with ${patientName}`;
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//PhysioDesk//Attendance//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:attendance-${attendance.id}@physiodesk`,
+    `DTSTAMP:${formatIcsDateTime(new Date())}`,
+    `DTSTART:${formatIcsDateTime(start)}`,
+    `DTEND:${formatIcsDateTime(end)}`,
+    `SUMMARY:${escapeIcsText(summary)}`,
+  ];
+  if (attendance.notes) {
+    lines.push(`DESCRIPTION:${escapeIcsText(attendance.notes)}`);
+  }
+  lines.push('END:VEVENT', 'END:VCALENDAR');
+
+  const ics = lines.join('\r\n');
+  const path = `${FileSystem.cacheDirectory}attendance-${attendance.id}.ics`;
+  await FileSystem.writeAsStringAsync(path, ics, { encoding: FileSystem.EncodingType.UTF8 });
+
+  if (await Sharing.isAvailableAsync()) {
+    await Sharing.shareAsync(path, {
+      mimeType: 'text/calendar',
+      UTI: 'com.apple.ical.ics',
+      dialogTitle: 'Add to Calendar',
+    });
+  }
+}
 
 export default function AttendanceScreen() {
   const router = useRouter();
@@ -96,6 +157,16 @@ export default function AttendanceScreen() {
         },
       },
     ]);
+  };
+
+  const handleAddToCalendar = async (id: string) => {
+    const attendance = attendances.find((a) => a.id === id);
+    if (!attendance) return;
+    try {
+      await shareAttendanceAsCalendarEvent(attendance);
+    } catch (err: any) {
+      showAlert('Error', err?.message || 'Could not create calendar event.');
+    }
   };
 
   const sections = useMemo(
@@ -231,6 +302,16 @@ export default function AttendanceScreen() {
               const id = activeActionId;
               setActiveActionId(null);
               if (id) router.push(`/attendance/add?id=${id}` as any);
+            },
+          },
+          {
+            label: 'Add to Calendar',
+            icon: 'calendar-outline',
+            color: Colors.info,
+            onPress: () => {
+              const id = activeActionId;
+              setActiveActionId(null);
+              if (id) handleAddToCalendar(id);
             },
           },
           {
