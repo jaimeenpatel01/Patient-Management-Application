@@ -86,11 +86,6 @@ export default function ProfileScreen() {
         ]
       : []),
     {
-      icon: 'notifications-outline',
-      label: 'Reminders',
-      onPress: () => router.push('/profile/notifications' as any),
-    },
-    {
       icon: 'language-outline',
       label: 'Language',
       onPress: () => router.push('/profile/language' as any),

@@ -13,16 +13,11 @@ import { SuccessModal } from '@/components/ui/SuccessModal';
 import type { Patient } from '@/types';
 import { getPatients } from '@/services/offline/patientService.offline';
 import { useAlert } from '@/contexts/AlertContext';
-import { useToast } from '@/contexts/ToastContext';
-import { scheduleAttendanceReminder } from '@/lib/reminders';
-
-const REMINDER_HOURS_BEFORE = 2;
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { showAlert } = useAlert();
-  const { showToast } = useToast();
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
@@ -100,12 +95,6 @@ export default function MarkAttendanceScreen() {
         notes: notes.trim() || null,
       });
       error = res.error;
-
-      if (!error && res.data) {
-        scheduleAttendanceReminder(res.data, REMINDER_HOURS_BEFORE).then((notificationId) => {
-          if (notificationId) showToast('Reminder set', 'success');
-        });
-      }
     }
 
     setIsSubmitting(false);

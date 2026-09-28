@@ -6,7 +6,6 @@ export default function ProfileLayout() {
   return (
     <Stack screenOptions={STACK_HEADER_OPTIONS}>
       <Stack.Screen name="personal-info" options={{ title: 'Personal Information' }} />
-      <Stack.Screen name="notifications" options={{ title: 'Reminders' }} />
       <Stack.Screen name="billing-info" options={{ title: 'Billing Information' }} />
       <Stack.Screen name="change-password" options={{ title: 'Change Password' }} />
       <Stack.Screen name="data-export" options={{ title: 'Export Data' }} />
