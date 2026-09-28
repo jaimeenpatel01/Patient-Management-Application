@@ -13,11 +13,16 @@ import { SuccessModal } from '@/components/ui/SuccessModal';
 import type { Patient } from '@/types';
 import { getPatients } from '@/services/offline/patientService.offline';
 import { useAlert } from '@/contexts/AlertContext';
+import { useToast } from '@/contexts/ToastContext';
+import { scheduleAttendanceReminder } from '@/lib/reminders';
+
+const REMINDER_HOURS_BEFORE = 2;
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { showAlert } = useAlert();
+  const { showToast } = useToast();
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
@@ -68,6 +73,7 @@ export default function MarkAttendanceScreen() {
     if (!selectedPatientId) e.patient = 'Select a patient';
     if (!attendanceDate) e.date = 'Date is required';
     if (!attendanceTime) e.time = 'Time is required';
+
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -76,7 +82,8 @@ export default function MarkAttendanceScreen() {
     if (!validate() || !selectedPatientId) return;
 
     setIsSubmitting(true);
-    let error;
+    let error: string | null = null;
+
     if (id) {
       const res = await updateAttendance(id, {
         patient_id: selectedPatientId,
@@ -93,6 +100,12 @@ export default function MarkAttendanceScreen() {
         notes: notes.trim() || null,
       });
       error = res.error;
+
+      if (!error && res.data) {
+        scheduleAttendanceReminder(res.data, REMINDER_HOURS_BEFORE).then((notificationId) => {
+          if (notificationId) showToast('Reminder set', 'success');
+        });
+      }
     }
 
     setIsSubmitting(false);
@@ -189,9 +202,9 @@ export default function MarkAttendanceScreen() {
         </View>
       </KeyboardAwareScrollView>
 
-      <SuccessModal 
-        visible={showSuccessModal} 
-        message={id ? "Attendance updated successfully." : "Attendance marked successfully."} 
+      <SuccessModal
+        visible={showSuccessModal}
+        message={id ? "Attendance updated successfully." : "Attendance marked successfully."}
       />
     </>
   );
