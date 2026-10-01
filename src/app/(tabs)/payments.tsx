@@ -3,13 +3,17 @@ import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicato
 import { useRouter, useFocusEffect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useAlert } from '@/contexts/AlertContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/offline/paymentService.offline';
 import { groupItemsByDate } from '@/lib/formatters';
+import { generateInvoiceHtml, getInvoiceNumber } from '@/lib/invoiceTemplate';
 
 const PAGE_SIZE = 20;
 
@@ -60,7 +64,8 @@ const PaymentItem = memo(function PaymentItem({ item, onMenuPress }: PaymentItem
 export default function PaymentsScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  
+  const { profile } = useAuth();
+
   const [payments, setPayments] = useState<PaymentWithPatient[]>([]);
   const [stats, setStats] = useState<RevenueStats>({ totalPaid: 0, totalPending: 0, thisMonthPaid: 0 });
   const [loading, setLoading] = useState(true);
@@ -140,6 +145,31 @@ export default function PaymentsScreen() {
   const clearDateFilter = () => {
     setFilterDate(null);
     setLoading(true);
+  };
+
+  const handleGenerateInvoice = async (payment: PaymentWithPatient) => {
+    if (!profile) {
+      showAlert('Error', 'Profile not loaded. Please try again.');
+      return;
+    }
+    try {
+      const html = generateInvoiceHtml(
+        payment,
+        {
+          full_name: payment.patient?.full_name || 'Unknown Patient',
+          phone: payment.patient?.phone || undefined,
+        },
+        profile
+      );
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, {
+        UTI: '.pdf',
+        mimeType: 'application/pdf',
+        dialogTitle: `${getInvoiceNumber(payment)} Invoice`,
+      });
+    } catch (error: any) {
+      showAlert('Error', error.message || 'Failed to generate invoice.');
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -306,6 +336,17 @@ export default function PaymentsScreen() {
               const id = activeActionId;
               setActiveActionId(null);
               if (id) router.push(`/payment/add?id=${id}` as any);
+            },
+          },
+          {
+            label: 'Generate Invoice',
+            icon: 'document-text',
+            color: Colors.primary,
+            onPress: () => {
+              const id = activeActionId;
+              setActiveActionId(null);
+              const payment = payments.find((p) => p.id === id);
+              if (payment) handleGenerateInvoice(payment);
             },
           },
           {

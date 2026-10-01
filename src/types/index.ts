@@ -12,7 +12,7 @@ export interface AuthState {
 export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
   verifyRecoveryOtp: (email: string, token: string) => Promise<{ error: string | null }>;
@@ -33,6 +33,10 @@ export interface Profile {
   role: UserRole;
   phone: string | null;
   avatar_url: string | null;
+  clinic_name: string | null;
+  clinic_address: string | null;
+  clinic_phone: string | null;
+  gst_number: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -169,6 +173,22 @@ export interface Payment {
   status: PaymentStatus;
   payment_date: string | null;
   notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+// ─── Waitlist ──────────────────────────────────────────────────
+
+export type WaitlistStatus = 'waiting' | 'contacted' | 'scheduled' | 'cancelled';
+
+export interface WaitlistEntry {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  requested_date: string | null;
+  notes: string | null;
+  status: WaitlistStatus;
+  patient?: { full_name: string; phone: string | null };
   created_at: string;
   updated_at: string;
 }

@@ -1,39 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useRouter, Stack, useLocalSearchParams, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { createAttendance, updateAttendance, getAttendanceById } from '@/services/offline/attendanceService.offline';
+import { createWaitlistEntry } from '@/services/waitlistService';
+import { getPatients } from '@/services/offline/patientService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { Button } from '@/components/ui/Button';
 import { SuccessModal } from '@/components/ui/SuccessModal';
-import type { Patient } from '@/types';
-import { getPatients } from '@/services/offline/patientService.offline';
 import { useAlert } from '@/contexts/AlertContext';
+import type { Patient } from '@/types';
 
-export default function MarkAttendanceScreen() {
+export default function AddToWaitlistScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
   const { showAlert } = useAlert();
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFetchingRecord, setIsFetchingRecord] = useState(!!id);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
-
-  const now = new Date();
-  const currentHours = String(now.getHours()).padStart(2, '0');
-  const currentMins = String(now.getMinutes()).padStart(2, '0');
-  const [attendanceTime, setAttendanceTime] = useState(`${currentHours}:${currentMins}`);
-
+  const [requestedDate, setRequestedDate] = useState('');
   const [notes, setNotes] = useState('');
 
   useFocusEffect(
@@ -47,28 +39,9 @@ export default function MarkAttendanceScreen() {
     }, [])
   );
 
-  useEffect(() => {
-    if (id) {
-      const fetchRecord = async () => {
-        const { data } = await getAttendanceById(id);
-        if (data) {
-          setSelectedPatientId(data.patient_id);
-          setAttendanceDate(data.attendance_date);
-          setAttendanceTime(data.attendance_time.substring(0, 5));
-          setNotes(data.notes || '');
-        }
-        setIsFetchingRecord(false);
-      };
-      fetchRecord();
-    }
-  }, [id]);
-
   const validate = (): boolean => {
     const e: Record<string, string> = {};
     if (!selectedPatientId) e.patient = 'Select a patient';
-    if (!attendanceDate) e.date = 'Date is required';
-    if (!attendanceTime) e.time = 'Time is required';
-
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -77,26 +50,11 @@ export default function MarkAttendanceScreen() {
     if (!validate() || !selectedPatientId) return;
 
     setIsSubmitting(true);
-    let error: string | null = null;
-
-    if (id) {
-      const res = await updateAttendance(id, {
-        patient_id: selectedPatientId,
-        attendance_date: attendanceDate,
-        attendance_time: attendanceTime,
-        notes: notes.trim() || null,
-      });
-      error = res.error;
-    } else {
-      const res = await createAttendance({
-        patient_id: selectedPatientId,
-        attendance_date: attendanceDate,
-        attendance_time: attendanceTime,
-        notes: notes.trim() || null,
-      });
-      error = res.error;
-    }
-
+    const { error } = await createWaitlistEntry({
+      patient_id: selectedPatientId,
+      requested_date: requestedDate || null,
+      notes: notes.trim() || null,
+    });
     setIsSubmitting(false);
 
     if (error) {
@@ -110,17 +68,8 @@ export default function MarkAttendanceScreen() {
     }
   };
 
-  if (isFetchingRecord) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <>
-      <Stack.Screen options={{ title: id ? 'Edit Attendance' : 'Mark Attendance' }} />
       <KeyboardAwareScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -149,28 +98,20 @@ export default function MarkAttendanceScreen() {
         <View style={[styles.sectionCard, Shadows.sm]}>
           <View style={styles.sectionHeader}>
             <View style={styles.sectionIconBg}>
-              <Ionicons name="time" size={18} color={Colors.primary} />
+              <Ionicons name="hourglass" size={18} color={Colors.primary} />
             </View>
-            <Text style={styles.sectionTitle}>Time & Details</Text>
+            <Text style={styles.sectionTitle}>Waitlist Details</Text>
           </View>
           <AppDateTimePicker
-            label="Date *"
-            value={attendanceDate}
-            onChange={setAttendanceDate}
+            label="Requested Date (optional)"
+            value={requestedDate}
+            onChange={setRequestedDate}
             mode="date"
-            error={errors.date}
-          />
-          <AppDateTimePicker
-            label="Time *"
-            value={attendanceTime}
-            onChange={setAttendanceTime}
-            mode="time"
-            error={errors.time}
           />
           <View style={{ marginTop: Spacing.sm }}>
             <Input
               label="Notes"
-              placeholder="Optional notes..."
+              placeholder="Reason, preferred time, etc."
               leftIcon="document-text-outline"
               value={notes}
               onChangeText={setNotes}
@@ -183,18 +124,15 @@ export default function MarkAttendanceScreen() {
 
         <View style={styles.submitContainer}>
           <Button
-            title={id ? 'Save Changes' : 'Mark Attendance'}
+            title="Add to Waitlist"
             onPress={handleSubmit}
             loading={isSubmitting}
-            icon={<Ionicons name={id ? 'save' : 'checkmark-circle'} size={20} color={Colors.textInverse} />}
+            icon={<Ionicons name="hourglass" size={20} color={Colors.textInverse} />}
           />
         </View>
       </KeyboardAwareScrollView>
 
-      <SuccessModal
-        visible={showSuccessModal}
-        message={id ? "Attendance updated successfully." : "Attendance marked successfully."}
-      />
+      <SuccessModal visible={showSuccessModal} message="Patient added to the waitlist." />
     </>
   );
 }

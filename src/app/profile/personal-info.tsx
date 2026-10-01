@@ -184,9 +184,10 @@ export default function PersonalInfoScreen() {
             label="Phone Number"
             leftIcon="call-outline"
             value={phone}
-            onChangeText={setPhone}
+            onChangeText={(text) => setPhone(text.replace(/[^0-9]/g, '').slice(0, 10))}
             placeholder="Enter your phone number"
             keyboardType="phone-pad"
+            maxLength={10}
           />
           <Input
             label="Email"

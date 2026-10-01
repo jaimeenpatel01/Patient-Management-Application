@@ -1,3 +1,5 @@
+import '@/lib/i18n';
+
 import React, { useRef, useEffect, useState } from 'react';
 import {
   Animated,
@@ -69,6 +71,7 @@ function RootNavigator() {
         <Stack.Screen name="attendance" />
         <Stack.Screen name="payment" />
         <Stack.Screen name="profile" />
+        <Stack.Screen name="waitlist" />
       </Stack>
     </>
   );

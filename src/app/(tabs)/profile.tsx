@@ -85,6 +85,34 @@ export default function ProfileScreen() {
           },
         ]
       : []),
+    {
+      icon: 'language-outline',
+      label: 'Language',
+      onPress: () => router.push('/profile/language' as any),
+    },
+  ];
+
+  const practiceItems: MenuItemProps[] = [
+    {
+      icon: 'receipt-outline',
+      label: 'Billing Information',
+      onPress: () => router.push('/profile/billing-info' as any),
+    },
+    {
+      icon: 'bar-chart-outline',
+      label: 'Business Reports',
+      onPress: () => router.push('/profile/reports' as any),
+    },
+    {
+      icon: 'time-outline',
+      label: 'Waitlist',
+      onPress: () => router.push('/waitlist' as any),
+    },
+    {
+      icon: 'download-outline',
+      label: 'Export Data',
+      onPress: () => router.push('/profile/data-export' as any),
+    },
   ];
 
   const supportItems: MenuItemProps[] = [
@@ -127,6 +155,19 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>ACCOUNT</Text>
           <View style={[styles.menuCard, Shadows.sm]}>
             {accountItems.map((item, index) => (
+              <React.Fragment key={item.label}>
+                {index > 0 && <View style={styles.divider} />}
+                <MenuItem {...item} />
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* Practice Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>PRACTICE</Text>
+          <View style={[styles.menuCard, Shadows.sm]}>
+            {practiceItems.map((item, index) => (
               <React.Fragment key={item.label}>
                 {index > 0 && <View style={styles.divider} />}
                 <MenuItem {...item} />

@@ -15,6 +15,8 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }
   cancelled: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
   inactive: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
   no_show: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
+  waiting: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
+  contacted: { bg: Colors.primaryFaded, text: Colors.primary, border: 'rgba(13, 148, 136, 0.25)' },
 };
 
 const DEFAULT_CONFIG = { bg: Colors.surfaceSecondary, text: Colors.textSecondary, border: Colors.border };

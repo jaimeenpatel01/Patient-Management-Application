@@ -1,23 +1,63 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, Stack, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPaymentsByPatientId } from '@/services/offline/paymentService.offline';
-import type { Payment } from '@/types';
+import { getPatientById } from '@/services/offline/patientService.offline';
+import { useAuth } from '@/hooks/useAuth';
+import { useAlert } from '@/contexts/AlertContext';
+import { generateInvoiceHtml, getInvoiceNumber } from '@/lib/invoiceTemplate';
+import type { Payment, Patient } from '@/types';
 
 export default function PatientPaymentsScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
+  const { profile } = useAuth();
+  const { showAlert } = useAlert();
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadPayments = useCallback(async () => {
     if (!patientId) return;
-    const { data } = await getPaymentsByPatientId(patientId);
+    const [{ data }, patientRes] = await Promise.all([
+      getPaymentsByPatientId(patientId),
+      getPatientById(patientId),
+    ]);
     setPayments(data);
+    if (patientRes.data) setPatient(patientRes.data);
   }, [patientId]);
+
+  const handleGenerateInvoice = async (payment: Payment) => {
+    if (!profile) {
+      showAlert('Error', 'Profile not loaded. Please try again.');
+      return;
+    }
+    try {
+      const html = generateInvoiceHtml(
+        payment,
+        {
+          full_name: patient?.full_name || 'Unknown Patient',
+          phone: patient?.phone || undefined,
+          address: patient?.address || undefined,
+        },
+        profile
+      );
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, {
+        UTI: '.pdf',
+        mimeType: 'application/pdf',
+        dialogTitle: `${getInvoiceNumber(payment)} Invoice`,
+      });
+    } catch (error: any) {
+      showAlert('Error', error.message || 'Failed to generate invoice.');
+    }
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -56,9 +96,17 @@ export default function PatientPaymentsScreen() {
             )}
           </View>
         )}
+        <TouchableOpacity
+          style={styles.invoiceButton}
+          onPress={() => handleGenerateInvoice(item)}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="document-text-outline" size={16} color={Colors.primary} />
+          <Text style={styles.invoiceButtonText}>Generate Invoice</Text>
+        </TouchableOpacity>
       </View>
     );
-  }, []);
+  }, [patient, profile]);
 
   if (isLoading) {
     return (
@@ -111,4 +159,9 @@ const styles = StyleSheet.create({
   },
   methodText: { fontSize: Typography.xs, color: Colors.textTertiary, fontWeight: Typography.medium },
   notesText: { fontSize: Typography.xs, color: Colors.textTertiary, flex: 1, textAlign: 'right', marginLeft: Spacing.md, fontStyle: 'italic' },
+  invoiceButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: Spacing.xs,
+    marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.border,
+  },
+  invoiceButtonText: { fontSize: Typography.xs, fontWeight: Typography.semibold, color: Colors.primary },
 });
