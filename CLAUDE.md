@@ -67,7 +67,18 @@ Reusable components in `src/components/ui/`: `Button`, `Input`, `CustomAlert`, `
 
 9 tables in Supabase (PostgreSQL): `profiles`, `patients`, `appointments`, `consultations`, `diagnoses`, `treatments`, `exercise_plans`, `documents`, `payments`. All have UUID PKs, `doctor_id` FK, `created_at`/`updated_at` managed by triggers.
 
-Migrations are in `supabase/migrations/`. Schema changes must be made there and applied via Supabase CLI.
+Migrations are in `supabase/migrations/`, numbered `NNN_description.sql` (zero-padded, sequential — keep this convention instead of the CLI's default timestamp names so ordering stays obvious).
+
+**Environments:** the Supabase CLI is linked to the production project (`slszmmuonicyojnosvsa`). There is no separate hosted dev project — the local Docker stack started by `supabase start` (`db:start`) is the dev environment, and `.env.local` already points the app at it. Never run `supabase db push` against a migration you haven't first applied and tested locally.
+
+**Workflow for schema changes:**
+1. `npm run db:start` — boot the local stack (first run only needs Docker running).
+2. `npm run db:new -- <description>` — scaffolds `supabase/migrations/<timestamp>_<description>.sql`; rename the file to the next `NNN_` number to match the existing convention.
+3. Write the SQL, then `npm run db:reset` — wipes the local DB and replays every migration in order from scratch. This is what catches migrations that are broken or depend on manual steps a fresh apply won't have.
+4. Run the app against `.env.local` and verify the change end-to-end.
+5. Only once it's verified locally: `npm run db:push:prod` — applies pending migrations to the linked production project. The CLI lists what will run and asks for confirmation before applying.
+
+Use `npm run db:migrations:list` any time to see which migrations are applied locally vs. on prod before pushing.
 
 ### TypeScript
 

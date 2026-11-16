@@ -3,6 +3,31 @@
  * Extracted from duplicated code across the app.
  */
 
+import type { RecurrenceFrequency } from '@/types';
+
+const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+/** Human-readable summary of a recurrence rule, e.g. "Weekly on Mon, Wed, Fri". */
+export function formatRecurrenceSummary(
+  frequency: RecurrenceFrequency,
+  daysOfWeek?: number[] | null
+): string {
+  switch (frequency) {
+    case 'one_off':
+      return 'One-time';
+    case 'daily':
+      return 'Daily';
+    case 'monthly':
+      return 'Monthly';
+    case 'weekly':
+    case 'biweekly': {
+      const label = frequency === 'weekly' ? 'Weekly' : 'Biweekly';
+      const days = (daysOfWeek ?? []).slice().sort((a, b) => a - b).map((d) => WEEKDAY_LABELS[d]);
+      return days.length ? `${label} on ${days.join(', ')}` : label;
+    }
+  }
+}
+
 /**
  * Groups a list of items by a date string field, returning sorted SectionList sections.
  * @param items Array of objects with a date field
@@ -11,7 +36,8 @@
  */
 export function groupItemsByDate<T>(
   items: T[],
-  getDate: (item: T) => string | null | undefined
+  getDate: (item: T) => string | null | undefined,
+  order: 'asc' | 'desc' = 'desc'
 ): { title: string; data: T[] }[] {
   const grouped = items.reduce((acc, item) => {
     const date = getDate(item) || 'Unknown Date';
@@ -21,7 +47,7 @@ export function groupItemsByDate<T>(
   }, {} as Record<string, T[]>);
 
   return Object.keys(grouped)
-    .sort((a, b) => (a < b ? 1 : -1))
+    .sort((a, b) => (order === 'asc' ? (a < b ? -1 : 1) : (a < b ? 1 : -1)))
     .map(date => {
       let formattedDate = date;
       if (date !== 'Unknown Date') {

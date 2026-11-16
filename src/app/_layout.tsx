@@ -69,6 +69,7 @@ function RootNavigator() {
         <Stack.Screen name="patient" />
         <Stack.Screen name="consultation" />
         <Stack.Screen name="attendance" />
+        <Stack.Screen name="appointment" />
         <Stack.Screen name="payment" />
         <Stack.Screen name="profile" />
         <Stack.Screen name="waitlist" />
