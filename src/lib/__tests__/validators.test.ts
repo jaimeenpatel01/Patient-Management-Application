@@ -11,7 +11,7 @@
  *   - Multiple errors returned simultaneously
  */
 
-import { validatePatientForm, PatientFormData } from '@/lib/validators';
+import { validatePatientForm, validateUpiReference, PatientFormData } from '@/lib/validators';
 import type { Gender, VisitType } from '@/types';
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -239,5 +239,28 @@ describe('validatePatientForm', () => {
       expect(errors.visitType).toBeUndefined();
       expect(errors.address).toBeUndefined();
     });
+  });
+});
+
+describe('validateUpiReference', () => {
+  it('accepts a 12-digit UTR', () => {
+    expect(validateUpiReference('412345678901')).toBeNull();
+  });
+
+  it('accepts alphanumeric references and trims whitespace', () => {
+    expect(validateUpiReference('  AXIS1234ABCD  ')).toBeNull();
+  });
+
+  it('requires a value', () => {
+    expect(validateUpiReference('   ')).toBe('Transaction ID is required');
+  });
+
+  it('rejects references that are too short or too long', () => {
+    expect(validateUpiReference('1234567')).not.toBeNull();
+    expect(validateUpiReference('1'.repeat(31))).not.toBeNull();
+  });
+
+  it('rejects special characters', () => {
+    expect(validateUpiReference('4123-4567-8901')).not.toBeNull();
   });
 });

@@ -3,7 +3,9 @@ import type { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureGoogleSigninConfigured } from '@/lib/supabase';
 import { updateProfile } from '@/services/profileService';
 import { getReadableError } from '@/lib/errorMessages';
-import type { AuthContextType, Profile, UserRole } from '@/types';
+import { getBillingSettings, getMySubscription } from '@/services/subscriptionService';
+import { DEFAULT_BILLING_SETTINGS } from '@/constants/billing';
+import type { AuthContextType, BillingSettings, DoctorSubscription, Profile, UserRole } from '@/types';
 import { clearAll as clearOfflineCache, getRecord, setRecord } from '@/lib/offlineCache';
 import { clear as clearSyncQueue } from '@/lib/syncQueue';
 import { setUserId } from '@/lib/networkState';
@@ -14,6 +16,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [subscription, setSubscription] = useState<DoctorSubscription | null>(null);
+  const [billingSettings, setBillingSettings] = useState<BillingSettings>(DEFAULT_BILLING_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstTimeGoogleSignIn, setIsFirstTimeGoogleSignIn] = useState(false);
 
@@ -30,11 +34,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const fetchBillingSettings = useCallback(async () => {
+    const { data } = await getBillingSettings();
+    if (data) {
+      setBillingSettings(data);
+      await setRecord('billing_settings', { ...data, id: 'current' });
+    } else {
+      const cached = await getRecord<BillingSettings>('billing_settings', 'current');
+      setBillingSettings(cached ?? DEFAULT_BILLING_SETTINGS);
+    }
+  }, []);
+
+  const fetchSubscription = useCallback(async (userId: string) => {
+    const [{ data, error }] = await Promise.all([getMySubscription(userId), fetchBillingSettings()]);
+    if (!error) {
+      setSubscription(data);
+      if (data) await setRecord('doctor_subscriptions', { ...data, id: userId });
+    } else {
+      // Cached by doctor id so it can be looked up before the row id is known
+      const cached = await getRecord<DoctorSubscription>('doctor_subscriptions', userId);
+      setSubscription(cached);
+    }
+  }, [fetchBillingSettings]);
+
   const refreshProfile = useCallback(async () => {
     if (user) {
       await fetchProfile(user.id);
     }
   }, [user, fetchProfile]);
+
+  const refreshSubscription = useCallback(async () => {
+    if (user) {
+      await fetchSubscription(user.id);
+    }
+  }, [user, fetchSubscription]);
 
   useEffect(() => {
     // Resolve with a fallback after `ms` milliseconds so offline network
@@ -57,7 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (initialSession?.user) {
         setUserId(initialSession.user.id);
         // fetchProfile requires network — time-box it so offline start never hangs
-        await withTimeout(fetchProfile(initialSession.user.id), 10000, undefined);
+        await withTimeout(
+          Promise.all([fetchProfile(initialSession.user.id), fetchSubscription(initialSession.user.id)]),
+          10000,
+          undefined,
+        );
       }
       setIsLoading(false);
     });
@@ -66,10 +103,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (newSession?.user) {
-          await fetchProfile(newSession.user.id);
+          await Promise.all([fetchProfile(newSession.user.id), fetchSubscription(newSession.user.id)]);
           setUserId(newSession.user.id);
         } else {
           setProfile(null);
+          setSubscription(null);
           setUserId(null);
         }
         setSession(newSession);
@@ -236,6 +274,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user,
         profile,
+        subscription,
+        billingSettings,
         isLoading,
         signIn,
         signInWithGoogle,
@@ -245,6 +285,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyRecoveryOtp,
         updatePassword,
         refreshProfile,
+        refreshSubscription,
         isFirstTimeGoogleSignIn,
         setIsFirstTimeGoogleSignIn,
       }}

@@ -13,6 +13,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="about" options={{ title: 'About PhysioDesk' }} />
       <Stack.Screen name="language" options={{ title: 'Language' }} />
       <Stack.Screen name="reports" options={{ title: 'Business Reports' }} />
+      <Stack.Screen name="subscription" options={{ title: 'Subscription' }} />
     </Stack>
   );
 }

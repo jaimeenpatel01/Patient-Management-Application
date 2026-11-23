@@ -17,6 +17,10 @@ const STATUS_CONFIG: Record<string, { bg: string; text: string; border: string }
   no_show: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
   waiting: { bg: Colors.warningLight, text: Colors.warning, border: 'rgba(217, 119, 6, 0.25)' },
   contacted: { bg: Colors.primaryFaded, text: Colors.primary, border: 'rgba(13, 148, 136, 0.25)' },
+  trialing: { bg: Colors.infoLight, text: Colors.info, border: 'rgba(37, 99, 235, 0.25)' },
+  verified: { bg: Colors.successLight, text: Colors.success, border: 'rgba(22, 163, 74, 0.25)' },
+  expired: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
+  rejected: { bg: Colors.errorLight, text: Colors.error, border: 'rgba(220, 38, 38, 0.25)' },
 };
 
 const DEFAULT_CONFIG = { bg: Colors.surfaceSecondary, text: Colors.textSecondary, border: Colors.border };

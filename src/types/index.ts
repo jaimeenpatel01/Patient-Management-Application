@@ -6,6 +6,8 @@ export interface AuthState {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
+  subscription: DoctorSubscription | null;
+  billingSettings: BillingSettings;
   isLoading: boolean;
 }
 
@@ -18,6 +20,7 @@ export interface AuthContextType extends AuthState {
   verifyRecoveryOtp: (email: string, token: string) => Promise<{ error: string | null }>;
   updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
   refreshProfile: () => Promise<void>;
+  refreshSubscription: () => Promise<void>;
   isFirstTimeGoogleSignIn: boolean;
   setIsFirstTimeGoogleSignIn: (val: boolean) => void;
 }
@@ -192,3 +195,74 @@ export interface WaitlistEntry {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Subscriptions ─────────────────────────────────────────────
+
+export type SubscriptionTier = 'free' | 'pro';
+
+export type BillingInterval = 'none' | 'monthly' | 'yearly';
+
+export type SubscriptionStatus = 'trialing' | 'active' | 'expired' | 'cancelled';
+
+export type BillingProvider = 'manual' | 'razorpay' | 'stripe' | 'apple_iap' | 'google_iap';
+
+export type SubscriptionPaymentStatus = 'pending' | 'verified' | 'rejected';
+
+export interface SubscriptionPlan {
+  id: string;
+  tier: SubscriptionTier;
+  name: string;
+  billing_interval: BillingInterval;
+  price_inr: number;
+  patient_cap: number | null;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DoctorSubscription {
+  id: string;
+  doctor_id: string;
+  plan_id: string;
+  status: SubscriptionStatus;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  billing_provider: BillingProvider;
+  provider_subscription_id: string | null;
+  plan?: SubscriptionPlan | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SubscriptionPayment {
+  id: string;
+  doctor_id: string;
+  plan_id: string;
+  amount_inr: number;
+  payment_reference: string;
+  payer_note: string | null;
+  status: SubscriptionPaymentStatus;
+  verified_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Admin-editable billing values (billing_settings row + the free plan's patient_cap). */
+export interface BillingSettings {
+  upi_id: string;
+  upi_payee_name: string;
+  verification_sla_text: string;
+  trial_days: number;
+  free_patient_cap: number;
+}
+
+export type FeatureKey =
+  | 'unlimited_patients'
+  | 'business_reports'
+  | 'export_data'
+  | 'waitlist'
+  | 'exercise_media'
+  | 'gst_invoices'
+  | 'calendar_export';

@@ -46,3 +46,11 @@ export function validatePatientForm(data: PatientFormData): Record<string, strin
 
   return errors;
 }
+
+/** UPI transaction reference (UTR / txn ID). Banks vary, so accept 8–30 alphanumerics. */
+export function validateUpiReference(value: string): string | null {
+  const v = value.trim();
+  if (!v) return 'Transaction ID is required';
+  if (!/^[A-Za-z0-9]{8,30}$/.test(v)) return 'Enter the 8–30 character transaction ID from your payment app';
+  return null;
+}

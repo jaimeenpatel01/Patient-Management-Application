@@ -130,6 +130,14 @@ const ERROR_MAP: Array<{ pattern: string; message: string }> = [
   // ── Database / Supabase ───────────────────────────────────────────────────
 
   {
+    pattern: 'uniq_subscription_payments_reference',
+    message: 'This transaction ID has already been submitted.',
+  },
+  {
+    pattern: 'uniq_subscription_payments_one_pending',
+    message: 'You already have a payment awaiting verification.',
+  },
+  {
     pattern: 'duplicate key value violates unique constraint',
     message: 'This record already exists.',
   },
