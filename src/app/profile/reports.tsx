@@ -16,6 +16,8 @@ import {
   AttendanceInsights,
   DiagnosisFrequency,
 } from '@/services/dashboardService';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 
 /** Compact currency label used above narrow bars (e.g. ₹12.3k) */
 function formatCompactCurrency(value: number): string {
@@ -31,7 +33,7 @@ interface ReportData {
   topDiagnoses: DiagnosisFrequency[];
 }
 
-export default function ReportsScreen() {
+function ReportsScreenContent() {
   const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -426,3 +428,11 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
 });
+
+export default function ReportsScreen() {
+  const { hasFeature } = useSubscription();
+  if (!hasFeature('business_reports')) {
+    return <UpgradePrompt title="Business Reports is a Pro feature" subtitle="See revenue trends, top patients and visit analytics with PhysioDesk Pro." />;
+  }
+  return <ReportsScreenContent />;
+}

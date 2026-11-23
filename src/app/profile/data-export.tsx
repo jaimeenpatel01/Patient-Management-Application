@@ -10,6 +10,8 @@ import { getPayments } from '@/services/paymentService';
 import { getAttendances } from '@/services/attendanceService';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { useAlert } from '@/contexts/AlertContext';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 
 // A page size large enough to pull every row in one request for a single-doctor
 // dataset. Export is a best-effort, online-only action (see summary).
@@ -112,7 +114,7 @@ async function shareAsPdf(dialogTitle: string, title: string, headers: string[],
   }
 }
 
-export default function DataExportScreen() {
+function DataExportScreenContent() {
   const { showAlert } = useAlert();
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
@@ -369,3 +371,11 @@ const styles = StyleSheet.create({
     marginLeft: Spacing.base + 40 + Spacing.md,
   },
 });
+
+export default function DataExportScreen() {
+  const { hasFeature } = useSubscription();
+  if (!hasFeature('export_data')) {
+    return <UpgradePrompt title="Data Export is a Pro feature" subtitle="Export your patients, payments and attendance as CSV or PDF with PhysioDesk Pro." />;
+  }
+  return <DataExportScreenContent />;
+}

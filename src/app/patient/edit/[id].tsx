@@ -11,6 +11,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useLocalSearchParams, useRouter, useFocusEffect, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAlert } from '@/contexts/AlertContext';
+import { usePatientCap } from '@/hooks/usePatientCap';
 import { getPatientById, updatePatient } from '@/services/offline/patientService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { Input } from '@/components/ui/Input';
@@ -24,6 +25,7 @@ export default function EditPatientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { showAlert } = useAlert();
+  const { patientCap, isAtCap } = usePatientCap();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -37,6 +39,7 @@ export default function EditPatientScreen() {
   const [visitType, setVisitType] = useState<VisitType | null>(null);
   const [address, setAddress] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [wasActive, setWasActive] = useState(true);
   const [notes, setNotes] = useState('');
 
   useFocusEffect(
@@ -54,6 +57,7 @@ export default function EditPatientScreen() {
           setVisitType(p.visit_type);
           setAddress(p.address || '');
           setIsActive(p.is_active);
+          setWasActive(p.is_active);
           setNotes(p.notes || '');
         }
         setIsLoading(false);
@@ -69,6 +73,18 @@ export default function EditPatientScreen() {
 
   const handleSubmit = async () => {
     if (!validate() || !id) return;
+
+    if (isActive && !wasActive && (await isAtCap())) {
+      showAlert(
+        'Patient limit reached',
+        `The Free plan allows ${patientCap} active patients. Upgrade to Pro to reactivate this patient.`,
+        [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => router.push('/profile/subscription' as any) },
+        ],
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     const { error } = await updatePatient(id, {

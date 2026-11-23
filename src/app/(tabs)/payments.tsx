@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import { useAlert } from '@/contexts/AlertContext';
+import { useProGuard } from '@/hooks/useProGuard';
 import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -64,6 +65,7 @@ const PaymentItem = memo(function PaymentItem({ item, onMenuPress }: PaymentItem
 export default function PaymentsScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
+  const requirePro = useProGuard();
   const { profile } = useAuth();
 
   const [payments, setPayments] = useState<PaymentWithPatient[]>([]);
@@ -346,7 +348,7 @@ export default function PaymentsScreen() {
               const id = activeActionId;
               setActiveActionId(null);
               const payment = payments.find((p) => p.id === id);
-              if (payment) handleGenerateInvoice(payment);
+              if (payment) requirePro('gst_invoices', () => handleGenerateInvoice(payment));
             },
           },
           {

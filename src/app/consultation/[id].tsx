@@ -13,11 +13,13 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAlert } from '@/contexts/AlertContext';
+import { useProGuard } from '@/hooks/useProGuard';
 
 export default function ConsultationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { showAlert } = useAlert();
+  const requirePro = useProGuard();
 
   const [consultation, setConsultation] = useState<Consultation | null>(null);
   const [diagnoses, setDiagnoses] = useState<Diagnosis[]>([]);
@@ -464,7 +466,7 @@ export default function ConsultationDetailScreen() {
                       </TouchableOpacity>
                     </View>
                   ) : (
-                    <TouchableOpacity style={styles.attachMediaBtn} onPress={pickExerciseMedia}>
+                    <TouchableOpacity style={styles.attachMediaBtn} onPress={() => requirePro('exercise_media', pickExerciseMedia)}>
                       <Ionicons name="image-outline" size={20} color={Colors.primary} />
                       <Text style={styles.attachMediaText}>Attach Photo</Text>
                     </TouchableOpacity>

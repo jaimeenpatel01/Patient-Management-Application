@@ -5,12 +5,14 @@ import { SuccessModal } from '@/components/ui/SuccessModal';
 import { GENDER_OPTIONS, VISIT_TYPE_OPTIONS } from '@/constants/options';
 import { BorderRadius, Colors, Shadows, Spacing, Typography } from '@/constants/theme';
 import { useAlert } from '@/contexts/AlertContext';
+import { usePatientCap } from '@/hooks/usePatientCap';
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 import { validatePatientForm } from '@/lib/validators';
 import { createPatient } from '@/services/offline/patientService.offline';
 import type { Gender, VisitType } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -18,7 +20,7 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-export default function AddPatientScreen() {
+function AddPatientForm() {
   const router = useRouter();
   const { showAlert } = useAlert();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -233,3 +235,27 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
 });
+
+export default function AddPatientScreen() {
+  const { patientCap, isAtCap } = usePatientCap();
+  const [atCap, setAtCap] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      isAtCap().then(setAtCap);
+    }, [isAtCap]),
+  );
+
+  if (atCap) {
+    return (
+      <>
+        <Stack.Screen options={{ title: 'Add Patient' }} />
+        <UpgradePrompt
+          title="Patient limit reached"
+          subtitle={`The Free plan allows ${patientCap} active patients. Upgrade to Pro for unlimited patients, or mark an existing patient inactive.`}
+        />
+      </>
+    );
+  }
+  return <AddPatientForm />;
+}

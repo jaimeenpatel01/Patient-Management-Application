@@ -13,8 +13,10 @@ import { Button } from '@/components/ui/Button';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import { useAlert } from '@/contexts/AlertContext';
 import type { Patient } from '@/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 
-export default function AddToWaitlistScreen() {
+function AddToWaitlistScreenContent() {
   const router = useRouter();
   const { showAlert } = useAlert();
 
@@ -168,3 +170,11 @@ const styles = StyleSheet.create({
   },
   submitContainer: { marginTop: Spacing.xs },
 });
+
+export default function AddToWaitlistScreen() {
+  const { hasFeature } = useSubscription();
+  if (!hasFeature('waitlist')) {
+    return <UpgradePrompt title="Waitlist is a Pro feature" subtitle="Track patients waiting for a slot and follow up with PhysioDesk Pro." />;
+  }
+  return <AddToWaitlistScreenContent />;
+}

@@ -6,6 +6,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useAlert } from '@/contexts/AlertContext';
+import { useProGuard } from '@/hooks/useProGuard';
 import { getAttendances, deleteAttendance } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -77,6 +78,7 @@ async function shareAttendanceAsCalendarEvent(attendance: Attendance): Promise<v
 export default function AttendanceScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
+  const requirePro = useProGuard();
   
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [page, setPage] = useState(0);
@@ -162,11 +164,13 @@ export default function AttendanceScreen() {
   const handleAddToCalendar = async (id: string) => {
     const attendance = attendances.find((a) => a.id === id);
     if (!attendance) return;
-    try {
-      await shareAttendanceAsCalendarEvent(attendance);
-    } catch (err: any) {
-      showAlert('Error', err?.message || 'Could not create calendar event.');
-    }
+    requirePro('calendar_export', async () => {
+      try {
+        await shareAttendanceAsCalendarEvent(attendance);
+      } catch (err: any) {
+        showAlert('Error', err?.message || 'Could not create calendar event.');
+      }
+    });
   };
 
   const sections = useMemo(

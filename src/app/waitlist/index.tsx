@@ -20,6 +20,8 @@ import { ActionMenu } from '@/components/ui/ActionMenu';
 import { useAlert } from '@/contexts/AlertContext';
 import { getInitials } from '@/lib/formatters';
 import type { WaitlistEntry, WaitlistStatus } from '@/types';
+import { useSubscription } from '@/hooks/useSubscription';
+import { UpgradePrompt } from '@/components/ui/UpgradePrompt';
 
 type FilterValue = WaitlistStatus | 'all';
 
@@ -47,7 +49,7 @@ function formatShortDate(date: string | null): string | null {
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
 
-export default function WaitlistScreen() {
+function WaitlistScreenContent() {
   const router = useRouter();
   const { showAlert } = useAlert();
 
@@ -535,3 +537,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.base,
   },
 });
+
+export default function WaitlistScreen() {
+  const { hasFeature } = useSubscription();
+  if (!hasFeature('waitlist')) {
+    return <UpgradePrompt title="Waitlist is a Pro feature" subtitle="Track patients waiting for a slot and follow up with PhysioDesk Pro." />;
+  }
+  return <WaitlistScreenContent />;
+}

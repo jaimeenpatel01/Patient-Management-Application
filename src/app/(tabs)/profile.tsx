@@ -11,12 +11,15 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { useAlert } from '@/contexts/AlertContext';
 import { getDoctorDisplayName } from '@/lib/formatters';
+import { ProPill } from '@/components/ui/UpgradePrompt';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 
 export default function ProfileScreen() {
   const { user, profile, signOut } = useAuth();
+  const { isPro, isTrialing, daysLeft, hasFeature } = useSubscription();
   const { showAlert } = useAlert();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -92,7 +95,16 @@ export default function ProfileScreen() {
     },
   ];
 
+  const planBadge = isTrialing ? `Trial · ${daysLeft}d` : isPro ? 'Pro' : 'Free';
+  const showRenewalBanner = isPro && daysLeft !== null && daysLeft <= 3;
+
   const practiceItems: MenuItemProps[] = [
+    {
+      icon: 'ribbon-outline',
+      label: 'Subscription',
+      badge: planBadge,
+      onPress: () => router.push('/profile/subscription' as any),
+    },
     {
       icon: 'receipt-outline',
       label: 'Billing Information',
@@ -101,16 +113,19 @@ export default function ProfileScreen() {
     {
       icon: 'bar-chart-outline',
       label: 'Business Reports',
+      locked: !hasFeature('business_reports'),
       onPress: () => router.push('/profile/reports' as any),
     },
     {
       icon: 'time-outline',
       label: 'Waitlist',
+      locked: !hasFeature('waitlist'),
       onPress: () => router.push('/waitlist' as any),
     },
     {
       icon: 'download-outline',
       label: 'Export Data',
+      locked: !hasFeature('export_data'),
       onPress: () => router.push('/profile/data-export' as any),
     },
   ];
@@ -149,6 +164,19 @@ export default function ProfileScreen() {
           <Text style={styles.profileName}>{displayName}</Text>
           <Text style={styles.profileEmail}>{user?.email ?? ''}</Text>
         </View>
+
+        {showRenewalBanner && (
+          <TouchableOpacity
+            style={styles.banner}
+            onPress={() => router.push('/profile/subscription' as any)}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="alert-circle-outline" size={20} color={Colors.warning} />
+            <Text style={styles.bannerText}>
+              {isTrialing ? 'Your Pro trial' : 'Your Pro plan'} ends in {daysLeft} day{daysLeft === 1 ? '' : 's'}. Tap to {isTrialing ? 'upgrade' : 'renew'}.
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Account Section */}
         <View style={styles.section}>
@@ -230,9 +258,11 @@ interface MenuItemProps {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  badge?: string;
+  locked?: boolean;
 }
 
-function MenuItem({ icon, label, onPress }: MenuItemProps) {
+function MenuItem({ icon, label, onPress, badge, locked }: MenuItemProps) {
   return (
     <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.6}>
       <View style={styles.menuItemLeft}>
@@ -241,7 +271,11 @@ function MenuItem({ icon, label, onPress }: MenuItemProps) {
         </View>
         <Text style={styles.menuItemLabel}>{label}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+      <View style={styles.menuItemRight}>
+        {locked && <ProPill />}
+        {badge && <Text style={styles.menuBadge}>{badge}</Text>}
+        <Ionicons name="chevron-forward" size={18} color={Colors.textTertiary} />
+      </View>
     </TouchableOpacity>
   );
 }
@@ -327,6 +361,30 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+  },
+  menuItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  menuBadge: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+    color: Colors.primary,
+  },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    backgroundColor: Colors.warningLight,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  bannerText: {
+    flex: 1,
+    fontSize: Typography.sm,
+    color: Colors.text,
   },
   menuIconBg: {
     width: 36,

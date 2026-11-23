@@ -11,6 +11,7 @@ import { getPaymentsByPatientId } from '@/services/offline/paymentService.offlin
 import { getPatientById } from '@/services/offline/patientService.offline';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/contexts/AlertContext';
+import { useProGuard } from '@/hooks/useProGuard';
 import { generateInvoiceHtml, getInvoiceNumber } from '@/lib/invoiceTemplate';
 import type { Payment, Patient } from '@/types';
 
@@ -18,6 +19,7 @@ export default function PatientPaymentsScreen() {
   const { id: patientId } = useLocalSearchParams<{ id: string }>();
   const { profile } = useAuth();
   const { showAlert } = useAlert();
+  const requirePro = useProGuard();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -98,7 +100,7 @@ export default function PatientPaymentsScreen() {
         )}
         <TouchableOpacity
           style={styles.invoiceButton}
-          onPress={() => handleGenerateInvoice(item)}
+          onPress={() => requirePro('gst_invoices', () => handleGenerateInvoice(item))}
           activeOpacity={0.7}
         >
           <Ionicons name="document-text-outline" size={16} color={Colors.primary} />
@@ -106,7 +108,7 @@ export default function PatientPaymentsScreen() {
         </TouchableOpacity>
       </View>
     );
-  }, [patient, profile]);
+  }, [patient, profile, requirePro]);
 
   if (isLoading) {
     return (
