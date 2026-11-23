@@ -62,7 +62,8 @@
     "lint": "expo lint",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "admin": "node --env-file=admin/.env.admin admin/server.mjs"
   },
   "private": true
 }
