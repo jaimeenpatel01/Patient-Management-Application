@@ -91,7 +91,11 @@ export default function PaymentsScreen() {
   // filter that hasn't changed just redisplays what we already have instead
   // of hitting the DB again.
   const cacheRef = useRef(new Map<string, { payments: PaymentWithPatient[]; page: number; hasMore: boolean }>());
-  const requestIdRef = useRef(0);
+  // Single-flight lock: SectionList's onEndReached can fire immediately on
+  // mount (an empty list looks "scrolled to the end"), which would otherwise
+  // race a page-1 fetch against the still-in-flight initial page-0 fetch and
+  // let the (likely empty, since most lists are short) page-1 response win.
+  const isFetchingRef = useRef(false);
   const filterStatusRef = useRef(filterStatus);
   const filterDateRef = useRef(filterDate);
   useEffect(() => { filterStatusRef.current = filterStatus; }, [filterStatus]);
@@ -101,22 +105,26 @@ export default function PaymentsScreen() {
     `${status}|${date ? toLocalDateString(date) : 'none'}`;
 
   const fetchPayments = useCallback(async (pageNumber: number, statusFilter: string, targetDate: Date | null) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     const key = buildCacheKey(statusFilter, targetDate);
-    const requestId = ++requestIdRef.current;
     const formattedDate = targetDate ? toLocalDateString(targetDate) : undefined;
 
-    const res = await getPayments(pageNumber, PAGE_SIZE, statusFilter, formattedDate);
+    try {
+      const res = await getPayments(pageNumber, PAGE_SIZE, statusFilter, formattedDate);
+      if (res.error) return;
 
-    // Ignore a stale response if the filter changed again before this returned.
-    if (requestId !== requestIdRef.current || res.error) return;
-
-    setPayments(prev => {
-      const next = pageNumber === 0 ? res.data : [...prev, ...res.data];
-      cacheRef.current.set(key, { payments: next, page: pageNumber, hasMore: res.data.length >= PAGE_SIZE });
-      return next;
-    });
-    setHasMore(res.data.length >= PAGE_SIZE);
-    setPage(pageNumber);
+      setPayments(prev => {
+        const next = pageNumber === 0 ? res.data : [...prev, ...res.data];
+        cacheRef.current.set(key, { payments: next, page: pageNumber, hasMore: res.data.length >= PAGE_SIZE });
+        return next;
+      });
+      setHasMore(res.data.length >= PAGE_SIZE);
+      setPage(pageNumber);
+    } finally {
+      isFetchingRef.current = false;
+    }
   }, []);
 
   const fetchStats = useCallback(async () => {
@@ -143,7 +151,7 @@ export default function PaymentsScreen() {
   };
 
   const handleLoadMore = () => {
-    if (hasMore && !refreshing) {
+    if (hasMore && !refreshing && !isFetchingRef.current && payments.length > 0) {
       fetchPayments(page + 1, filterStatus, filterDate);
     }
   };
