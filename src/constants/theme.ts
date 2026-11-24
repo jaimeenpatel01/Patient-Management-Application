@@ -8,6 +8,7 @@ export const Colors = {
   primary: '#0D9488',
   primaryLight: '#14B8A6',
   primaryDark: '#0F766E',
+  primaryDeep: '#115E59',
   primaryFaded: 'rgba(13, 148, 136, 0.1)',
 
   // Background
@@ -21,6 +22,7 @@ export const Colors = {
   textSecondary: '#475569',
   textTertiary: '#94A3B8',
   textInverse: '#FFFFFF',
+  textInverseMuted: 'rgba(255, 255, 255, 0.7)',
 
   // Borders
   border: '#E2E8F0',
@@ -32,6 +34,9 @@ export const Colors = {
   successLight: 'rgba(22, 163, 74, 0.1)',
   warning: '#F59E0B',
   warningLight: 'rgba(217, 119, 6, 0.1)',
+  warningDeep: '#B45309',
+  warningDotOnDark: '#FCD34D',
+  warningTextOnDark: '#FDE68A',
   error: '#DC2626',
   errorLight: 'rgba(240, 50, 50, 0.17)',
   info: '#2563EB',
@@ -55,6 +60,7 @@ export const Colors = {
   shadowDanger: 'rgba(220, 38, 38, 0.25)',
   successSurface: '#DCFCE7',
   successBorder: '#BBF7D0',
+  dividerOnDark: 'rgba(255, 255, 255, 0.15)',
 } as const;
 
 export const Typography = {
