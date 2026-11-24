@@ -18,7 +18,7 @@ import { useAlert } from '@/contexts/AlertContext';
 
 export default function AddPaymentScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, patientId: initialPatientId } = useLocalSearchParams<{ id?: string; patientId?: string }>();
   const { showAlert } = useAlert();
 
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -29,7 +29,7 @@ export default function AddPaymentScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Form state
-  const [patientId, setPatientId] = useState<string>('');
+  const [patientId, setPatientId] = useState<string>(initialPatientId ?? '');
   const [amount, setAmount] = useState<string>('');
   const [paymentType, setPaymentType] = useState<PaymentType>('consultation');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');

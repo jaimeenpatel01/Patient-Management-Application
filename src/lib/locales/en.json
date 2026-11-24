@@ -3,8 +3,16 @@
     "dashboard": "Dashboard",
     "patients": "Patients",
     "attendance": "Attendance",
+    "appointments": "Appointments",
     "payments": "Payments",
     "profile": "Profile"
+  },
+  "tabBar": {
+    "dashboard": "Home",
+    "patients": "Patients",
+    "attendance": "Attendance",
+    "appointments": "Schedule",
+    "payments": "Payments"
   },
   "login": {
     "appName": "PhysioDesk",
@@ -59,5 +67,11 @@
     "subtitle": "Choose your preferred language",
     "english": "English",
     "hindi": "हिन्दी"
+  },
+  "common": {
+    "back": "Back"
+  },
+  "profileMenu": {
+    "open": "Open profile menu"
   }
 }

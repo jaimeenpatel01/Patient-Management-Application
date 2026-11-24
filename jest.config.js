@@ -21,5 +21,6 @@ module.exports = {
     'src/lib/validators.ts',
     'src/lib/formatters.ts',
     'src/lib/errorMessages.ts',
+    'src/lib/recurrence.ts',
   ],
 };

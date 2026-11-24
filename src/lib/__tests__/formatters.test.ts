@@ -98,6 +98,18 @@ describe('groupItemsByDate', () => {
     expect(result[1].title).toBe('01/01/2024');
   });
 
+  it('should sort sections oldest-first when order is "asc"', () => {
+    const items: Item[] = [
+      { id: '1', date: '2024-01-01' },
+      { id: '2', date: '2024-03-01' },
+      { id: '3', date: '2024-02-01' },
+    ];
+    const result = groupItemsByDate(items, getDate, 'asc');
+    expect(result[0].title).toBe('01/01/2024');
+    expect(result[1].title).toBe('01/02/2024');
+    expect(result[2].title).toBe('01/03/2024');
+  });
+
   it('should preserve original items inside each section', () => {
     const items: Item[] = [
       { id: 'a', date: '2024-07-04' },

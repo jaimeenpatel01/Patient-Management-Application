@@ -10,53 +10,60 @@ import { useAuth } from '@/hooks/useAuth';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
-import { StatusBadge } from '@/components/ui/StatusBadge';
 import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/offline/paymentService.offline';
 import { groupItemsByDate } from '@/lib/formatters';
 import { generateInvoiceHtml, getInvoiceNumber } from '@/lib/invoiceTemplate';
 
 const PAGE_SIZE = 20;
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return parts.slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+}
+
 interface PaymentItemProps {
   item: PaymentWithPatient;
   onMenuPress: (id: string) => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
-const PaymentItem = memo(function PaymentItem({ item, onMenuPress }: PaymentItemProps) {
-  const isPaid = item.status === 'paid';
-  return (
-    <View style={[styles.paymentCard, Shadows.md]}>
-      <View style={[styles.paymentAccent, { backgroundColor: isPaid ? Colors.success : Colors.warning }]} />
-      <View style={styles.paymentContent}>
-        <View style={styles.paymentHeader}>
-          <View style={styles.patientInfo}>
-            <Text style={styles.patientName} numberOfLines={1}>{item.patient?.full_name || 'Unknown Patient'}</Text>
-            <Text style={styles.paymentDate}>
-              {item.payment_type.replace('_', ' ')}
-            </Text>
-          </View>
-          <View style={styles.amountInfo}>
-            <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
-            <StatusBadge status={item.status} />
-          </View>
-        </View>
+const PaymentItem = memo(function PaymentItem({ item, onMenuPress, isFirst, isLast }: PaymentItemProps) {
+  const patientName = item.patient?.full_name || 'Unknown Patient';
+  const statusLabel =
+    item.status === 'paid' ? 'Paid' : item.status === 'partially_paid' ? 'Partial' : 'Pending';
+  const statusColor = item.status === 'paid' ? Colors.primaryDark : Colors.warningDeep;
 
-        <View style={styles.paymentFooter}>
-          <View style={styles.footerLeft}>
-            {item.payment_method && (
-              <Text style={styles.methodText}>Method: {item.payment_method.toUpperCase()}</Text>
-            )}
-            {item.notes && (
-              <Text style={styles.notesText} numberOfLines={1}>{item.notes}</Text>
-            )}
-          </View>
-          <View style={styles.actionsContainer}>
-            <TouchableOpacity onPress={() => onMenuPress(item.id)} style={styles.actionBtn}>
-              <Ionicons name="ellipsis-vertical" size={20} color={Colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </View>
+  return (
+    <View
+      style={[
+        styles.paymentRow,
+        isFirst && styles.paymentRowFirst,
+        isLast && styles.paymentRowLast,
+        !isFirst && styles.paymentRowDivider,
+      ]}
+    >
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{getInitials(patientName)}</Text>
       </View>
+      <View style={styles.paymentContent}>
+        <Text style={styles.patientName} numberOfLines={1}>{patientName}</Text>
+        <Text style={styles.paymentSubtitle} numberOfLines={1}>
+          {item.payment_type.replace('_', ' ')}
+          {item.payment_method ? ` · ${item.payment_method.toUpperCase()}` : ''}
+        </Text>
+        {item.notes && (
+          <Text style={styles.notesText} numberOfLines={1}>{item.notes}</Text>
+        )}
+      </View>
+      <View style={styles.amountInfo}>
+        <Text style={styles.amountText}>₹{item.amount.toLocaleString()}</Text>
+        <Text style={[styles.statusText, { color: statusColor }]}>{statusLabel}</Text>
+      </View>
+      <TouchableOpacity onPress={() => onMenuPress(item.id)} style={styles.actionBtn}>
+        <Ionicons name="ellipsis-vertical" size={20} color={Colors.textTertiary} />
+      </TouchableOpacity>
     </View>
   );
 });
@@ -193,34 +200,29 @@ export default function PaymentsScreen() {
 
   const renderHeader = () => (
     <View style={styles.dashboardContainer}>
-      <Text style={styles.dashboardTitle}>Revenue Dashboard</Text>
-      
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: Colors.primary }, Shadows.md]}>
-          <Ionicons name="wallet" size={28} color={Colors.textInverse} style={styles.statIcon} />
-          <Text style={styles.statLabelInverse}>Total Earnings</Text>
-          <Text style={styles.statValueInverse}>₹{stats.totalPaid.toLocaleString()}</Text>
-        </View>
-        
-        <View style={[styles.statCard, { backgroundColor: Colors.warning }, Shadows.md]}>
-          <Ionicons name="time" size={28} color={Colors.textInverse} style={styles.statIcon} />
-          <Text style={styles.statLabelInverse}>Total Due</Text>
-          <Text style={styles.statValueInverse}>₹{stats.totalPending.toLocaleString()}</Text>
+      <View style={[styles.heroCard, Shadows.md]}>
+        <Text style={styles.heroLabel}>Collected this month</Text>
+        <Text style={styles.heroValue}>₹{stats.thisMonthPaid.toLocaleString()}</Text>
+
+        <View style={styles.heroDivider} />
+
+        <View style={styles.heroStatsRow}>
+          <View style={styles.heroStat}>
+            <Text style={styles.heroStatLabel}>All-time earnings</Text>
+            <Text style={styles.heroStatValue}>₹{stats.totalPaid.toLocaleString()}</Text>
+          </View>
+          <View style={styles.heroStat}>
+            <View style={styles.heroStatLabelRow}>
+              <View style={styles.heroDot} />
+              <Text style={styles.heroStatLabel}>Outstanding</Text>
+            </View>
+            <Text style={[styles.heroStatValue, styles.heroStatValueDue]}>₹{stats.totalPending.toLocaleString()}</Text>
+          </View>
         </View>
       </View>
 
-      <View style={[styles.monthlyStatCard, Shadows.md]}>
-        <View style={styles.monthlyStatHeader}>
-          <View style={styles.monthlyIconBg}>
-            <Ionicons name="calendar" size={20} color={Colors.primary} />
-          </View>
-          <Text style={styles.monthlyStatLabel}>This Month Earnings</Text>
-        </View>
-        <Text style={styles.monthlyStatValue}>₹{stats.thisMonthPaid.toLocaleString()}</Text>
-      </View>
-      
-      <Text style={styles.sectionTitle}>Recent Transactions</Text>
-      
+      <Text style={styles.sectionTitle}>Transactions</Text>
+
       {filterDate && (
         <View style={styles.activeFilterContainer}>
           <View style={styles.activeFilterChip}>
@@ -291,12 +293,20 @@ export default function PaymentsScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <PaymentItem item={item} onMenuPress={setActiveActionId} />}
-        renderSectionHeader={({ section: { title } }) => (
+        renderItem={({ item, index, section }) => (
+          <PaymentItem
+            item={item}
+            onMenuPress={setActiveActionId}
+            isFirst={index === 0}
+            isLast={index === section.data.length - 1}
+          />
+        )}
+        renderSectionHeader={({ section: { title, data } }) => (
           <View style={styles.sectionHeaderContainer}>
-            <Ionicons name="calendar" size={16} color={Colors.textTertiary} style={styles.sectionHeaderIcon} />
-            <Text style={styles.sectionHeaderText}>{title}</Text>
-            <View style={styles.sectionHeaderLine} />
+            <Text style={styles.sectionHeaderText}>{title.toUpperCase()}</Text>
+            <Text style={styles.sectionHeaderTotal}>
+              ₹{data.reduce((sum, p) => sum + p.amount, 0).toLocaleString()}
+            </Text>
           </View>
         )}
         ListHeaderComponent={renderHeader}
@@ -378,27 +388,22 @@ const styles = StyleSheet.create({
   listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'], paddingTop: Spacing.md },
   
   dashboardContainer: { marginBottom: Spacing.md },
-  dashboardTitle: { fontSize: Typography.xl, fontWeight: Typography.bold, color: Colors.text, marginBottom: Spacing.md },
-  
-  statsRow: { flexDirection: 'row', gap: Spacing.md, marginBottom: Spacing.md },
-  statCard: { 
-    flex: 1, borderRadius: BorderRadius.xl, padding: Spacing.xl, 
-    justifyContent: 'space-between',
+
+  heroCard: {
+    backgroundColor: Colors.primaryDeep, borderRadius: BorderRadius.xl, padding: Spacing.xl,
+    marginBottom: Spacing.xl,
   },
-  statIcon: { marginBottom: Spacing.sm },
-  statLabelInverse: { fontSize: Typography.sm, color: Colors.textInverse, opacity: 0.9, marginBottom: 4, fontWeight: Typography.medium },
-  statValueInverse: { fontSize: Typography['2xl'], fontWeight: Typography.bold, color: Colors.textInverse },
-  
-  monthlyStatCard: {
-    backgroundColor: Colors.surfaceElevated, borderRadius: BorderRadius.xl, padding: Spacing.lg,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: Spacing.xl, borderWidth: 0
-  },
-  monthlyStatHeader: { flexDirection: 'row', alignItems: 'center', gap: Spacing.sm },
-  monthlyIconBg: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.primaryFaded, justifyContent: 'center', alignItems: 'center' },
-  monthlyStatLabel: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text },
-  monthlyStatValue: { fontSize: Typography.xl, fontWeight: Typography.bold, color: Colors.primary },
-  
+  heroLabel: { fontSize: Typography.sm, fontWeight: Typography.medium, color: Colors.textInverseMuted },
+  heroValue: { fontSize: Typography['3xl'], fontWeight: Typography.bold, color: Colors.textInverse, letterSpacing: -0.5, marginTop: 4 },
+  heroDivider: { height: 1, backgroundColor: Colors.dividerOnDark, marginVertical: Spacing.lg },
+  heroStatsRow: { flexDirection: 'row', gap: Spacing.md },
+  heroStat: { flex: 1 },
+  heroStatLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  heroDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.warningDotOnDark },
+  heroStatLabel: { fontSize: Typography.xs, color: Colors.textInverseMuted },
+  heroStatValue: { fontSize: Typography.lg, fontWeight: Typography.semibold, color: Colors.textInverse, marginTop: 2 },
+  heroStatValueDue: { color: Colors.warningTextOnDark },
+
   sectionTitle: { fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.text, marginBottom: Spacing.sm },
   
   activeFilterContainer: {
@@ -441,8 +446,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   filterChipActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryDark,
+    borderColor: Colors.primaryDark,
   },
   filterChipText: {
     fontSize: Typography.sm,
@@ -455,50 +460,55 @@ const styles = StyleSheet.create({
   
   sectionHeaderContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: Spacing.lg,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
     paddingHorizontal: Spacing.xs,
   },
-  sectionHeaderIcon: {
-    marginRight: Spacing.sm,
-  },
   sectionHeaderText: {
-    fontSize: Typography.sm,
+    fontSize: Typography.xs,
     fontWeight: Typography.bold,
-    color: Colors.textSecondary,
+    color: Colors.textTertiary,
     letterSpacing: 1,
   },
-  sectionHeaderLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.border,
-    marginLeft: Spacing.md,
+  sectionHeaderTotal: {
+    fontSize: Typography.xs,
+    fontWeight: Typography.semibold,
+    color: Colors.textTertiary,
   },
-  
-  paymentCard: {
-    backgroundColor: Colors.surfaceElevated, borderRadius: BorderRadius.xl,
-    flexDirection: 'row', overflow: 'hidden', marginBottom: Spacing.md, borderWidth: 0
+
+  paymentRow: {
+    backgroundColor: Colors.surfaceElevated,
+    borderLeftWidth: 1, borderRightWidth: 1, borderColor: Colors.border,
+    flexDirection: 'row', alignItems: 'center', gap: Spacing.md,
+    paddingVertical: Spacing.md, paddingHorizontal: Spacing.base,
   },
-  paymentAccent: { width: 6 },
-  paymentContent: { flex: 1, padding: Spacing.base },
-  paymentHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  patientInfo: { flex: 1, marginRight: Spacing.md },
-  patientName: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text, marginBottom: 4 },
-  paymentDate: { fontSize: Typography.xs, color: Colors.textSecondary, textTransform: 'capitalize', fontWeight: Typography.medium },
-  
+  paymentRowFirst: {
+    borderTopWidth: 1, borderTopLeftRadius: BorderRadius.lg, borderTopRightRadius: BorderRadius.lg,
+  },
+  paymentRowLast: {
+    borderBottomWidth: 1, borderBottomLeftRadius: BorderRadius.lg, borderBottomRightRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  paymentRowDivider: { borderTopWidth: 1, borderTopColor: Colors.borderLight },
+
+  avatar: {
+    width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.primaryFaded,
+    justifyContent: 'center', alignItems: 'center', flexShrink: 0,
+  },
+  avatarText: { fontSize: Typography.sm, fontWeight: Typography.bold, color: Colors.primaryDark },
+
+  paymentContent: { flex: 1 },
+  patientName: { fontSize: Typography.base, fontWeight: Typography.semibold, color: Colors.text },
+  paymentSubtitle: { fontSize: Typography.xs, color: Colors.textSecondary, textTransform: 'capitalize', marginTop: 2 },
+  notesText: { fontSize: Typography.xs, color: Colors.textTertiary, fontStyle: 'italic', marginTop: 2 },
+
   amountInfo: { alignItems: 'flex-end' },
-  amountText: { fontSize: Typography.lg, fontWeight: Typography.bold, color: Colors.text, marginBottom: 6 },
-  
-  paymentFooter: { 
-    marginTop: Spacing.sm, paddingTop: Spacing.sm, borderTopWidth: 1, borderTopColor: Colors.borderLight,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'
-  },
-  footerLeft: { flex: 1, marginRight: Spacing.md },
-  methodText: { fontSize: Typography.xs, color: Colors.textSecondary, fontWeight: Typography.medium, marginBottom: 2 },
-  notesText: { fontSize: Typography.xs, color: Colors.textSecondary, fontStyle: 'italic' },
-  actionsContainer: { flexDirection: 'row', alignItems: 'center' },
-  actionBtn: { padding: Spacing.xs, marginLeft: Spacing.sm },
+  amountText: { fontSize: Typography.base, fontWeight: Typography.bold, color: Colors.text },
+  statusText: { fontSize: Typography.xs, fontWeight: Typography.semibold, marginTop: 2 },
+
+  actionBtn: { padding: Spacing.xs },
   
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.xl,

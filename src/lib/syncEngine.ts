@@ -30,6 +30,14 @@ import {
   deleteAttendance,
 } from '@/services/attendanceService';
 import {
+  getAppointments,
+  createAppointmentSeriesRecord,
+  updateAppointmentSeries,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+} from '@/services/appointmentService';
+import {
   getPayments,
   createPayment,
   updatePayment,
@@ -126,6 +134,44 @@ async function syncEntry(
       break;
     }
 
+    // ── Appointment Series ───────────────────────────────────────────────────
+    case 'appointment_series': {
+      if (entry.operation === 'create') {
+        const { data, error } = await createAppointmentSeriesRecord(payload);
+        if (error || !data) return { error: error ?? 'Unknown error' };
+        return { realId: data.id };
+      }
+      if (entry.operation === 'update') {
+        const id = idMapping[entry.recordId] ?? entry.recordId;
+        const { error } = await updateAppointmentSeries(id, payload);
+        if (error) return { error };
+        return {};
+      }
+      break;
+    }
+
+    // ── Appointments ──────────────────────────────────────────────────────────
+    case 'appointments': {
+      if (entry.operation === 'create') {
+        const { data, error } = await createAppointment(payload);
+        if (error || !data) return { error: error ?? 'Unknown error' };
+        return { realId: data.id };
+      }
+      if (entry.operation === 'update') {
+        const id = idMapping[entry.recordId] ?? entry.recordId;
+        const { error } = await updateAppointment(id, payload);
+        if (error) return { error };
+        return {};
+      }
+      if (entry.operation === 'delete') {
+        const id = idMapping[entry.recordId] ?? entry.recordId;
+        const { error } = await deleteAppointment(id);
+        if (error) return { error };
+        return {};
+      }
+      break;
+    }
+
     // ── Payments ──────────────────────────────────────────────────────────────
     case 'payments': {
       if (entry.operation === 'create') {
@@ -208,10 +254,11 @@ async function syncEntry(
 
 async function refreshCollectionCaches(): Promise<void> {
   try {
-    const [patientsRes, attendancesRes, paymentsRes] = await Promise.allSettled([
+    const [patientsRes, attendancesRes, paymentsRes, appointmentsRes] = await Promise.allSettled([
       getPatients('all'),
       getAttendances(undefined, 0, 100),
       getPayments(0, 100),
+      getAppointments(undefined, 0, 100),
     ]);
 
     if (patientsRes.status === 'fulfilled' && patientsRes.value.data) {
@@ -222,6 +269,9 @@ async function refreshCollectionCaches(): Promise<void> {
     }
     if (paymentsRes.status === 'fulfilled' && paymentsRes.value.data) {
       await offlineCache.setCollection('payments', paymentsRes.value.data);
+    }
+    if (appointmentsRes.status === 'fulfilled' && appointmentsRes.value.data) {
+      await offlineCache.setCollection('appointments', appointmentsRes.value.data);
     }
   } catch {
     // Non-critical — cache will be refreshed on next read

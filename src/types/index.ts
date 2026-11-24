@@ -192,3 +192,48 @@ export interface WaitlistEntry {
   created_at: string;
   updated_at: string;
 }
+
+// ─── Appointments ──────────────────────────────────────────────
+
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
+
+export type RecurrenceFrequency = 'one_off' | 'daily' | 'weekly' | 'biweekly' | 'monthly';
+
+export type RecurrenceEndType = 'occurrences' | 'end_date' | 'ongoing';
+
+export type SeriesStatus = 'active' | 'cancelled' | 'completed';
+
+export interface AppointmentSeries {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  start_date: string;
+  start_time: string;
+  duration_minutes: number;
+  frequency: RecurrenceFrequency;
+  days_of_week: number[] | null;
+  end_type: RecurrenceEndType;
+  end_date: string | null;
+  occurrences_count: number | null;
+  status: SeriesStatus;
+  notes: string | null;
+  patient?: { full_name: string };
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Appointment {
+  id: string;
+  doctor_id: string;
+  patient_id: string;
+  series_id: string;
+  appointment_date: string;
+  appointment_time: string;
+  duration_minutes: number;
+  status: AppointmentStatus;
+  notes: string | null;
+  patient?: { full_name: string };
+  series?: { frequency: RecurrenceFrequency };
+  created_at: string;
+  updated_at: string;
+}
