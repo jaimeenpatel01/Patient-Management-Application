@@ -67,8 +67,7 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:new": "supabase migration new",
-    "db:migrations:list": "supabase migration list",
-    "db:push:prod": "supabase db push"
+    "db:migrations:list": "supabase migration list"
   },
   "private": true
 }

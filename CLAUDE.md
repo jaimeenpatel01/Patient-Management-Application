@@ -70,7 +70,7 @@ Security model: the server binds to `127.0.0.1` only, checks `Host`/`Origin`, an
 When changing admin SQL:
 - `admin_subscription_state` (015) mirrors `getEffectiveTier` in `src/lib/subscription.ts`; keep them in sync.
 - Billing values (Pro prices, free patient cap, trial days, UPI ID/payee, verification time) are edited in the portal's Settings tab, not in code. They live in `subscription_plans` and `billing_settings` (016). The app loads them into `AuthContext.billingSettings`; `src/constants/billing.ts` only holds offline fallbacks.
-- `public.appointments` doesn't exist on prod: migration 004 dropped it, and it returns only with the appointments feature. Admin stats count `attendances`, and count appointments only when the table exists.
+- `public.appointments` and `appointment_series` come from 012/013 (appointments feature, v2.4.0); the old table from 001 was dropped in 004. Admin stats count `attendances`, and count appointments only when the table exists.
 
 ## Architecture
 
