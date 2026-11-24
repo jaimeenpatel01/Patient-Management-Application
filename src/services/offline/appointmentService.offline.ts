@@ -269,41 +269,45 @@ export async function deleteAppointment(id: string): Promise<{ error: string | n
 // ─── cancelAppointmentSeries ────────────────────────────────────────────────────
 
 export async function cancelAppointmentSeries(seriesId: string): Promise<{ error: string | null }> {
+  const isDeletable = (a: Appointment) =>
+    a.series_id === seriesId && appointmentService.SERIES_CANCEL_DELETABLE_STATUSES.includes(a.status);
+
   if (getIsOnline()) {
     try {
-      return await appointmentService.cancelAppointmentSeries(seriesId);
+      const result = await appointmentService.cancelAppointmentSeries(seriesId);
+      if (!result.error) {
+        const cached = await offlineCache.getCollection<Appointment>(ENTITY);
+        if (cached) await offlineCache.setCollection<Appointment>(ENTITY, cached.filter((a) => !isDeletable(a)));
+      }
+      return result;
     } catch {
       // Fall through
     }
   }
 
+  const cached = await offlineCache.getCollection<Appointment>(ENTITY);
+  if (cached) {
+    const removed = cached.filter(isDeletable);
+    await offlineCache.setCollection<Appointment>(ENTITY, cached.filter((a) => !isDeletable(a)));
+
+    for (const a of removed) {
+      await syncQueue.enqueue({
+        entity: ENTITY,
+        operation: 'delete',
+        recordId: a.id,
+        payload: {},
+      });
+    }
+  }
+
+  // Offline the cache may not hold every completed visit, so never delete the
+  // series here (appointments.series_id cascades); marking it cancelled is safe.
   await syncQueue.enqueue({
     entity: SERIES_ENTITY,
     operation: 'update',
     recordId: seriesId,
     payload: { status: 'cancelled' },
   });
-
-  const cached = await offlineCache.getCollection<Appointment>(ENTITY);
-  if (cached) {
-    const updated = cached.map((a) =>
-      a.series_id === seriesId && a.status === 'scheduled'
-        ? { ...a, status: 'cancelled' as const, updated_at: new Date().toISOString() }
-        : a,
-    );
-    await offlineCache.setCollection<Appointment>(ENTITY, updated);
-
-    for (const a of updated) {
-      if (a.series_id === seriesId && a.status === 'cancelled') {
-        await syncQueue.enqueue({
-          entity: ENTITY,
-          operation: 'update',
-          recordId: a.id,
-          payload: { status: 'cancelled' },
-        });
-      }
-    }
-  }
 
   return { error: null };
 }

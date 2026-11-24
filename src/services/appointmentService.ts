@@ -202,24 +202,41 @@ export async function deleteAppointment(id: string): Promise<{ error: string | n
   return { error: null };
 }
 
+/** Statuses removed when a whole series is cancelled; completed/no-show visits are kept as history. */
+export const SERIES_CANCEL_DELETABLE_STATUSES: AppointmentStatus[] = ['scheduled', 'cancelled'];
+
+/**
+ * Cancels a recurring series by deleting its upcoming (and already-cancelled)
+ * appointments rather than keeping them around as 'cancelled' rows. The series
+ * row itself is deleted when nothing references it any more; otherwise it's
+ * marked 'cancelled' so the ongoing-series generator stops — it can't be
+ * deleted then, because appointments.series_id cascades and would take the
+ * completed history with it.
+ */
 export async function cancelAppointmentSeries(seriesId: string): Promise<{ error: string | null }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not authenticated' };
 
-  const { error: seriesError } = await supabase
-    .from('appointment_series')
-    .update({ status: 'cancelled' })
-    .eq('id', seriesId)
-    .eq('doctor_id', user.id);
-  if (seriesError) return { error: seriesError.message };
-
-  const { error: appointmentsError } = await supabase
+  const { error: deleteError } = await supabase
     .from('appointments')
-    .update({ status: 'cancelled' })
+    .delete()
     .eq('series_id', seriesId)
     .eq('doctor_id', user.id)
-    .eq('status', 'scheduled');
-  if (appointmentsError) return { error: appointmentsError.message };
+    .in('status', SERIES_CANCEL_DELETABLE_STATUSES);
+  if (deleteError) return { error: deleteError.message };
+
+  const { count, error: countError } = await supabase
+    .from('appointments')
+    .select('id', { count: 'exact', head: true })
+    .eq('series_id', seriesId)
+    .eq('doctor_id', user.id);
+  if (countError) return { error: countError.message };
+
+  const seriesQuery = supabase.from('appointment_series');
+  const { error: seriesError } = count === 0
+    ? await seriesQuery.delete().eq('id', seriesId).eq('doctor_id', user.id)
+    : await seriesQuery.update({ status: 'cancelled' }).eq('id', seriesId).eq('doctor_id', user.id);
+  if (seriesError) return { error: seriesError.message };
 
   return { error: null };
 }

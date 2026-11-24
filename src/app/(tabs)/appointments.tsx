@@ -12,11 +12,12 @@ import {
   cancelAppointmentSeries,
   topUpSeriesIfNeeded,
 } from '@/services/offline/appointmentService.offline';
-import { createAttendance } from '@/services/offline/attendanceService.offline';
+import { createAttendance, getAttendances, deleteAttendance } from '@/services/offline/attendanceService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu, ActionMenuOption } from '@/components/ui/ActionMenu';
 import { StatusBadge } from '@/components/ui/StatusBadge';
+import { CancelSeriesDialog } from '@/components/ui/CancelSeriesDialog';
 import { formatTime12Hour, formatRecurrenceSummary, groupItemsByDate } from '@/lib/formatters';
 import type { Appointment } from '@/types';
 
@@ -36,6 +37,7 @@ export default function AppointmentsScreen() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const [activeAppointment, setActiveAppointment] = useState<Appointment | null>(null);
+  const [seriesToCancel, setSeriesToCancel] = useState<Appointment | null>(null);
 
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -108,6 +110,29 @@ export default function AppointmentsScreen() {
     loadAppointments(0, true, filterDate);
   };
 
+  /** Reverts a completed appointment to scheduled and removes the attendance logged when it was completed. */
+  const handleUndoCompleted = async (appointment: Appointment) => {
+    const { error } = await updateAppointment(appointment.id, { status: 'scheduled' });
+    if (error) {
+      showToast('Could not undo. Please try again.', 'error');
+      return;
+    }
+
+    // Attendances aren't linked to appointments, so match the one Mark Completed
+    // created: same patient, date and time.
+    const { data: attendances } = await getAttendances(appointment.appointment_date, 0, 100);
+    const attendance = attendances?.find(
+      (a) => a.patient_id === appointment.patient_id && a.attendance_time === appointment.appointment_time
+    );
+    if (attendance) {
+      await deleteAttendance(attendance.id);
+    } else {
+      showToast('Appointment set back to scheduled. Check Attendance for a leftover entry.', 'warning');
+    }
+
+    loadAppointments(0, true, filterDate);
+  };
+
   const handleDelete = (id: string) => {
     showAlert('Delete Appointment', 'Are you sure you want to delete this appointment?', [
       { text: 'Cancel', style: 'cancel' },
@@ -122,22 +147,15 @@ export default function AppointmentsScreen() {
     ]);
   };
 
-  const handleCancelSeries = (seriesId: string) => {
-    showAlert(
-      'Cancel Recurring Schedule',
-      'This will cancel every upcoming appointment in this schedule. Already completed appointments are not affected.',
-      [
-        { text: 'Keep Schedule', style: 'cancel' },
-        {
-          text: 'Cancel Schedule',
-          style: 'destructive',
-          onPress: async () => {
-            await cancelAppointmentSeries(seriesId);
-            loadAppointments(0, true, filterDate);
-          },
-        },
-      ]
-    );
+  const handleConfirmCancelSeries = async () => {
+    const appointment = seriesToCancel;
+    setSeriesToCancel(null);
+    if (!appointment) return;
+    const { error } = await cancelAppointmentSeries(appointment.series_id);
+    if (error) {
+      showToast('Could not cancel the schedule. Please try again.', 'error');
+    }
+    loadAppointments(0, true, filterDate);
   };
 
   const sections = useMemo(
@@ -204,17 +222,58 @@ export default function AppointmentsScreen() {
   const actionOptions = useMemo((): ActionMenuOption[] => {
     if (!activeAppointment) return [];
     const appointment = activeAppointment;
-    const options: ActionMenuOption[] = [
-      {
-        label: 'Edit',
-        icon: 'pencil',
-        color: Colors.primary,
-        onPress: () => {
-          setActiveAppointment(null);
-          router.push(`/appointment/add?id=${appointment.id}` as any);
+    const options: ActionMenuOption[] = [];
+
+    if (appointment.status === 'completed') {
+      options.push(
+        {
+          label: 'Record Payment',
+          icon: 'wallet',
+          color: Colors.primary,
+          onPress: () => {
+            setActiveAppointment(null);
+            router.push(`/payment/add?patientId=${appointment.patient_id}` as any);
+          },
         },
+        {
+          label: 'Add Consultation Notes',
+          icon: 'document-text',
+          color: Colors.primary,
+          onPress: () => {
+            setActiveAppointment(null);
+            router.push(`/consultation/add?patientId=${appointment.patient_id}` as any);
+          },
+        },
+        {
+          label: 'Book Follow-up',
+          icon: 'calendar',
+          color: Colors.primary,
+          onPress: () => {
+            setActiveAppointment(null);
+            router.push(`/appointment/add?patientId=${appointment.patient_id}` as any);
+          },
+        },
+        {
+          label: 'Undo Completed',
+          icon: 'arrow-undo',
+          color: Colors.warning,
+          onPress: () => {
+            setActiveAppointment(null);
+            handleUndoCompleted(appointment);
+          },
+        }
+      );
+    }
+
+    options.push({
+      label: 'Edit',
+      icon: 'pencil',
+      color: Colors.primary,
+      onPress: () => {
+        setActiveAppointment(null);
+        router.push(`/appointment/add?id=${appointment.id}` as any);
       },
-    ];
+    });
 
     if (appointment.status === 'scheduled') {
       options.push(
@@ -255,7 +314,7 @@ export default function AppointmentsScreen() {
         color: Colors.error,
         onPress: () => {
           setActiveAppointment(null);
-          handleCancelSeries(appointment.series_id);
+          setSeriesToCancel(appointment);
         },
       });
     } else {
@@ -346,9 +405,18 @@ export default function AppointmentsScreen() {
           : undefined}
       />
 
+      <CancelSeriesDialog
+        visible={!!seriesToCancel}
+        patientName={seriesToCancel?.patient?.full_name || 'this patient'}
+        scheduleLabel={seriesToCancel
+          ? `${formatRecurrenceSummary(seriesToCancel.series?.frequency ?? 'one_off').toLowerCase()}, ${formatTime12Hour(seriesToCancel.appointment_time)}`
+          : ''}
+        onKeep={() => setSeriesToCancel(null)}
+        onConfirm={handleConfirmCancelSeries}
+      />
+
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/appointment/add' as any)} activeOpacity={0.8}>
-        <Ionicons name="add" size={24} color={Colors.textInverse} />
-        <Text style={styles.fabText}>New Appointment</Text>
+        <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -438,9 +506,7 @@ const styles = StyleSheet.create({
   notesText: { fontSize: Typography.sm, color: Colors.textSecondary, fontStyle: 'italic' },
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.lg,
-    backgroundColor: Colors.primary, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.lg, height: 56,
-    borderRadius: 28, ...Shadows.xl,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
+    justifyContent: 'center', alignItems: 'center', ...Shadows.xl,
   },
-  fabText: { color: Colors.textInverse, fontWeight: Typography.bold, marginLeft: Spacing.xs, fontSize: Typography.base },
 });

@@ -77,7 +77,7 @@ function WeekdayPicker({ value, onChange }: { value: number[]; onChange: (days: 
 
 export default function AppointmentFormScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  const { id, patientId: initialPatientId } = useLocalSearchParams<{ id?: string; patientId?: string }>();
   const { showAlert } = useAlert();
   const isEditMode = !!id;
 
@@ -88,7 +88,7 @@ export default function AppointmentFormScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(initialPatientId ?? null);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const now = new Date();
