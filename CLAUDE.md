@@ -22,6 +22,56 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=
 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=
 ```
 
+### Local Supabase (dev database)
+
+The Supabase CLI is a devDependency — run it via `npx supabase`. Requires Docker Desktop to be running.
+
+```bash
+npx supabase start            # Boot local stack (Postgres, Auth, Storage, Studio) and apply all migrations
+npx supabase status           # Show local URLs and keys (API URL, anon key, Studio URL)
+npx supabase db reset         # Wipe local DB and re-apply every migration in supabase/migrations/
+npx supabase migration new <name>   # Create a new migration file
+npx supabase functions serve  # Run edge functions (e.g. delete-account) locally
+npx supabase stop             # Stop the stack (data persists; add --no-backup to wipe)
+```
+
+Defaults: API `http://127.0.0.1:54321`, Postgres `postgresql://postgres:postgres@127.0.0.1:54322/postgres`, Studio `http://127.0.0.1:54323`, Inbucket (captures auth emails) `http://127.0.0.1:54324`.
+
+To point the app at the local stack, create `.env.development.local` (git-ignored, overrides `.env.local` in dev) with the API URL and anon key from `npx supabase status`:
+```
+EXPO_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+EXPO_PUBLIC_SUPABASE_ANON_KEY=<anon key from supabase status>
+```
+On a physical device use your machine's LAN IP instead of `127.0.0.1`; on the Android emulator use `10.0.2.2`. Google Sign-In won't work locally unless `[auth.external.google]` is configured in `supabase/config.toml` — use email/password auth for local testing.
+
+### Admin portal (local only)
+
+```bash
+npm run admin   # http://127.0.0.1:4500 — users, subscription payments, stats; verify/reject payments, change plans
+```
+
+Lives in `admin/` (plain Node + vanilla JS, no build, excluded from ESLint). Never deploy it or import it into the app. See `admin/README.md`.
+
+Setup:
+1. Create the env file: `cp admin/.env.admin.example admin/.env.admin`. It's git-ignored. Fill in:
+   - `SUPABASE_URL`: local stack `http://127.0.0.1:54321`.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Dashboard → Project Settings → API → `service_role`, or the local key from `npx supabase status`.
+   - The service-role key bypasses RLS; never commit it.
+2. Apply the admin migrations to the target database. They are service-role-only `admin_*` functions:
+   - `014_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
+   - `015_admin_subscriptions.sql`: plans, revenue, payments, verify/reject, plan changes. Requires `012_subscriptions.sql`, so apply right after 012 when subscriptions ship. Until then the portal hides those features automatically.
+   - `016_billing_settings.sql`: the Settings tab and `admin_update_billing`. Also requires 012; ship it with 012 and 015.
+   - On prod, paste the files into Studio's SQL editor; don't run `db push`, because prod has no recorded migration history.
+   - Locally, `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f <file>` applies a file without wiping data. `db reset` wipes it.
+3. Run `npm run admin` and open http://127.0.0.1:4500.
+
+Security model: the server binds to `127.0.0.1` only, checks `Host`/`Origin`, and requires a per-run token injected into the page. It also requires a JSON `Content-Type` on POSTs. App users get "permission denied" on all `admin_*` functions.
+
+When changing admin SQL:
+- `admin_subscription_state` (015) mirrors `getEffectiveTier` in `src/lib/subscription.ts`; keep them in sync.
+- Billing values (Pro prices, free patient cap, trial days, UPI ID/payee, verification time) are edited in the portal's Settings tab, not in code. They live in `subscription_plans` and `billing_settings` (016). The app loads them into `AuthContext.billingSettings`; `src/constants/billing.ts` only holds offline fallbacks.
+- `public.appointments` doesn't exist on prod: migration 004 dropped it, and it returns only with the appointments feature. Admin stats count `attendances`, and count appointments only when the table exists.
+
 ## Architecture
 
 **PhysioDesk** is a React Native / Expo app for physiotherapists to manage patients, appointments, consultations, documents, and payments. Single-doctor per instance; all data is isolated by `doctor_id` via Supabase Row-Level Security.
@@ -67,18 +117,7 @@ Reusable components in `src/components/ui/`: `Button`, `Input`, `CustomAlert`, `
 
 9 tables in Supabase (PostgreSQL): `profiles`, `patients`, `appointments`, `consultations`, `diagnoses`, `treatments`, `exercise_plans`, `documents`, `payments`. All have UUID PKs, `doctor_id` FK, `created_at`/`updated_at` managed by triggers.
 
-Migrations are in `supabase/migrations/`, numbered `NNN_description.sql` (zero-padded, sequential — keep this convention instead of the CLI's default timestamp names so ordering stays obvious).
-
-**Environments:** the Supabase CLI is linked to the production project (`slszmmuonicyojnosvsa`). There is no separate hosted dev project — the local Docker stack started by `supabase start` (`db:start`) is the dev environment, and `.env.local` already points the app at it. Never run `supabase db push` against a migration you haven't first applied and tested locally.
-
-**Workflow for schema changes:**
-1. `npm run db:start` — boot the local stack (first run only needs Docker running).
-2. `npm run db:new -- <description>` — scaffolds `supabase/migrations/<timestamp>_<description>.sql`; rename the file to the next `NNN_` number to match the existing convention.
-3. Write the SQL, then `npm run db:reset` — wipes the local DB and replays every migration in order from scratch. This is what catches migrations that are broken or depend on manual steps a fresh apply won't have.
-4. Run the app against `.env.local` and verify the change end-to-end.
-5. Only once it's verified locally: `npm run db:push:prod` — applies pending migrations to the linked production project. The CLI lists what will run and asks for confirmation before applying.
-
-Use `npm run db:migrations:list` any time to see which migrations are applied locally vs. on prod before pushing.
+Migrations are in `supabase/migrations/`. Schema changes must be made there and applied via Supabase CLI.
 
 ### TypeScript
 
