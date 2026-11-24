@@ -7,6 +7,13 @@
     "payments": "Payments",
     "profile": "Profile"
   },
+  "tabBar": {
+    "dashboard": "Home",
+    "patients": "Patients",
+    "attendance": "Attendance",
+    "appointments": "Schedule",
+    "payments": "Payments"
+  },
   "login": {
     "appName": "PhysioDesk",
     "appTagline": "Manage your clinic efficiently",
@@ -60,5 +67,11 @@
     "subtitle": "Choose your preferred language",
     "english": "English",
     "hindi": "हिन्दी"
+  },
+  "common": {
+    "back": "Back"
+  },
+  "profileMenu": {
+    "open": "Open profile menu"
   }
 }

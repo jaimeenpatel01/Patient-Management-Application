@@ -7,6 +7,13 @@
     "payments": "भुगतान",
     "profile": "प्रोफ़ाइल"
   },
+  "tabBar": {
+    "dashboard": "होम",
+    "patients": "मरीज़",
+    "attendance": "उपस्थिति",
+    "appointments": "शेड्यूल",
+    "payments": "भुगतान"
+  },
   "login": {
     "appName": "PhysioDesk",
     "appTagline": "अपने क्लिनिक को कुशलता से प्रबंधित करें",
@@ -60,5 +67,11 @@
     "subtitle": "अपनी पसंदीदा भाषा चुनें",
     "english": "English",
     "hindi": "हिन्दी"
+  },
+  "common": {
+    "back": "वापस"
+  },
+  "profileMenu": {
+    "open": "प्रोफ़ाइल मेनू खोलें"
   }
 }

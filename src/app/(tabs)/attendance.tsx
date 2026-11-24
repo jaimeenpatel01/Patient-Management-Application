@@ -328,8 +328,7 @@ export default function AttendanceScreen() {
       />
 
       <TouchableOpacity style={styles.fab} onPress={() => router.push('/attendance/add' as any)} activeOpacity={0.8}>
-        <Ionicons name="add" size={24} color={Colors.textInverse} />
-        <Text style={styles.fabText}>Mark Attendance</Text>
+        <Ionicons name="add" size={28} color={Colors.textInverse} />
       </TouchableOpacity>
     </View>
   );
@@ -419,9 +418,7 @@ const styles = StyleSheet.create({
   notesText: { fontSize: Typography.sm, color: Colors.textSecondary, fontStyle: 'italic' },
   fab: {
     position: 'absolute', bottom: Spacing.xl, right: Spacing.lg,
-    backgroundColor: Colors.primary, flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: Spacing.lg, height: 56,
-    borderRadius: 28, ...Shadows.xl,
+    width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary,
+    justifyContent: 'center', alignItems: 'center', ...Shadows.xl,
   },
-  fabText: { color: Colors.textInverse, fontWeight: Typography.bold, marginLeft: Spacing.xs, fontSize: Typography.base },
 });
