@@ -18,10 +18,14 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NetworkProvider } from '@/contexts/NetworkContext';
 import { CustomAlert } from '@/components/ui/CustomAlert';
 import { Toast } from '@/components/ui/Toast';
+import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Colors } from '@/constants/theme';
 import AnimatedSplash from '@/components/SplashScreen';
+import { UpdateRequiredModal } from '@/components/UpdateRequiredModal';
+import { getAppSettings } from '@/services/appSettingsService';
+import { isVersionBelow } from '@/lib/version';
 
 // Keep the native splash visible until we're ready to show our JS one.
 SplashScreen.preventAutoHideAsync();
@@ -84,9 +88,32 @@ function NetworkProviderWithAuth({ children }: { children: React.ReactNode }) {
   return <NetworkProvider userId={user?.id}>{children}</NetworkProvider>;
 }
 
+// ─── Forced update gate ────────────────────────────────────────────────────────
+// Runs independent of auth — a stale build should be blocked before login too.
+function useUpdateGate() {
+  const [updateInfo, setUpdateInfo] = useState<{ required: boolean; message: string | null }>({
+    required: false,
+    message: null,
+  });
+
+  useEffect(() => {
+    const currentVersion = Constants.expoConfig?.version;
+    if (!currentVersion) return;
+
+    getAppSettings().then(({ data }) => {
+      if (data && isVersionBelow(currentVersion, data.minAppVersion)) {
+        setUpdateInfo({ required: true, message: data.updateMessage });
+      }
+    });
+  }, []);
+
+  return updateInfo;
+}
+
 // ─── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
+  const updateGate = useUpdateGate();
 
   // Hide the native splash immediately — our animated JS splash takes over.
   useEffect(() => {
@@ -110,6 +137,8 @@ export default function RootLayout() {
           </ToastProvider>
           <CustomAlert />
         </AlertProvider>
+
+        <UpdateRequiredModal visible={updateGate.required} message={updateGate.message} />
 
         {/* Animated JS splash rendered on top of everything */}
         {showSplash && (
