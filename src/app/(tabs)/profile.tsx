@@ -163,9 +163,9 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Practice Section */}
+        {/* Clinic Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PRACTICE</Text>
+          <Text style={styles.sectionTitle}>CLINIC</Text>
           <View style={[styles.menuCard, Shadows.sm]}>
             {practiceItems.map((item, index) => (
               <React.Fragment key={item.label}>
