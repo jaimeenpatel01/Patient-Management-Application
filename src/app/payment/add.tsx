@@ -7,6 +7,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ChipSelector } from '@/components/ui/ChipSelector';
+import { AppDateTimePicker } from '@/components/ui/DateTimePicker';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
 import { PAYMENT_TYPES, PAYMENT_METHODS, PAYMENT_STATUSES } from '@/constants/options';
@@ -15,6 +16,7 @@ import { createPayment, updatePayment } from '@/services/offline/paymentService.
 import type { Patient, PaymentType, PaymentMethod, PaymentStatus } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/contexts/AlertContext';
+import { toLocalDateString } from '@/lib/formatters';
 
 export default function AddPaymentScreen() {
   const router = useRouter();
@@ -34,6 +36,7 @@ export default function AddPaymentScreen() {
   const [paymentType, setPaymentType] = useState<PaymentType>('consultation');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('upi');
   const [status, setStatus] = useState<PaymentStatus>('paid');
+  const [paymentDate, setPaymentDate] = useState<string>(toLocalDateString(new Date()));
   const [notes, setNotes] = useState<string>('');
 
   useEffect(() => {
@@ -61,6 +64,7 @@ export default function AddPaymentScreen() {
           setPaymentType(data.payment_type as PaymentType);
           setPaymentMethod((data.payment_method || 'upi') as PaymentMethod);
           setStatus(data.status as PaymentStatus);
+          setPaymentDate(data.payment_date || toLocalDateString(new Date()));
           setNotes(data.notes || '');
         }
         setIsFetchingRecord(false);
@@ -91,6 +95,7 @@ export default function AddPaymentScreen() {
         payment_type: paymentType,
         payment_method: paymentMethod,
         status: status,
+        payment_date: paymentDate,
         notes: notes.trim() || null,
       });
       error = res.error;
@@ -102,7 +107,7 @@ export default function AddPaymentScreen() {
         payment_type: paymentType,
         payment_method: paymentMethod,
         status: status,
-        payment_date: new Date().toISOString().split('T')[0],
+        payment_date: paymentDate,
         notes: notes.trim() || null,
       });
       error = res.error;
@@ -178,7 +183,7 @@ export default function AddPaymentScreen() {
             error={errors.amount}
           />
 
-          <View style={styles.spacer} />
+          <AppDateTimePicker label="Date" value={paymentDate} onChange={setPaymentDate} mode="date" />
 
           <Text style={styles.fieldLabel}>Payment Type</Text>
           <ChipSelector options={PAYMENT_TYPES} value={paymentType} onChange={setPaymentType} />

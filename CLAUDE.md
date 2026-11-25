@@ -13,7 +13,17 @@ npm test                # Run unit tests (Jest)
 npm run test:coverage   # Run tests with coverage report
 eas build --platform android --profile preview   # Preview APK build
 eas build --platform android --profile production # Production build
+eas build --platform android --profile production --local --non-interactive  # Production .aab built on this machine (~20 min; writes build-<timestamp>.aab to the repo root, git-ignored)
 ```
+
+### Releasing a new version
+
+1. Bump `expo.version` in `app.json` (e.g. `2.4.1` → `2.5.0`) and commit it. Every release needs a higher version than the last one shipped, or the update prompt can't tell builds apart. `eas.json` uses `appVersionSource: "remote"` + `autoIncrement`, so EAS bumps the Android `versionCode` itself; don't rely on it to bump `version`.
+2. Build the `.aab` (command above) and upload it in Play Console (internal testing or production) with release notes.
+3. Once the release is live on Play Store, optionally prompt users on older builds from the admin portal's App update tab (`npm run admin:prod`):
+   - **Soft:** set the minimum version to the new version. Users get a dismissible prompt that returns on every launch.
+   - **Hard:** only for breaking changes. It blocks the app until they update, so never use it before the version is installable.
+   - Routine releases need no change there.
 
 Environment variables (`.env` file required):
 ```
@@ -47,30 +57,33 @@ On a physical device use your machine's LAN IP instead of `127.0.0.1`; on the An
 ### Admin portal (local only)
 
 ```bash
-npm run admin   # http://127.0.0.1:4500 — users, subscription payments, stats; verify/reject payments, change plans
+npm run admin:dev    # local DB  → http://127.0.0.1:4500 (env: admin/.env.admin)
+npm run admin:prod   # production → http://127.0.0.1:4501 (env: admin/.env.admin.prod), red "Production" label
+# Users, stats, app update prompt (+ payments/plans once subscriptions ship)
 ```
 
 Lives in `admin/` (plain Node + vanilla JS, no build, excluded from ESLint). Never deploy it or import it into the app. See `admin/README.md`.
 
 Setup:
-1. Create the env file: `cp admin/.env.admin.example admin/.env.admin`. It's git-ignored. Fill in:
-   - `SUPABASE_URL`: local stack `http://127.0.0.1:54321`.
-   - `SUPABASE_SERVICE_ROLE_KEY`: Dashboard → Project Settings → API → `service_role`, or the local key from `npx supabase status`.
+1. Create the env files from `admin/.env.admin.example`. Both are git-ignored:
+   - `admin/.env.admin` (dev): `SUPABASE_URL=http://127.0.0.1:54321` and the local `service_role` key from `npx supabase status`.
+   - `admin/.env.admin.prod` (prod): the project URL and the `service_role` key from Dashboard → Project Settings → API.
    - The service-role key bypasses RLS; never commit it.
+   - The server labels the session from `SUPABASE_URL`: localhost, `10.0.2.2` or a private LAN IP is Local (port 4500); anything else is Production (port 4501, red label).
 2. Apply the admin migrations to the target database. They are service-role-only `admin_*` functions:
-   - `014_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
-   - `015_admin_subscriptions.sql`: plans, revenue, payments, verify/reject, plan changes. Requires `012_subscriptions.sql`, so apply right after 012 when subscriptions ship. Until then the portal hides those features automatically.
-   - `016_billing_settings.sql`: the Settings tab and `admin_update_billing`. Also requires 012; ship it with 012 and 015.
+   - `016_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
+   - `017_admin_app_settings.sql`: `admin_update_app_settings`, used by the App update tab. Requires `014_app_settings.sql` and `015_app_settings_force_update.sql`.
+   - Subscription admin migrations (plans, revenue, payments, billing settings) are on the `feature/subscription-model` branch and aren't merged here yet. Until they're applied the portal hides those tabs automatically.
    - On prod, paste the files into Studio's SQL editor; don't run `db push`, because prod has no recorded migration history.
    - Locally, `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f <file>` applies a file without wiping data. `db reset` wipes it.
-3. Run `npm run admin` and open http://127.0.0.1:4500.
+3. Run `npm run admin:dev` (http://127.0.0.1:4500) or `npm run admin:prod` (http://127.0.0.1:4501).
 
 Security model: the server binds to `127.0.0.1` only, checks `Host`/`Origin`, and requires a per-run token injected into the page. It also requires a JSON `Content-Type` on POSTs. App users get "permission denied" on all `admin_*` functions.
 
 When changing admin SQL:
-- `admin_subscription_state` (015) mirrors `getEffectiveTier` in `src/lib/subscription.ts`; keep them in sync.
-- Billing values (Pro prices, free patient cap, trial days, UPI ID/payee, verification time) are edited in the portal's Settings tab, not in code. They live in `subscription_plans` and `billing_settings` (016). The app loads them into `AuthContext.billingSettings`; `src/constants/billing.ts` only holds offline fallbacks.
+- The update prompt (`min_app_version`, `force_update`, `update_message` in `app_settings`) is managed from the portal's App update tab, not by hand-written SQL. The portal's `compareVersions` in `admin/app.js` mirrors `src/lib/version.ts`, and its default messages mirror `UpdateRequiredModal.tsx`; keep them in sync.
 - `public.appointments` and `appointment_series` come from 012/013 (appointments feature, v2.4.0); the old table from 001 was dropped in 004. Admin stats count `attendances`, and count appointments only when the table exists.
+- When the subscription-model branch merges, its migrations (`012_subscriptions`, `014_admin_portal`, `015_admin_subscriptions`, `016_billing_settings`) collide with this branch's numbers and must be renumbered after `017`. Its `014_admin_portal.sql` is the same as `016_admin_portal.sql` here, so drop it rather than applying it twice.
 
 ## Architecture
 
@@ -87,6 +100,10 @@ src/app/
 ```
 
 The root `_layout.tsx` redirects unauthenticated users to `/login` and authenticated users away from auth screens. Google Sign-In users who haven't completed their profile are redirected to `/complete-profile`.
+
+### Forced update prompt
+
+`useUpdateGate()` in `src/app/_layout.tsx` runs once per launch, before and independent of auth. It compares the installed version (`Constants.expoConfig.version`, i.e. `app.json`'s `version` at build time) with `min_app_version` in the singleton `app_settings` table (migrations 014/015, readable by anyone). If the app is older it shows `UpdateRequiredModal`: hard when `force_update` is true (no dismiss, back button disabled), soft otherwise ("Remind me later", hidden until the next launch). The modal opens the Play Store listing. If the settings can't be fetched, no prompt is shown; a backend problem never locks users out. Version comparison is in `src/lib/version.ts`. Manage the values from the admin portal, not SQL.
 
 ### State Management
 
@@ -129,4 +146,6 @@ Strict mode. Path alias `@/*` maps to `src/*`. All entity types are defined in `
 - Map Supabase/auth errors through `src/lib/errorMessages.ts` before displaying to users.
 - Form validation logic belongs in `src/lib/validators.ts`.
 - Formatting (dates, currency, strings) belongs in `src/lib/formatters.ts`.
+- Turn a `Date` into a `YYYY-MM-DD` date string with `toLocalDateString()` from `formatters.ts`, never `date.toISOString().split('T')[0]`. That converts to UTC first, so in India (UTC+5:30) it gives the previous day for times before 5:30 am. It broke the Payments date filter. `attendance.tsx`, `appointments.tsx` and some add screens still use the old pattern.
+- Paginated lists: `SectionList`/`FlatList` fire `onEndReached` right after mounting when the list is empty. Guard load-more so it can't run while the first page is still loading (see the single-flight lock in `(tabs)/payments.tsx`). Otherwise an empty page 2 can overwrite page 1.
 - Primary color: `#0D9488` (healthcare teal).

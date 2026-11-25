@@ -29,6 +29,20 @@ export function formatRecurrenceSummary(
 }
 
 /**
+ * Formats a Date as YYYY-MM-DD using local calendar fields (not UTC), so a date
+ * picked via a native date picker matches the date the user actually selected
+ * regardless of timezone offset. `date.toISOString().split('T')[0]` is wrong for
+ * this — it shifts to UTC first, which rolls the date back a day in timezones
+ * ahead of UTC (e.g. IST).
+ */
+export function toLocalDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+/**
  * Groups a list of items by a date string field, returning sorted SectionList sections.
  * @param items Array of objects with a date field
  * @param getDate Function to extract the date string (YYYY-MM-DD) from an item

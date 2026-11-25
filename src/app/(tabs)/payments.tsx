@@ -1,5 +1,5 @@
-import React, { useState, useCallback, memo, useMemo } from 'react';
-import { View, Text, StyleSheet, SectionList, TouchableOpacity, ActivityIndicator, RefreshControl, ScrollView } from 'react-native';
+import React, { useState, useCallback, useRef, useEffect, memo, useMemo } from 'react';
+import { View, Text, StyleSheet, SectionList, TouchableOpacity, RefreshControl, ScrollView } from 'react-native';
 import { useRouter, useFocusEffect, Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -11,7 +11,7 @@ import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
 import { getPayments, deletePayment, getRevenueStatistics, PaymentWithPatient, RevenueStats } from '@/services/offline/paymentService.offline';
-import { groupItemsByDate } from '@/lib/formatters';
+import { groupItemsByDate, toLocalDateString } from '@/lib/formatters';
 import { generateInvoiceHtml, getInvoiceNumber } from '@/lib/invoiceTemplate';
 
 const PAGE_SIZE = 20;
@@ -75,83 +75,114 @@ export default function PaymentsScreen() {
 
   const [payments, setPayments] = useState<PaymentWithPatient[]>([]);
   const [stats, setStats] = useState<RevenueStats>({ totalPaid: 0, totalPending: 0, thisMonthPaid: 0 });
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  
+
   const [activeActionId, setActiveActionId] = useState<string | null>(null);
 
   // Date Filter State
   const [filterDate, setFilterDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const fetchData = useCallback(async (pageNumber: number, statusFilter: string, refresh: boolean, targetDate: Date | null) => {
-    if (pageNumber > 0) setIsLoadingMore(true);
+  // Cache of already-fetched pages per filter combination, so re-selecting a
+  // filter that hasn't changed just redisplays what we already have instead
+  // of hitting the DB again.
+  const cacheRef = useRef(new Map<string, { payments: PaymentWithPatient[]; page: number; hasMore: boolean }>());
+  // Single-flight lock: SectionList's onEndReached can fire immediately on
+  // mount (an empty list looks "scrolled to the end"), which would otherwise
+  // race a page-1 fetch against the still-in-flight initial page-0 fetch and
+  // let the (likely empty, since most lists are short) page-1 response win.
+  const isFetchingRef = useRef(false);
+  const filterStatusRef = useRef(filterStatus);
+  const filterDateRef = useRef(filterDate);
+  useEffect(() => { filterStatusRef.current = filterStatus; }, [filterStatus]);
+  useEffect(() => { filterDateRef.current = filterDate; }, [filterDate]);
 
-    const formattedDate = targetDate ? targetDate.toISOString().split('T')[0] : undefined;
+  const buildCacheKey = (status: string, date: Date | null) =>
+    `${status}|${date ? toLocalDateString(date) : 'none'}`;
 
-    const [paymentsRes, statsRes] = await Promise.all([
-      getPayments(pageNumber, PAGE_SIZE, statusFilter, formattedDate),
-      pageNumber === 0 ? getRevenueStatistics() : Promise.resolve(null),
-    ]);
+  const fetchPayments = useCallback(async (pageNumber: number, statusFilter: string, targetDate: Date | null) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
 
-    if (!paymentsRes.error) {
-      if (refresh || pageNumber === 0) {
-        setPayments(paymentsRes.data);
-      } else {
-        setPayments(prev => [...prev, ...paymentsRes.data]);
-      }
-      setHasMore(paymentsRes.data.length >= PAGE_SIZE);
+    const key = buildCacheKey(statusFilter, targetDate);
+    const formattedDate = targetDate ? toLocalDateString(targetDate) : undefined;
+
+    try {
+      const res = await getPayments(pageNumber, PAGE_SIZE, statusFilter, formattedDate);
+      if (res.error) return;
+
+      setPayments(prev => {
+        const next = pageNumber === 0 ? res.data : [...prev, ...res.data];
+        cacheRef.current.set(key, { payments: next, page: pageNumber, hasMore: res.data.length >= PAGE_SIZE });
+        return next;
+      });
+      setHasMore(res.data.length >= PAGE_SIZE);
       setPage(pageNumber);
+    } finally {
+      isFetchingRef.current = false;
     }
-
-    if (statsRes && !statsRes.error) {
-      setStats(statsRes.data);
-    }
-
-    setIsLoadingMore(false);
-    setLoading(false);
   }, []);
 
+  const fetchStats = useCallback(async () => {
+    const res = await getRevenueStatistics();
+    if (!res.error) setStats(res.data);
+  }, []);
+
+  // Runs only on actual screen focus (mount, or navigating back to this tab) —
+  // not when the filter chips change — since data may have changed elsewhere
+  // (a payment added/edited on another screen).
   useFocusEffect(
     useCallback(() => {
-      fetchData(0, filterStatus, true, filterDate);
-    }, [fetchData, filterStatus, filterDate])
+      cacheRef.current.clear();
+      fetchPayments(0, filterStatusRef.current, filterDateRef.current);
+      fetchStats();
+    }, [fetchPayments, fetchStats])
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchData(0, filterStatus, true, filterDate);
+    cacheRef.current.clear();
+    await Promise.all([fetchPayments(0, filterStatus, filterDate), fetchStats()]);
     setRefreshing(false);
   };
-  
+
   const handleLoadMore = () => {
-    if (hasMore && !isLoadingMore && !refreshing && !loading) {
-      fetchData(page + 1, filterStatus, false, filterDate);
+    if (hasMore && !refreshing && !isFetchingRef.current && payments.length > 0) {
+      fetchPayments(page + 1, filterStatus, filterDate);
+    }
+  };
+
+  const applyFilter = (status: string, date: Date | null) => {
+    const cached = cacheRef.current.get(buildCacheKey(status, date));
+    if (cached) {
+      setPayments(cached.payments);
+      setPage(cached.page);
+      setHasMore(cached.hasMore);
+    } else {
+      fetchPayments(0, status, date);
     }
   };
 
   const handleFilterChange = (status: string) => {
     setFilterStatus(status);
-    setLoading(true);
-    fetchData(0, status, true, filterDate);
+    applyFilter(status, filterDate);
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (event.type === 'set' && selectedDate) {
       setFilterDate(selectedDate);
-      setLoading(true);
+      applyFilter(filterStatus, selectedDate);
     }
   };
 
   const clearDateFilter = () => {
     setFilterDate(null);
-    setLoading(true);
+    applyFilter(filterStatus, null);
   };
 
   const handleGenerateInvoice = async (payment: PaymentWithPatient) => {
@@ -187,7 +218,9 @@ export default function PaymentsScreen() {
         style: 'destructive',
         onPress: async () => {
           await deletePayment(id);
-          fetchData(0, filterStatus, true, filterDate);
+          cacheRef.current.clear();
+          fetchPayments(0, filterStatus, filterDate);
+          fetchStats();
         },
       },
     ]);
@@ -261,14 +294,6 @@ export default function PaymentsScreen() {
     </View>
   );
 
-  if (loading && !refreshing) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
       <Tabs.Screen 
@@ -316,13 +341,6 @@ export default function PaymentsScreen() {
         }
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          isLoadingMore ? (
-            <View style={{ padding: Spacing.md }}>
-              <ActivityIndicator size="small" color={Colors.primary} />
-            </View>
-          ) : null
-        }
         ListEmptyComponent={
           <EmptyState
             icon="receipt-outline"
@@ -384,7 +402,6 @@ export default function PaymentsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.background },
-  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background },
   listContent: { padding: Spacing.base, paddingBottom: Spacing['6xl'], paddingTop: Spacing.md },
   
   dashboardContainer: { marginBottom: Spacing.md },

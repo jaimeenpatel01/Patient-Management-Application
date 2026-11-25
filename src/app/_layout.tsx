@@ -18,10 +18,14 @@ import { ToastProvider } from '@/contexts/ToastContext';
 import { NetworkProvider } from '@/contexts/NetworkContext';
 import { CustomAlert } from '@/components/ui/CustomAlert';
 import { Toast } from '@/components/ui/Toast';
+import Constants from 'expo-constants';
 import { useAuth } from '@/hooks/useAuth';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import { Colors } from '@/constants/theme';
 import AnimatedSplash from '@/components/SplashScreen';
+import { UpdateRequiredModal } from '@/components/UpdateRequiredModal';
+import { getAppSettings } from '@/services/appSettingsService';
+import { isVersionBelow } from '@/lib/version';
 
 // Keep the native splash visible until we're ready to show our JS one.
 SplashScreen.preventAutoHideAsync();
@@ -84,9 +88,50 @@ function NetworkProviderWithAuth({ children }: { children: React.ReactNode }) {
   return <NetworkProvider userId={user?.id}>{children}</NetworkProvider>;
 }
 
+// ─── Forced update gate ────────────────────────────────────────────────────────
+// Runs independent of auth — a stale build should be blocked before login too.
+function useUpdateGate() {
+  const [updateInfo, setUpdateInfo] = useState<{
+    required: boolean;
+    message: string | null;
+    forceUpdate: boolean;
+    minVersion: string | null;
+  }>({ required: false, message: null, forceUpdate: false, minVersion: null });
+  // A soft prompt can be dismissed for the rest of this app session; it
+  // reappears on the next launch as long as min_app_version is still ahead.
+  const [dismissed, setDismissed] = useState(false);
+
+  const currentVersion = Constants.expoConfig?.version ?? null;
+
+  useEffect(() => {
+    if (!currentVersion) return;
+
+    getAppSettings().then(({ data }) => {
+      if (data && isVersionBelow(currentVersion, data.minAppVersion)) {
+        setUpdateInfo({
+          required: true,
+          message: data.updateMessage,
+          forceUpdate: data.forceUpdate,
+          minVersion: data.minAppVersion,
+        });
+      }
+    });
+  }, [currentVersion]);
+
+  return {
+    visible: updateInfo.required && !(dismissed && !updateInfo.forceUpdate),
+    message: updateInfo.message,
+    forceUpdate: updateInfo.forceUpdate,
+    currentVersion,
+    minVersion: updateInfo.minVersion,
+    dismiss: () => setDismissed(true),
+  };
+}
+
 // ─── Root layout ──────────────────────────────────────────────────────────────
 export default function RootLayout() {
   const [showSplash, setShowSplash] = useState(true);
+  const updateGate = useUpdateGate();
 
   // Hide the native splash immediately — our animated JS splash takes over.
   useEffect(() => {
@@ -110,6 +155,15 @@ export default function RootLayout() {
           </ToastProvider>
           <CustomAlert />
         </AlertProvider>
+
+        <UpdateRequiredModal
+          visible={updateGate.visible}
+          message={updateGate.message}
+          forceUpdate={updateGate.forceUpdate}
+          currentVersion={updateGate.currentVersion}
+          minVersion={updateGate.minVersion}
+          onDismiss={updateGate.dismiss}
+        />
 
         {/* Animated JS splash rendered on top of everything */}
         {showSplash && (

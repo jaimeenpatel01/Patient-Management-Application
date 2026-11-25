@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="admin-token" content="__ADMIN_TOKEN__">
+  <title>PhysioDesk Admin · __ADMIN_ENV__</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body class="env-__ADMIN_ENV_CLASS__">
+  <header class="topbar">
+    <div class="brand"><span class="logo">P</span> PhysioDesk <span class="muted">Admin</span> <span class="env-badge">__ADMIN_ENV__</span></div>
+    <nav class="tabs">
+      <a href="#overview" data-tab="overview">Overview</a>
+      <a href="#users" data-tab="users">Users</a>
+      <a href="#payments" data-tab="payments">Payments <span id="pending-badge" class="badge" hidden></span></a>
+      <a href="#settings" data-tab="settings" hidden>Settings</a>
+      <a href="#app-update" data-tab="app-update" hidden>App update</a>
+    </nav>
+    <button id="refresh" class="btn ghost" type="button">Refresh</button>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main>
+    <section id="view-overview" hidden></section>
+
+    <section id="view-users" hidden>
+      <div class="toolbar">
+        <input id="user-search" type="search" placeholder="Search name, email, phone, clinic…" autocomplete="off">
+        <select id="user-filter">
+          <option value="">All plans</option>
+          <option value="pro_paid">Pro (paid)</option>
+          <option value="trialing">Trialing</option>
+          <option value="free">Free</option>
+          <option value="expired">Expired</option>
+        </select>
+        <span id="user-count" class="muted"></span>
+      </div>
+      <div class="table-wrap"><table id="users-table"></table></div>
+    </section>
+
+    <section id="view-payments" hidden>
+      <div class="toolbar">
+        <div class="seg" id="payment-filter">
+          <button type="button" data-status="pending">Pending</button>
+          <button type="button" data-status="verified">Verified</button>
+          <button type="button" data-status="rejected">Rejected</button>
+          <button type="button" data-status="">All</button>
+        </div>
+      </div>
+      <div class="table-wrap"><table id="payments-table"></table></div>
+    </section>
+
+    <section id="view-settings" hidden></section>
+
+    <section id="view-app-update" hidden></section>
+  </main>
+
+  <aside id="drawer" class="drawer" hidden>
+    <div class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+      <button class="btn ghost close" type="button" data-close>✕</button>
+      <div id="drawer-body"></div>
+    </div>
+  </aside>
+
+  <script src="/app.js"></script>
+</body>
+</html>
