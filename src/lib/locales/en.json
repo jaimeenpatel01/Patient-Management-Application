@@ -60,7 +60,8 @@
     "addPatient": "Add Patient",
     "noPhone": "No phone",
     "patientCountSuffix": "patient",
-    "patientCountSuffixPlural": "patients"
+    "patientCountSuffixPlural": "patients",
+    "statusToggleLabel": "Active status for {{name}}"
   },
   "language": {
     "title": "Language",
