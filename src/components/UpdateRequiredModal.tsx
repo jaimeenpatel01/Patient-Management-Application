@@ -9,9 +9,12 @@ const ANDROID_PACKAGE = 'com.drketuphysio.doctor';
 interface UpdateRequiredModalProps {
   visible: boolean;
   message?: string | null;
+  /** Hard = no way to dismiss, blocks the app. Soft = can dismiss and keep using the app for this session. */
+  forceUpdate: boolean;
+  onDismiss: () => void;
 }
 
-export function UpdateRequiredModal({ visible, message }: UpdateRequiredModalProps) {
+export function UpdateRequiredModal({ visible, message, forceUpdate, onDismiss }: UpdateRequiredModalProps) {
   const handleUpdate = () => {
     const url =
       Platform.OS === 'android'
@@ -23,17 +26,28 @@ export function UpdateRequiredModal({ visible, message }: UpdateRequiredModalPro
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={() => {}}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={forceUpdate ? () => {} : onDismiss}
+    >
       <View style={styles.overlay}>
         <View style={styles.content}>
           <View style={styles.iconBg}>
             <Ionicons name="arrow-up-circle" size={36} color={Colors.primary} />
           </View>
-          <Text style={styles.title}>Update Required</Text>
+          <Text style={styles.title}>{forceUpdate ? 'Update Required' : 'Update Available'}</Text>
           <Text style={styles.text}>
-            {message || 'A new version of PhysioDesk is available. Please update to continue using the app.'}
+            {message ||
+              (forceUpdate
+                ? 'A new version of PhysioDesk is available. Please update to continue using the app.'
+                : 'A new version of PhysioDesk is available. We recommend updating soon.')}
           </Text>
           <Button title="Update Now" onPress={handleUpdate} style={styles.button} />
+          {!forceUpdate && (
+            <Button title="Later" onPress={onDismiss} variant="ghost" style={styles.laterButton} />
+          )}
         </View>
       </View>
     </Modal>
@@ -81,5 +95,9 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
+  },
+  laterButton: {
+    width: '100%',
+    marginTop: Spacing.xs,
   },
 });

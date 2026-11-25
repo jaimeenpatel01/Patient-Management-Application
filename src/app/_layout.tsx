@@ -91,10 +91,14 @@ function NetworkProviderWithAuth({ children }: { children: React.ReactNode }) {
 // ─── Forced update gate ────────────────────────────────────────────────────────
 // Runs independent of auth — a stale build should be blocked before login too.
 function useUpdateGate() {
-  const [updateInfo, setUpdateInfo] = useState<{ required: boolean; message: string | null }>({
-    required: false,
-    message: null,
-  });
+  const [updateInfo, setUpdateInfo] = useState<{
+    required: boolean;
+    message: string | null;
+    forceUpdate: boolean;
+  }>({ required: false, message: null, forceUpdate: false });
+  // A soft prompt can be dismissed for the rest of this app session; it
+  // reappears on the next launch as long as min_app_version is still ahead.
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
     const currentVersion = Constants.expoConfig?.version;
@@ -102,12 +106,17 @@ function useUpdateGate() {
 
     getAppSettings().then(({ data }) => {
       if (data && isVersionBelow(currentVersion, data.minAppVersion)) {
-        setUpdateInfo({ required: true, message: data.updateMessage });
+        setUpdateInfo({ required: true, message: data.updateMessage, forceUpdate: data.forceUpdate });
       }
     });
   }, []);
 
-  return updateInfo;
+  return {
+    visible: updateInfo.required && !(dismissed && !updateInfo.forceUpdate),
+    message: updateInfo.message,
+    forceUpdate: updateInfo.forceUpdate,
+    dismiss: () => setDismissed(true),
+  };
 }
 
 // ─── Root layout ──────────────────────────────────────────────────────────────
@@ -138,7 +147,12 @@ export default function RootLayout() {
           <CustomAlert />
         </AlertProvider>
 
-        <UpdateRequiredModal visible={updateGate.required} message={updateGate.message} />
+        <UpdateRequiredModal
+          visible={updateGate.visible}
+          message={updateGate.message}
+          forceUpdate={updateGate.forceUpdate}
+          onDismiss={updateGate.dismiss}
+        />
 
         {/* Animated JS splash rendered on top of everything */}
         {showSplash && (
