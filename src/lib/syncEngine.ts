@@ -52,8 +52,6 @@ import {
   createDiagnosis,
   getTreatments,
   createTreatment,
-  getExercisePlans,
-  createExercisePlan,
 } from '@/services/medicalService';
 
 export interface SyncResult {
@@ -236,15 +234,6 @@ async function syncEntry(
       break;
     }
 
-    // ── Exercise Plans ────────────────────────────────────────────────────────
-    case 'exercise_plans': {
-      if (entry.operation === 'create') {
-        const { data, error } = await createExercisePlan(payload);
-        if (error || !data) return { error: error ?? 'Unknown error' };
-        return { realId: data.id };
-      }
-      break;
-    }
   }
 
   return { error: `Unhandled entity/operation: ${entry.entity}/${entry.operation}` };

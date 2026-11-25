@@ -102,7 +102,7 @@ All Supabase queries live in `src/services/`. Each function returns a `{ data, e
 Key services:
 - `patientService.ts` — CRUD with soft-delete (`is_active` flag)
 - `attendanceService.ts` — appointments with status tracking
-- `medicalService.ts` — consultations, diagnoses, treatments, exercise plans
+- `medicalService.ts` — consultations, diagnoses, treatments
 - `paymentService.ts` — transactions with multi-status (paid/pending/partially_paid)
 - `documentService.ts` — file uploads to Supabase Storage
 - `dashboardService.ts` — aggregated statistics
@@ -115,7 +115,7 @@ Reusable components in `src/components/ui/`: `Button`, `Input`, `CustomAlert`, `
 
 ### Database
 
-9 tables in Supabase (PostgreSQL): `profiles`, `patients`, `appointments`, `consultations`, `diagnoses`, `treatments`, `exercise_plans`, `documents`, `payments`. All have UUID PKs, `doctor_id` FK, `created_at`/`updated_at` managed by triggers.
+8 tables in Supabase (PostgreSQL): `profiles`, `patients`, `appointments`, `consultations`, `diagnoses`, `treatments`, `documents`, `payments`. All have UUID PKs, `doctor_id` FK, `created_at`/`updated_at` managed by triggers.
 
 Migrations are in `supabase/migrations/`. Schema changes must be made there and applied via Supabase CLI.
 
