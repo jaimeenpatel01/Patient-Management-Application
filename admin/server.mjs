@@ -1,5 +1,5 @@
 // PhysioDesk admin portal — local-only server.
-// Run with `npm run admin`. Holds the Supabase service-role key; never deploy this.
+// Run with `npm run admin:dev` or `npm run admin:prod`. Holds the Supabase service-role key; never deploy this.
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
@@ -7,17 +7,26 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
-const HOST = '127.0.0.1';
-const PORT = Number(process.env.ADMIN_PORT) || 4500;
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error(
     'Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.\n' +
-      'Copy admin/.env.admin.example to admin/.env.admin and fill both in.'
+      'Copy admin/.env.admin.example to admin/.env.admin (dev) or admin/.env.admin.prod (prod) and fill both in.'
   );
   process.exit(1);
 }
+
+// A local stack (this machine, the Android emulator alias, or a LAN IP) is dev; anything else is
+// treated as production. Prod gets its own port and a red label so the two can't be confused.
+const SUPABASE_HOST = new URL(SUPABASE_URL).hostname;
+const IS_LOCAL_DB =
+  ['localhost', '127.0.0.1', '10.0.2.2'].includes(SUPABASE_HOST) ||
+  /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(SUPABASE_HOST);
+const ENV_LABEL = IS_LOCAL_DB ? 'Local' : 'Production';
+
+const HOST = '127.0.0.1';
+const PORT = Number(process.env.ADMIN_PORT) || (IS_LOCAL_DB ? 4500 : 4501);
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
@@ -242,7 +251,11 @@ const server = createServer(async (req, res) => {
 
     if (url.pathname === '/' || url.pathname === '/index.html') {
       const html = await readFile(path.join(DIR, 'index.html'), 'utf8');
-      return send(res, 200, html.replace('__ADMIN_TOKEN__', TOKEN), 'text/html; charset=utf-8');
+      const page = html
+        .replace('__ADMIN_TOKEN__', TOKEN)
+        .replaceAll('__ADMIN_ENV__', ENV_LABEL)
+        .replaceAll('__ADMIN_ENV_CLASS__', IS_LOCAL_DB ? 'local' : 'prod');
+      return send(res, 200, page, 'text/html; charset=utf-8');
     }
     const file = STATIC[url.pathname];
     if (file) return send(res, 200, await readFile(path.join(DIR, file[0]), 'utf8'), file[1]);
@@ -256,6 +269,7 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, HOST, () => {
   const target = new URL(SUPABASE_URL).host;
-  console.log(`PhysioDesk admin → http://${HOST}:${PORT}  (Supabase: ${target})`);
+  console.log(`PhysioDesk admin [${ENV_LABEL.toUpperCase()}] → http://${HOST}:${PORT}  (Supabase: ${target})`);
+  if (!IS_LOCAL_DB) console.log('⚠ Connected to PRODUCTION. Changes affect real users.');
   console.log('Local only. Press Ctrl+C to stop.');
 });

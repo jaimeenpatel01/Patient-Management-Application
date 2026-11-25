@@ -47,23 +47,26 @@ On a physical device use your machine's LAN IP instead of `127.0.0.1`; on the An
 ### Admin portal (local only)
 
 ```bash
-npm run admin   # http://127.0.0.1:4500 — users, stats, app update prompt (+ payments/plans once subscriptions ship)
+npm run admin:dev    # local DB  → http://127.0.0.1:4500 (env: admin/.env.admin)
+npm run admin:prod   # production → http://127.0.0.1:4501 (env: admin/.env.admin.prod), red "Production" label
+# Users, stats, app update prompt (+ payments/plans once subscriptions ship)
 ```
 
 Lives in `admin/` (plain Node + vanilla JS, no build, excluded from ESLint). Never deploy it or import it into the app. See `admin/README.md`.
 
 Setup:
-1. Create the env file: `cp admin/.env.admin.example admin/.env.admin`. It's git-ignored. Fill in:
-   - `SUPABASE_URL`: local stack `http://127.0.0.1:54321`.
-   - `SUPABASE_SERVICE_ROLE_KEY`: Dashboard → Project Settings → API → `service_role`, or the local key from `npx supabase status`.
+1. Create the env files from `admin/.env.admin.example`. Both are git-ignored:
+   - `admin/.env.admin` (dev): `SUPABASE_URL=http://127.0.0.1:54321` and the local `service_role` key from `npx supabase status`.
+   - `admin/.env.admin.prod` (prod): the project URL and the `service_role` key from Dashboard → Project Settings → API.
    - The service-role key bypasses RLS; never commit it.
+   - The server labels the session from `SUPABASE_URL`: localhost, `10.0.2.2` or a private LAN IP is Local (port 4500); anything else is Production (port 4501, red label).
 2. Apply the admin migrations to the target database. They are service-role-only `admin_*` functions:
    - `016_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
    - `017_admin_app_settings.sql`: `admin_update_app_settings`, used by the App update tab. Requires `014_app_settings.sql` and `015_app_settings_force_update.sql`.
    - Subscription admin migrations (plans, revenue, payments, billing settings) are on the `feature/subscription-model` branch and aren't merged here yet. Until they're applied the portal hides those tabs automatically.
    - On prod, paste the files into Studio's SQL editor; don't run `db push`, because prod has no recorded migration history.
    - Locally, `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f <file>` applies a file without wiping data. `db reset` wipes it.
-3. Run `npm run admin` and open http://127.0.0.1:4500.
+3. Run `npm run admin:dev` (http://127.0.0.1:4500) or `npm run admin:prod` (http://127.0.0.1:4501).
 
 Security model: the server binds to `127.0.0.1` only, checks `Host`/`Origin`, and requires a per-run token injected into the page. It also requires a JSON `Content-Type` on POSTs. App users get "permission denied" on all `admin_*` functions.
 

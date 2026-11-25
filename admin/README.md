@@ -2,7 +2,7 @@
 
 A local-only web page for viewing users and app stats, and for managing the in-app update prompt. When subscriptions are enabled it also handles UPI payments and plan changes.
 
-It runs on your machine at http://127.0.0.1:4500. It is **not** part of the mobile app and must never be deployed.
+It runs on your machine: http://127.0.0.1:4500 for your local database, http://127.0.0.1:4501 for production. It is **not** part of the mobile app and must never be deployed.
 
 ## Setup
 
@@ -11,10 +11,14 @@ It runs on your machine at http://127.0.0.1:4500. It is **not** part of the mobi
    - `supabase/migrations/017_admin_app_settings.sql`: lets the App update tab save changes. Needs the update-gate migrations `014_app_settings.sql` and `015_app_settings_force_update.sql` first.
    - Subscriptions (plans, revenue, payments, billing settings) aren't on this branch yet. Their migrations live on the `feature/subscription-model` branch. Until they're applied, the portal hides the Payments and Settings tabs and the plan/revenue tiles, and shows a note instead.
    - Local stack: `npx supabase db reset` wipes local data; `psql ... -f <file>` keeps it.
-2. Run `cp admin/.env.admin.example admin/.env.admin` and fill in:
-   - `SUPABASE_URL`: the project URL (local: `http://127.0.0.1:54321`).
-   - `SUPABASE_SERVICE_ROLE_KEY`: Dashboard → Project Settings → API → `service_role` (local: `npx supabase status`).
-3. Run `npm run admin` and open the printed URL.
+2. Create an env file for each database you'll use. Both are git-ignored.
+   - Dev: `cp admin/.env.admin.example admin/.env.admin`. Set `SUPABASE_URL=http://127.0.0.1:54321` and the `service_role` key from `npx supabase status`.
+   - Production: `cp admin/.env.admin.example admin/.env.admin.prod`. Set `SUPABASE_URL` to the project URL and `SUPABASE_SERVICE_ROLE_KEY` to Dashboard → Project Settings → API → `service_role`.
+3. Run it and open the printed URL:
+   - `npm run admin:dev`: local database, port 4500.
+   - `npm run admin:prod`: production, port 4501. The header shows a red **Production** label and the browser tab title says Production, so you can tell the two apart. You can run both at once.
+
+The label comes from the database address, not the script: a local, emulator (`10.0.2.2`) or LAN address shows **Local**, anything else shows **Production**.
 
 ## What it does
 
