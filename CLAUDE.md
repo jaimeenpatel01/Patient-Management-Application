@@ -13,7 +13,17 @@ npm test                # Run unit tests (Jest)
 npm run test:coverage   # Run tests with coverage report
 eas build --platform android --profile preview   # Preview APK build
 eas build --platform android --profile production # Production build
+eas build --platform android --profile production --local --non-interactive  # Production .aab built on this machine (~20 min; writes build-<timestamp>.aab to the repo root, git-ignored)
 ```
+
+### Releasing a new version
+
+1. Bump `expo.version` in `app.json` (e.g. `2.4.1` → `2.5.0`) and commit it. Every release needs a higher version than the last one shipped, or the update prompt can't tell builds apart. `eas.json` uses `appVersionSource: "remote"` + `autoIncrement`, so EAS bumps the Android `versionCode` itself; don't rely on it to bump `version`.
+2. Build the `.aab` (command above) and upload it in Play Console (internal testing or production) with release notes.
+3. Once the release is live on Play Store, optionally prompt users on older builds from the admin portal's App update tab (`npm run admin:prod`):
+   - **Soft:** set the minimum version to the new version. Users get a dismissible prompt that returns on every launch.
+   - **Hard:** only for breaking changes. It blocks the app until they update, so never use it before the version is installable.
+   - Routine releases need no change there.
 
 Environment variables (`.env` file required):
 ```
@@ -91,6 +101,10 @@ src/app/
 
 The root `_layout.tsx` redirects unauthenticated users to `/login` and authenticated users away from auth screens. Google Sign-In users who haven't completed their profile are redirected to `/complete-profile`.
 
+### Forced update prompt
+
+`useUpdateGate()` in `src/app/_layout.tsx` runs once per launch, before and independent of auth. It compares the installed version (`Constants.expoConfig.version`, i.e. `app.json`'s `version` at build time) with `min_app_version` in the singleton `app_settings` table (migrations 014/015, readable by anyone). If the app is older it shows `UpdateRequiredModal`: hard when `force_update` is true (no dismiss, back button disabled), soft otherwise ("Remind me later", hidden until the next launch). The modal opens the Play Store listing. If the settings can't be fetched, no prompt is shown; a backend problem never locks users out. Version comparison is in `src/lib/version.ts`. Manage the values from the admin portal, not SQL.
+
 ### State Management
 
 Three React Contexts (no Redux/Zustand):
@@ -132,4 +146,6 @@ Strict mode. Path alias `@/*` maps to `src/*`. All entity types are defined in `
 - Map Supabase/auth errors through `src/lib/errorMessages.ts` before displaying to users.
 - Form validation logic belongs in `src/lib/validators.ts`.
 - Formatting (dates, currency, strings) belongs in `src/lib/formatters.ts`.
+- Turn a `Date` into a `YYYY-MM-DD` date string with `toLocalDateString()` from `formatters.ts`, never `date.toISOString().split('T')[0]`. That converts to UTC first, so in India (UTC+5:30) it gives the previous day for times before 5:30 am. It broke the Payments date filter. `attendance.tsx`, `appointments.tsx` and some add screens still use the old pattern.
+- Paginated lists: `SectionList`/`FlatList` fire `onEndReached` right after mounting when the list is empty. Guard load-more so it can't run while the first page is still loading (see the single-flight lock in `(tabs)/payments.tsx`). Otherwise an empty page 2 can overwrite page 1.
 - Primary color: `#0D9488` (healthcare teal).
