@@ -67,7 +67,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:new": "supabase migration new",
-    "db:migrations:list": "supabase migration list"
+    "db:migrations:list": "supabase migration list",
+    "admin": "node --env-file=admin/.env.admin admin/server.mjs"
   },
   "private": true
 }

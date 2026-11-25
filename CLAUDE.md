@@ -47,7 +47,7 @@ On a physical device use your machine's LAN IP instead of `127.0.0.1`; on the An
 ### Admin portal (local only)
 
 ```bash
-npm run admin   # http://127.0.0.1:4500 — users, subscription payments, stats; verify/reject payments, change plans
+npm run admin   # http://127.0.0.1:4500 — users, stats, app update prompt (+ payments/plans once subscriptions ship)
 ```
 
 Lives in `admin/` (plain Node + vanilla JS, no build, excluded from ESLint). Never deploy it or import it into the app. See `admin/README.md`.
@@ -58,9 +58,9 @@ Setup:
    - `SUPABASE_SERVICE_ROLE_KEY`: Dashboard → Project Settings → API → `service_role`, or the local key from `npx supabase status`.
    - The service-role key bypasses RLS; never commit it.
 2. Apply the admin migrations to the target database. They are service-role-only `admin_*` functions:
-   - `014_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
-   - `015_admin_subscriptions.sql`: plans, revenue, payments, verify/reject, plan changes. Requires `012_subscriptions.sql`, so apply right after 012 when subscriptions ship. Until then the portal hides those features automatically.
-   - `016_billing_settings.sql`: the Settings tab and `admin_update_billing`. Also requires 012; ship it with 012 and 015.
+   - `016_admin_portal.sql`: users list, user counts, usage totals. Depends only on 001–011, so it's safe for prod now.
+   - `017_admin_app_settings.sql`: `admin_update_app_settings`, used by the App update tab. Requires `014_app_settings.sql` and `015_app_settings_force_update.sql`.
+   - Subscription admin migrations (plans, revenue, payments, billing settings) are on the `feature/subscription-model` branch and aren't merged here yet. Until they're applied the portal hides those tabs automatically.
    - On prod, paste the files into Studio's SQL editor; don't run `db push`, because prod has no recorded migration history.
    - Locally, `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f <file>` applies a file without wiping data. `db reset` wipes it.
 3. Run `npm run admin` and open http://127.0.0.1:4500.
@@ -68,9 +68,9 @@ Setup:
 Security model: the server binds to `127.0.0.1` only, checks `Host`/`Origin`, and requires a per-run token injected into the page. It also requires a JSON `Content-Type` on POSTs. App users get "permission denied" on all `admin_*` functions.
 
 When changing admin SQL:
-- `admin_subscription_state` (015) mirrors `getEffectiveTier` in `src/lib/subscription.ts`; keep them in sync.
-- Billing values (Pro prices, free patient cap, trial days, UPI ID/payee, verification time) are edited in the portal's Settings tab, not in code. They live in `subscription_plans` and `billing_settings` (016). The app loads them into `AuthContext.billingSettings`; `src/constants/billing.ts` only holds offline fallbacks.
+- The update prompt (`min_app_version`, `force_update`, `update_message` in `app_settings`) is managed from the portal's App update tab, not by hand-written SQL. The portal's `compareVersions` in `admin/app.js` mirrors `src/lib/version.ts`, and its default messages mirror `UpdateRequiredModal.tsx`; keep them in sync.
 - `public.appointments` and `appointment_series` come from 012/013 (appointments feature, v2.4.0); the old table from 001 was dropped in 004. Admin stats count `attendances`, and count appointments only when the table exists.
+- When the subscription-model branch merges, its migrations (`012_subscriptions`, `014_admin_portal`, `015_admin_subscriptions`, `016_billing_settings`) collide with this branch's numbers and must be renumbered after `017`. Its `014_admin_portal.sql` is the same as `016_admin_portal.sql` here, so drop it rather than applying it twice.
 
 ## Architecture
 
