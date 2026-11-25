@@ -95,26 +95,35 @@ function useUpdateGate() {
     required: boolean;
     message: string | null;
     forceUpdate: boolean;
-  }>({ required: false, message: null, forceUpdate: false });
+    minVersion: string | null;
+  }>({ required: false, message: null, forceUpdate: false, minVersion: null });
   // A soft prompt can be dismissed for the rest of this app session; it
   // reappears on the next launch as long as min_app_version is still ahead.
   const [dismissed, setDismissed] = useState(false);
 
+  const currentVersion = Constants.expoConfig?.version ?? null;
+
   useEffect(() => {
-    const currentVersion = Constants.expoConfig?.version;
     if (!currentVersion) return;
 
     getAppSettings().then(({ data }) => {
       if (data && isVersionBelow(currentVersion, data.minAppVersion)) {
-        setUpdateInfo({ required: true, message: data.updateMessage, forceUpdate: data.forceUpdate });
+        setUpdateInfo({
+          required: true,
+          message: data.updateMessage,
+          forceUpdate: data.forceUpdate,
+          minVersion: data.minAppVersion,
+        });
       }
     });
-  }, []);
+  }, [currentVersion]);
 
   return {
     visible: updateInfo.required && !(dismissed && !updateInfo.forceUpdate),
     message: updateInfo.message,
     forceUpdate: updateInfo.forceUpdate,
+    currentVersion,
+    minVersion: updateInfo.minVersion,
     dismiss: () => setDismissed(true),
   };
 }
@@ -151,6 +160,8 @@ export default function RootLayout() {
           visible={updateGate.visible}
           message={updateGate.message}
           forceUpdate={updateGate.forceUpdate}
+          currentVersion={updateGate.currentVersion}
+          minVersion={updateGate.minVersion}
           onDismiss={updateGate.dismiss}
         />
 

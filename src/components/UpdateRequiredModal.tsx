@@ -11,10 +11,19 @@ interface UpdateRequiredModalProps {
   message?: string | null;
   /** Hard = no way to dismiss, blocks the app. Soft = can dismiss and keep using the app for this session. */
   forceUpdate: boolean;
+  currentVersion?: string | null;
+  minVersion?: string | null;
   onDismiss: () => void;
 }
 
-export function UpdateRequiredModal({ visible, message, forceUpdate, onDismiss }: UpdateRequiredModalProps) {
+export function UpdateRequiredModal({
+  visible,
+  message,
+  forceUpdate,
+  currentVersion,
+  minVersion,
+  onDismiss,
+}: UpdateRequiredModalProps) {
   const handleUpdate = () => {
     const url =
       Platform.OS === 'android'
@@ -34,20 +43,38 @@ export function UpdateRequiredModal({ visible, message, forceUpdate, onDismiss }
     >
       <View style={styles.overlay}>
         <View style={styles.content}>
-          <View style={styles.iconBg}>
-            <Ionicons name="arrow-up-circle" size={36} color={Colors.primary} />
+          <View style={styles.header}>
+            <View style={styles.iconBg}>
+              <Ionicons name="arrow-up-circle" size={30} color={Colors.textInverse} />
+            </View>
+            {!!currentVersion && !!minVersion && (
+              <View style={styles.versionRow}>
+                <View style={styles.versionPillOld}>
+                  <Text style={styles.versionPillOldText}>v{currentVersion}</Text>
+                </View>
+                <Ionicons name="arrow-forward" size={16} color={Colors.textInverse} />
+                <View style={styles.versionPillNew}>
+                  <Text style={styles.versionPillNewText}>v{minVersion}</Text>
+                </View>
+              </View>
+            )}
           </View>
-          <Text style={styles.title}>{forceUpdate ? 'Update Required' : 'Update Available'}</Text>
-          <Text style={styles.text}>
-            {message ||
-              (forceUpdate
-                ? 'A new version of PhysioDesk is available. Please update to continue using the app.'
-                : 'A new version of PhysioDesk is available. We recommend updating soon.')}
-          </Text>
-          <Button title="Update Now" onPress={handleUpdate} style={styles.button} />
-          {!forceUpdate && (
-            <Button title="Later" onPress={onDismiss} variant="ghost" style={styles.laterButton} />
-          )}
+
+          <View style={styles.body}>
+            <Text style={styles.title}>
+              {forceUpdate ? 'Update Required' : 'A New Version Is Ready'}
+            </Text>
+            <Text style={styles.text}>
+              {message ||
+                (forceUpdate
+                  ? 'A new version of PhysioDesk is available. Please update to continue using the app.'
+                  : 'Update to get the latest fixes and improvements.')}
+            </Text>
+            <Button title="Update Now" onPress={handleUpdate} style={styles.button} />
+            {!forceUpdate && (
+              <Button title="Remind Me Later" onPress={onDismiss} variant="ghost" style={styles.laterButton} />
+            )}
+          </View>
         </View>
       </View>
     </Modal>
@@ -64,28 +91,66 @@ const styles = StyleSheet.create({
   content: {
     backgroundColor: Colors.surface,
     borderRadius: BorderRadius['2xl'],
-    paddingVertical: Spacing['2xl'],
-    paddingHorizontal: Spacing.xl,
-    alignItems: 'center',
     width: 300,
-    borderWidth: 1,
-    borderColor: Colors.borderLight,
+    overflow: 'hidden',
     ...Shadows.xl,
   },
+  header: {
+    backgroundColor: Colors.primaryDeep,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    alignItems: 'center',
+  },
   iconBg: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: Colors.primaryFaded,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.md,
+  },
+  versionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  versionPillOld: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  versionPillOldText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.semibold,
+    color: Colors.textInverseMuted,
+    textDecorationLine: 'line-through',
+  },
+  versionPillNew: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.surface,
+  },
+  versionPillNewText: {
+    fontSize: Typography.sm,
+    fontWeight: Typography.bold,
+    color: Colors.primaryDeep,
+  },
+  body: {
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    alignItems: 'center',
   },
   title: {
     fontSize: Typography.lg,
     fontWeight: Typography.bold,
     color: Colors.text,
     marginBottom: Spacing.xs,
+    textAlign: 'center',
   },
   text: {
     fontSize: Typography.sm,
