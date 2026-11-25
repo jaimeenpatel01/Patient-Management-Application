@@ -43,5 +43,5 @@ export const DOCUMENT_CATEGORIES: { label: string; value: DocumentCategory }[] =
   { label: 'Other', value: 'other' },
 ];
 
-export const APP_VERSION = '2.3.0';
-export const SUPPORT_EMAIL = 'doctor.app.devv@gmail.com';
+export const APP_VERSION = '2.4.1';
+export const SUPPORT_EMAIL = 'jaimeen.app@gmail.com';
