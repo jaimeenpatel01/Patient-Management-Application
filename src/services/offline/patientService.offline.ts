@@ -185,8 +185,12 @@ export async function updatePatient(
     }
   }
 
-  // Offline: update the cached record optimistically
-  const existing = await offlineCache.getRecord<Patient>(ENTITY, id);
+  // Offline: update the cached record optimistically. Patients loaded only via
+  // the list live in the collection cache, so fall back to it.
+  const existing =
+    (await offlineCache.getRecord<Patient>(ENTITY, id)) ??
+    (await offlineCache.getCollection<Patient>(ENTITY))?.find((p) => p.id === id) ??
+    null;
   if (!existing) return { data: null, error: 'Offline — patient not cached' };
 
   const updated: Patient = { ...existing, ...input, updated_at: new Date().toISOString() };
