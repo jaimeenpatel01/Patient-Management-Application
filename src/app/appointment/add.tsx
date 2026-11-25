@@ -19,6 +19,7 @@ import { SuccessModal } from '@/components/ui/SuccessModal';
 import { useAlert } from '@/contexts/AlertContext';
 import { validateAppointmentForm } from '@/lib/validators';
 import type { Patient, RecurrenceEndType, RecurrenceFrequency } from '@/types';
+import { toLocalDateString } from '@/lib/formatters';
 
 const FREQUENCY_OPTIONS: { label: string; value: RecurrenceFrequency }[] = [
   { label: 'One-time', value: 'one_off' },
@@ -89,7 +90,7 @@ export default function AppointmentFormScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(initialPatientId ?? null);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(toLocalDateString(new Date()));
 
   const now = new Date();
   const [time, setTime] = useState(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);

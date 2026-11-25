@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu, ActionMenuOption } from '@/components/ui/ActionMenu';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { CancelSeriesDialog } from '@/components/ui/CancelSeriesDialog';
-import { formatTime12Hour, formatRecurrenceSummary, groupItemsByDate } from '@/lib/formatters';
+import { formatTime12Hour, formatRecurrenceSummary, groupItemsByDate, toLocalDateString } from '@/lib/formatters';
 import type { Appointment } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -45,7 +45,7 @@ export default function AppointmentsScreen() {
   const loadAppointments = useCallback(async (pageNumber = 0, refresh = false, targetDate = filterDate) => {
     if (pageNumber > 0) setIsLoadingMore(true);
 
-    const formattedDate = targetDate ? targetDate.toISOString().split('T')[0] : undefined;
+    const formattedDate = targetDate ? toLocalDateString(targetDate) : undefined;
     const { data } = await getAppointments({ date: formattedDate }, pageNumber, PAGE_SIZE);
 
     if (refresh || pageNumber === 0) {

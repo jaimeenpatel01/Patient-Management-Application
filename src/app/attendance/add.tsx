@@ -13,6 +13,7 @@ import { SuccessModal } from '@/components/ui/SuccessModal';
 import type { Patient } from '@/types';
 import { getPatients } from '@/services/offline/patientService.offline';
 import { useAlert } from '@/contexts/AlertContext';
+import { toLocalDateString } from '@/lib/formatters';
 
 export default function MarkAttendanceScreen() {
   const router = useRouter();
@@ -27,7 +28,7 @@ export default function MarkAttendanceScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceDate, setAttendanceDate] = useState(toLocalDateString(new Date()));
 
   const now = new Date();
   const currentHours = String(now.getHours()).padStart(2, '0');
