@@ -104,11 +104,6 @@ export default function ProfileScreen() {
       onPress: () => router.push('/profile/reports' as any),
     },
     {
-      icon: 'time-outline',
-      label: 'Waitlist',
-      onPress: () => router.push('/waitlist' as any),
-    },
-    {
       icon: 'download-outline',
       label: 'Export Data',
       onPress: () => router.push('/profile/data-export' as any),
@@ -163,9 +158,9 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* Practice Section */}
+        {/* Clinic Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>PRACTICE</Text>
+          <Text style={styles.sectionTitle}>CLINIC</Text>
           <View style={[styles.menuCard, Shadows.sm]}>
             {practiceItems.map((item, index) => (
               <React.Fragment key={item.label}>

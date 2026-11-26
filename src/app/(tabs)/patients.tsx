@@ -7,20 +7,28 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  LayoutAnimation,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { getPatients } from '@/services/offline/patientService.offline';
+import { getPatients, updatePatient } from '@/services/offline/patientService.offline';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PatientSearchPicker } from '@/components/ui/PatientSearchPicker';
+import { StatusToggle } from '@/components/ui/StatusToggle';
+import { useToast } from '@/contexts/ToastContext';
+import { getReadableError } from '@/lib/errorMessages';
 import { getInitials } from '@/lib/formatters';
 import type { Patient } from '@/types';
+
+// Lets the toggle's thumb animation finish before the row leaves the current tab.
+const STATUS_CHANGE_DELAY_MS = 250;
 
 export default function PatientsScreen() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { showToast } = useToast();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,6 +64,25 @@ export default function PatientsScreen() {
     );
   }, [patients, filterStatus]);
 
+  const setPatientActive = useCallback((id: string, isActive: boolean) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setPatients(prev => prev.map(p => (p.id === id ? { ...p, is_active: isActive } : p)));
+  }, []);
+
+  const changePatientStatus = useCallback(
+    async (patient: Patient, isActive: boolean) => {
+      await new Promise(resolve => setTimeout(resolve, STATUS_CHANGE_DELAY_MS));
+      setPatientActive(patient.id, isActive);
+
+      const { error: updateError } = await updatePatient(patient.id, { is_active: isActive });
+      if (updateError) {
+        setPatientActive(patient.id, !isActive);
+        showToast(getReadableError(updateError), 'error');
+      }
+    },
+    [setPatientActive, showToast],
+  );
+
   const renderPatientCard = useCallback(({ item }: { item: Patient }) => (
     <TouchableOpacity
       style={[styles.patientCard, Shadows.md]}
@@ -74,10 +101,16 @@ export default function PatientsScreen() {
             <Text style={styles.patientMetaText}>{item.phone || t('patients.noPhone')}</Text>
           </View>
         </View>
-        <Ionicons name="chevron-forward" size={20} color={Colors.textTertiary} />
+        <StatusToggle
+          value={item.is_active !== false}
+          onToggle={(next) => changePatientStatus(item, next)}
+          activeLabel={t('patients.active')}
+          inactiveLabel={t('patients.inactive')}
+          accessibilityLabel={t('patients.statusToggleLabel', { name: item.full_name })}
+        />
       </View>
     </TouchableOpacity>
-  ), [router, t]);
+  ), [router, t, changePatientStatus]);
 
   if (isLoading && patients.length === 0) {
     return (

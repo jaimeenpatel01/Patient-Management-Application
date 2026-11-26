@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/Button';
 import { SuccessModal } from '@/components/ui/SuccessModal';
 import { supabase } from '@/lib/supabase';
 import { useAlert } from '@/contexts/AlertContext';
+import { toLocalDateString } from '@/lib/formatters';
 
 export default function AddConsultationScreen() {
   const { patientId, id } = useLocalSearchParams<{ patientId: string; id?: string }>();
@@ -21,7 +22,7 @@ export default function AddConsultationScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(toLocalDateString(new Date()));
   const [symptoms, setSymptoms] = useState('');
   const [diagnosis, setDiagnosis] = useState('');
   const [assessment, setAssessment] = useState('');

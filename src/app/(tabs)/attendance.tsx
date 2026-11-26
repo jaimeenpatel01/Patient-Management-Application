@@ -10,7 +10,7 @@ import { getAttendances, deleteAttendance } from '@/services/offline/attendanceS
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionMenu } from '@/components/ui/ActionMenu';
-import { formatTime12Hour, groupItemsByDate } from '@/lib/formatters';
+import { formatTime12Hour, groupItemsByDate, toLocalDateString } from '@/lib/formatters';
 import type { Attendance } from '@/types';
 
 const PAGE_SIZE = 20;
@@ -98,7 +98,7 @@ export default function AttendanceScreen() {
     // Format date as YYYY-MM-DD for backend
     let formattedDate = undefined;
     if (targetDate) {
-      formattedDate = targetDate.toISOString().split('T')[0];
+      formattedDate = toLocalDateString(targetDate);
     }
 
     const { data } = await getAttendances(formattedDate, pageNumber, PAGE_SIZE);

@@ -60,7 +60,8 @@
     "addPatient": "मरीज़ जोड़ें",
     "noPhone": "कोई फ़ोन नंबर नहीं",
     "patientCountSuffix": "मरीज़",
-    "patientCountSuffixPlural": "मरीज़"
+    "patientCountSuffixPlural": "मरीज़",
+    "statusToggleLabel": "{{name}} की सक्रिय स्थिति"
   },
   "language": {
     "title": "भाषा",
